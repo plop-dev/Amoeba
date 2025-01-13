@@ -1,0 +1,67 @@
+---
+import '@/styles/global.css';
+import Page from '@/components/Page';
+import { ClientRouter } from 'astro:transitions';
+import { Separator } from '@/components/ui/separator';
+import { AppSidebar } from '@/components/nav/app-sidebar';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+
+const defaultSidebarOpen = Astro.cookies.get('sidebar:state')?.value === 'true';
+
+interface Props {
+	title: string;
+	className?: string;
+}
+
+const { title, className = '' } = Astro.props;
+const { APPNAME: appName } = import.meta.env;
+---
+
+<!doctype html>
+<html lang='en'>
+	<head>
+		<meta charset='UTF-8' />
+		<meta name='viewport' content='width=device-width' />
+		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
+		<meta name='generator' content={Astro.generator} />
+		<title>{title} - {appName}</title>
+
+		<ClientRouter />
+	</head>
+	<body>
+		<Page appName={appName} client:load defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} className={className}>
+			<slot />
+		</Page>
+
+		<!-- <SidebarProvider defaultOpen={defaultSidebarOpen}>
+			<AppSidebar transition:persist />
+
+			<SidebarInset>
+				<header class='flex h-16 shrink-0 items-center gap-2 border-b px-4'>
+					<SidebarTrigger className='-ml-1' />
+					<Separator orientation='vertical' className='mr-2 h-4' />
+					<Breadcrumb>
+						<BreadcrumbList>
+							<BreadcrumbItem className='hidden md:block'>
+								<BreadcrumbLink href='/chats'>Chats</BreadcrumbLink>
+							</BreadcrumbItem>
+							<BreadcrumbSeparator className='hidden md:block' />
+							<BreadcrumbItem>
+								<BreadcrumbPage>#general</BreadcrumbPage>
+							</BreadcrumbItem>
+						</BreadcrumbList>
+					</Breadcrumb>
+				</header>
+				<div class='flex flex-1 flex-col gap-4 p-4'><slot /></div>
+			</SidebarInset>
+		</SidebarProvider> -->
+	</body>
+</html>
+
+<style lang='scss'>
+	body {
+		display: flex;
+		flex-direction: row;
+	}
+</style>

@@ -1,0 +1,9 @@
+---
+import DefaultLayout from '@/layouts/DefaultLayout.astro';
+
+const vcTitle = Astro.url.pathname.replace('/dashboard/chats/', '');
+---
+
+<DefaultLayout title={vcTitle}>
+	<div class='container'></div>
+</DefaultLayout>
