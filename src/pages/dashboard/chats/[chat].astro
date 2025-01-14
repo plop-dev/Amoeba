@@ -10,19 +10,21 @@ import { ChatContainer } from '@/components/ChatContainer';
 import { buttonVariants } from '@/components/ui/button';
 import { UploadedFile } from '@/components/UploadedFile';
 import { ChatInput } from '@/components/ChatInput';
+import { ChatPage } from '@/components/ChatPage';
 
 const channelTitle = Astro.url.pathname.replace('/dashboard/chats/', '');
 ---
 
 <DefaultLayout title={channelTitle} className=''>
-	<div class='container'>
+	<ChatPage client:only='react' />
+	<!-- <div class='container'>
 		<ChatContainer />
 		<ChatInput client:load />
 
-		<!-- <div class='uploaded-files-container flex rounded-lg border border-border p-2 gap-x-4'>
+		<div class='uploaded-files-container flex rounded-lg border border-border p-2 gap-x-4'>
 			<UploadedFile client:load />
-		</div> -->
-	</div>
+		</div>
+	</div> -->
 </DefaultLayout>
 
 <!-- <script>
@@ -67,7 +69,7 @@ const channelTitle = Astro.url.pathname.replace('/dashboard/chats/', '');
 	fileInput?.addEventListener('change', handleFileChange);
 </script> -->
 
-<style lang='scss'>
+<!-- <style lang='scss'>
 	.container {
 		display: grid;
 		grid-template-columns: auto;
@@ -76,4 +78,4 @@ const channelTitle = Astro.url.pathname.replace('/dashboard/chats/', '');
 		width: 100%;
 		row-gap: 1rem;
 	}
-</style>
+</style> -->

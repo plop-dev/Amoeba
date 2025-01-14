@@ -9,7 +9,7 @@
 		"paths": {
 			"@/*": ["./src/*"]
 		},
-		"allowJs": true
-	},
-	"typeRoots": ["./types", "./node_modules/@types"]
+		"allowJs": true,
+		"typeRoots": ["./types", "./node_modules/@types"]
+	}
 }
