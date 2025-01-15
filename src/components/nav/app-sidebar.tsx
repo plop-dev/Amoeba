@@ -72,6 +72,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 					{
 						title: '#general',
 						url: '/dashboard/boards/general',
+						usersOnline: 3,
 					},
 					{
 						title: '#off-topic',

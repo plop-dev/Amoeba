@@ -1,6 +1,5 @@
-'use client';
-
 import { ChevronRight, type LucideIcon } from 'lucide-react';
+import './nav.css';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -25,6 +24,7 @@ export function NavMain({
 		items?: {
 			title: string;
 			url: string;
+			usersOnline?: number;
 		}[];
 	}[];
 }) {
@@ -50,7 +50,15 @@ export function NavMain({
 											<SidebarMenuSubItem key={subItem.title}>
 												<SidebarMenuSubButton asChild>
 													<a href={subItem.url}>
-														<span>{subItem.title}</span>
+														<span className='flex items-center w-full'>
+															<p className='w-full'>{subItem.title}</p>
+															{subItem.usersOnline && (
+																<span className='flex justify-end items-center gap-x-1'>
+																	<i className='online-badge w-2 h-2 rounded-full relative bg-green-600'></i>
+																	{subItem.usersOnline}
+																</span>
+															)}
+														</span>
 													</a>
 												</SidebarMenuSubButton>
 											</SidebarMenuSubItem>
