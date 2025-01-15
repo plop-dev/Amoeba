@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AudioWaveform, Droplet, MessageCircle, Settings, Worm } from 'lucide-react';
+import { AudioWaveform, Book, Droplet, MessageCircle, Settings, TreePine, Worm } from 'lucide-react';
 
 import { NavMain } from '@/components/nav/nav-main';
 import { NavUser } from '@/components/nav/nav-user';
@@ -21,12 +21,12 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 		},
 		teams: [
 			{
-				name: 'Naeglaria',
-				logo: Worm,
+				name: 'Project 1',
+				logo: TreePine,
 				plan: '3 Members',
 			},
 			{
-				name: 'Junin',
+				name: 'Project 2',
 				logo: Droplet,
 				plan: '2 Members',
 			},
@@ -41,10 +41,6 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 					{
 						title: '#general',
 						url: '/dashboard/chats/general',
-					},
-					{
-						title: '#ned',
-						url: '/dashboard/chats/ned',
 					},
 					{
 						title: '#off-topic',
@@ -62,8 +58,24 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 						url: '/dashboard/vcs/general',
 					},
 					{
-						title: '#ned',
-						url: '/dashboard/vcs/ned',
+						title: '#off-topic',
+						url: '/dashboard/vcs/off-topic',
+					},
+				],
+			},
+			{
+				title: 'Boards',
+				url: '/dashboard/boards',
+				icon: Book,
+				isActive: true,
+				items: [
+					{
+						title: '#general',
+						url: '/dashboard/boards/general',
+					},
+					{
+						title: '#off-topic',
+						url: '/dashboard/boards/off-topic',
 					},
 				],
 			},

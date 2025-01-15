@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Upload, SendHorizonal, Trash2 } from 'lucide-react';
 
 import DefaultLayout from '@/layouts/DefaultLayout.astro';
-import { ChatContainer } from '@/components/ChatContainer';
+import { ChatContainer } from '@/components/Chat/ChatContainer';
 import { buttonVariants } from '@/components/ui/button';
-import { UploadedFile } from '@/components/UploadedFile';
-import { ChatInput } from '@/components/ChatInput';
-import { ChatPage } from '@/components/ChatPage';
+import { UploadedFile } from '@/components/Chat/UploadedFile';
+import { ChatInput } from '@/components/Chat/ChatInput';
+import { ChatPage } from '@/components/Chat/ChatPage';
 
 const channelTitle = Astro.url.pathname.replace('/dashboard/chats/', '');
 ---
