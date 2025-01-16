@@ -115,6 +115,8 @@ export function Message({ messageId, handleReplyTo }: { messageId: string; handl
 	const [reactions, setReactions] = useState<{ emojiName: string; count: number }[]>([]);
 
 	const handleAddReaction = (emojiName: string) => {
+		document.querySelector(`.message[data-message-id="${messageId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
 		setReactions(prevReactions => {
 			const reactionIndex = prevReactions.findIndex(r => r.emojiName === emojiName);
 			if (reactionIndex !== -1) {

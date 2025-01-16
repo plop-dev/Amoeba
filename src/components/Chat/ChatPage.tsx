@@ -22,7 +22,6 @@ export function ChatPage() {
 	};
 
 	useEffect(() => {
-		// Simulate loading time
 		const timer = setTimeout(() => {
 			setLoading(false);
 			setTimeout(() => {
