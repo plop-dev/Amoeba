@@ -5,11 +5,12 @@ interface AvatarProps {
 	src: string;
 	alt: string;
 	fallback: string;
+	className?: string;
 }
 
-const CustomAvatar: React.FC<AvatarProps> = ({ src, alt, fallback }) => {
+const CustomAvatar: React.FC<AvatarProps> = ({ src, alt, fallback, className }) => {
 	return (
-		<Avatar>
+		<Avatar className={className}>
 			<AvatarImage src={src} alt={alt} />
 			<AvatarFallback>{fallback}</AvatarFallback>
 		</Avatar>

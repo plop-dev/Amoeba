@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import CustomAvatar from '@/components/custom/CustomAvatar';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Laugh, PartyPopper, Pen, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
+import { Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
 function OptionsButton({
 	children,
@@ -12,14 +13,14 @@ function OptionsButton({
 	emoji = false,
 	messageId,
 	onEmojiClick,
-	onReplyClick,
+	onClick,
 }: {
 	children: React.ReactNode;
 	variant: 'default' | 'destructive' | 'ghost' | 'link' | 'outline' | 'secondary';
 	emoji?: boolean;
 	messageId?: string;
 	onEmojiClick?: (emojiName: string) => void;
-	onReplyClick?: (messageId: string) => void;
+	onClick?: () => void;
 }) {
 	const handleClick = () => {
 		if (React.isValidElement(children) && emoji) {
@@ -51,10 +52,7 @@ function OptionsButton({
 
 			onEmojiClick?.(emojiName);
 		}
-
-		if (onReplyClick && messageId) {
-			onReplyClick(messageId);
-		}
+		onClick?.();
 	};
 
 	return (
@@ -98,25 +96,40 @@ function ReactionPicker({ onEmojiClick }: { onEmojiClick: (emojiName: string) =>
 }
 
 function EmojiReaction({ emojiName, count }: { emojiName: string; count: number }) {
+	const style = 'w-4 h-4';
+
 	return (
-		<span className='emoji-reaction flex gap-x-2 rounded-lg border border-border px-2 py-1 items-center'>
-			<p>{count}</p>
-			{emojiName === 'SmilePlus' && <SmilePlus className='w-4 h-4' />}
-			{emojiName === 'Smile' && <Smile className='w-4 h-4' />}
-			{emojiName === 'Laugh' && <Laugh className='w-4 h-4' />}
-			{emojiName === 'ThumbsUp' && <ThumbsUp className='w-4 h-4' />}
-			{emojiName === 'ThumbsDown' && <ThumbsDown className='w-4 h-4' />}
-			{emojiName === 'PartyPopper' && <PartyPopper className='w-4 h-4' />}
-		</span>
+		<div className='emoji-reaction flex gap-x-2 rounded-lg border border-border px-1 items-center hover:border-primary/75 transition-colors duration-300'>
+			<TooltipProvider delayDuration={50}>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<span className='flex gap-x-1 items-center px-2 py-1'>
+							<p>{count}</p>
+							{emojiName === 'Smile' && <Smile className={style} />}
+							{emojiName === 'Laugh' && <Laugh className={style} />}
+							{emojiName === 'ThumbsUp' && <ThumbsUp className={style} />}
+							{emojiName === 'ThumbsDown' && <ThumbsDown className={style} />}
+							{emojiName === 'PartyPopper' && <PartyPopper className={style} />}
+						</span>
+					</TooltipTrigger>
+					<TooltipContent border={true} asChild>
+						<div className='flex flex-row gap-x-2'>
+							<CustomAvatar alt='P' fallback='P' src='' className='w-8 h-8'></CustomAvatar>
+							<CustomAvatar alt='P' fallback='P' src='' className='w-8 h-8'></CustomAvatar>
+							<CustomAvatar alt='P' fallback='P' src='' className='w-8 h-8'></CustomAvatar>
+						</div>
+					</TooltipContent>
+				</Tooltip>
+			</TooltipProvider>
+		</div>
 	);
 }
 
-export function Message({ messageId, handleReplyTo }: { messageId: string; handleReplyTo: (messageId: string) => void }) {
+export function Message({ messageId, onReplyClick, isHighlighted }: { messageId: string; onReplyClick?: (msgId: string) => void; isHighlighted?: boolean }) {
 	const [reactions, setReactions] = useState<{ emojiName: string; count: number }[]>([]);
+	const messageRef = useRef<HTMLDivElement | null>(null);
 
 	const handleAddReaction = (emojiName: string) => {
-		document.querySelector(`.message[data-message-id="${messageId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
 		setReactions(prevReactions => {
 			const reactionIndex = prevReactions.findIndex(r => r.emojiName === emojiName);
 			if (reactionIndex !== -1) {
@@ -127,6 +140,9 @@ export function Message({ messageId, handleReplyTo }: { messageId: string; handl
 				return [...prevReactions, { emojiName, count: 1 }];
 			}
 		});
+
+		if (!messageRef.current) return;
+		messageRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	};
 
 	const date = new Date(Date.now() + Math.random() * 10000000000).toLocaleTimeString();
@@ -135,7 +151,13 @@ export function Message({ messageId, handleReplyTo }: { messageId: string; handl
 		<TooltipProvider delayDuration={50}>
 			<Tooltip>
 				<TooltipTrigger asChild>
-					<div className='message flex items-start gap-x-4 my-1 p-2 rounded-lg first:mt-0 hover:bg-secondary/50' data-message-id={messageId}>
+					<div
+						className={cn('message flex items-start gap-x-4 my-1 p-2 rounded-lg first:mt-0 transition-colors', {
+							'bg-primary/20 hover:bg-primary/15': isHighlighted,
+							'hover:bg-secondary/50': !isHighlighted,
+						})}
+						ref={messageRef}
+						data-message-id={messageId}>
 						<div className='avatar'>
 							<CustomAvatar alt='' fallback='P' src='' />
 						</div>
@@ -161,8 +183,8 @@ export function Message({ messageId, handleReplyTo }: { messageId: string; handl
 				<TooltipContent border={true} className='p-1' asChild>
 					<div className='flex gap-x-1'>
 						<ReactionPicker onEmojiClick={handleAddReaction} />
-						<OptionsButton variant='outline' onReplyClick={handleReplyTo} messageId={messageId}>
-							<Reply></Reply>
+						<OptionsButton variant='outline' messageId={messageId} onClick={() => onReplyClick?.(messageId)}>
+							<Reply />
 						</OptionsButton>
 
 						<Separator orientation='vertical' className='bg-primary h-full'></Separator>

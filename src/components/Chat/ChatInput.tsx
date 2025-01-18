@@ -7,7 +7,7 @@ import { useRef, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { UploadedFile } from '@/components/Chat/UploadedFile';
 
-export function ChatInput({ replyTo = '', setReplyTo }: { replyTo?: string; setReplyTo: (value: string) => void }) {
+export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | null; onClearReply?: () => void }) {
 	const { toast } = useToast();
 	const [files, setFiles] = useState<{ id: string; file: File }[]>([]);
 	const [previews, setPreviews] = useState<FilePreview[]>([]);
@@ -64,14 +64,10 @@ export function ChatInput({ replyTo = '', setReplyTo }: { replyTo?: string; setR
 				</div>
 			)}
 
-			{replyTo && (
-				<div className='reply-to flex items-center p-2 rounded-lg border border-border'>
-					<p className='flex justify-start w-full'>
-						Replying to <b className='ml-[1ch]'>{replyTo}</b>
-					</p>
-					<Button variant='ghost' onClick={() => setReplyTo('')} className='p-2 flex justify-end'>
-						<X />
-					</Button>
+			{replyingTo && (
+				<div className='replying-to flex items-center gap-2 p-2 text-sm bg-muted'>
+					<span>Replying to {document.querySelector(`.message[data-message-id="${replyingTo}"]`)?.querySelector('.username')?.textContent}</span>
+					<X className='cursor-pointer' onClick={onClearReply} />
 				</div>
 			)}
 

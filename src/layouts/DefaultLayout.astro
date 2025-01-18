@@ -23,7 +23,7 @@ const { APPNAME: appName } = import.meta.env;
 		<meta name='generator' content={Astro.generator} />
 		<title>{title} - {appName}</title>
 
-		<ClientRouter />
+		<!-- <ClientRouter /> -->
 	</head>
 	<body>
 		<Page appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} className={className}>

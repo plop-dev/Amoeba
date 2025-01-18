@@ -4,21 +4,12 @@ import { useState, useEffect } from 'react';
 import { LoaderCircle } from 'lucide-react';
 
 export function ChatPage() {
-	const [replyTo, setReplyTo] = useState<string>('');
 	const [loading, setLoading] = useState(true);
 	const [isVisible, setIsVisible] = useState(true);
+	const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
-	const handleReply = (messageId: string) => {
-		const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-		if (messageElement) {
-			const usernameElement = messageElement.querySelector('.username');
-			if (usernameElement) {
-				const username = usernameElement.textContent;
-				if (username) {
-					setReplyTo(username);
-				}
-			}
-		}
+	const handleReplyClick = (msgId: string) => {
+		setReplyingTo(msgId);
 	};
 
 	useEffect(() => {
@@ -34,8 +25,8 @@ export function ChatPage() {
 
 	return (
 		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] w-full gap-y-4'>
-			<ChatContainer handleReply={handleReply} />
-			<ChatInput replyTo={replyTo} setReplyTo={setReplyTo} />
+			<ChatContainer replyingTo={replyingTo} onReplyClick={handleReplyClick} />
+			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} />
 
 			{isVisible && (
 				<div

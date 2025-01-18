@@ -1,7 +1,7 @@
-import { Message } from '@/components/Chat/Message';
 import { useEffect } from 'react';
+import { Message } from '@/components/Chat/Message';
 
-export function ChatContainer({ handleReply }: { handleReply: (messageId: string) => void }) {
+export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string | null; onReplyClick: (msgId: string) => void }) {
 	useEffect(() => {
 		const chatContainer = document.querySelector('.chat-container');
 		if (chatContainer) {
@@ -9,11 +9,25 @@ export function ChatContainer({ handleReply }: { handleReply: (messageId: string
 		}
 	}, []);
 
+	useEffect(() => {
+		const chatContainer = document.querySelector('.chat-container');
+		const message = document.querySelector(`.message[data-message-id="${replyingTo}"]`);
+
+		if (chatContainer && message) {
+			const messageRect = message.getBoundingClientRect();
+			const containerRect = chatContainer.getBoundingClientRect();
+
+			if (messageRect.top < containerRect.top || messageRect.bottom > containerRect.bottom) {
+				message.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			}
+		}
+	}, [replyingTo]);
+
 	return (
 		<div className='chat-container overflow-auto'>
 			<div className='wrapper pr-4'>
 				{Array.from({ length: 25 }, (i, j) => {
-					return <Message messageId={j.toString()} key={j} handleReplyTo={handleReply} />;
+					return <Message messageId={j.toString()} key={j} onReplyClick={onReplyClick} isHighlighted={replyingTo === j.toString()} />;
 				})}
 			</div>
 		</div>
