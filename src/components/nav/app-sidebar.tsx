@@ -4,7 +4,9 @@ import { AudioWaveform, Book, CurlyBraces, Droplet, MessageCircle, Settings, Tre
 import { NavMain } from '@/components/nav/nav-main';
 import { NavUser } from '@/components/nav/nav-user';
 import { TeamSwitcher } from '@/components/nav/team-switcher';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, SidebarTrigger } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 // This is sample data.
 
@@ -13,6 +15,8 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ appName, ...props }: AppSidebarProps) {
+	const { isMobile, state, toggleSidebar } = useSidebar();
+
 	const data = {
 		user: {
 			name: 'plop',
@@ -106,18 +110,18 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	return (
 		<Sidebar collapsible='icon' {...props}>
 			<SidebarHeader className='relative'>
-				<div className='logo flex gap-x-2 items-center px-2'>
-					<div className='icon rounded-lg border-border border p-1'>
+				<div className={cn('logo flex items-center', state === 'expanded' && 'px-2')}>
+					<Button variant={'outline'} className='aspect-square size-8 p-0 flex items-center justify-center' onClick={toggleSidebar}>
 						<CurlyBraces className='w-4 h-4'></CurlyBraces>
+					</Button>
+
+					<div className={cn('text-lg transition-all overflow-hidden', state === 'collapsed' ? 'max-w-0' : 'max-w-20 ml-2')}>
+						<span>{appName}</span>
 					</div>
-					<div className='text-lg'>{appName}</div>
 				</div>
 				<TeamSwitcher teams={data.teams} />
 			</SidebarHeader>
 			<SidebarContent>
-				{/* <video autoPlay muted playsInline loop>
-					<source src='https://ia804502.us.archive.org/33/items/GoldenGa1939_3/GoldenGa1939_3_512kb.mp4' type='video/mp4' />
-				</video> */}
 				<NavMain items={data.navMain} />
 			</SidebarContent>
 			<SidebarFooter>
