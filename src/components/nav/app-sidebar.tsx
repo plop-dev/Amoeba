@@ -1,10 +1,10 @@
 import * as React from 'react';
-import { AudioWaveform, Book, Droplet, MessageCircle, Settings, TreePine, Worm } from 'lucide-react';
+import { AudioWaveform, Book, CurlyBraces, Droplet, MessageCircle, Settings, TreePine, Worm } from 'lucide-react';
 
 import { NavMain } from '@/components/nav/nav-main';
 import { NavUser } from '@/components/nav/nav-user';
 import { TeamSwitcher } from '@/components/nav/team-switcher';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, SidebarTrigger } from '@/components/ui/sidebar';
 
 // This is sample data.
 
@@ -105,7 +105,13 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 
 	return (
 		<Sidebar collapsible='icon' {...props}>
-			<SidebarHeader>
+			<SidebarHeader className='relative'>
+				<div className='logo flex gap-x-2 items-center px-2'>
+					<div className='icon rounded-lg border-border border p-1'>
+						<CurlyBraces className='w-4 h-4'></CurlyBraces>
+					</div>
+					<div className='text-lg'>{appName}</div>
+				</div>
 				<TeamSwitcher teams={data.teams} />
 			</SidebarHeader>
 			<SidebarContent>

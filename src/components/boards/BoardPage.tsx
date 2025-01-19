@@ -16,7 +16,7 @@ export function BoardPage() {
 				className='w-full'
 				editorContentClassName='p-5'
 				output='json'
-				placeholder='Type your description here...'
+				placeholder='Board [name]...'
 				autofocus={true}
 				editable={true}
 				editorClassName='focus:outline-none'

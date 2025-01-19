@@ -1,7 +1,12 @@
 ---
 import '@/styles/global.css';
-import Page from '@/components/Page';
+import Sidebar from '@/components/Sidebar';
 import { ClientRouter } from 'astro:transitions';
+import { Separator } from '@radix-ui/react-separator';
+import { AppSidebar } from '@/components/nav/app-sidebar';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
 
 const defaultSidebarOpen = Astro.cookies.get('sidebar:state')?.value === 'true';
 
@@ -23,18 +28,38 @@ const { APPNAME: appName } = import.meta.env;
 		<meta name='generator' content={Astro.generator} />
 		<title>{title} - {appName}</title>
 
-		<!-- <ClientRouter /> -->
+		<ClientRouter />
 	</head>
 	<body>
-		<Page appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} className={className}>
-			<slot />
-		</Page>
-	</body>
-</html>
+		<Sidebar appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} className={className} transition:persist />
 
-<style lang='scss'>
-	body {
-		display: flex;
-		flex-direction: row;
-	}
-</style>
+		<main
+			class='relative flex min-h-svh flex-1 flex-col bg-background peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow'>
+			<header class='flex h-16 shrink-0 items-center gap-2 border-b px-4'>
+				<!-- <SidebarTrigger /> -->
+				<Separator orientation='vertical' className='mr-2 h-4' />
+				<Breadcrumb className='ml-2'>
+					<BreadcrumbList>
+						<BreadcrumbItem className='hidden md:block'>
+							<BreadcrumbLink href={'/' + Astro.url.pathname.split('/')[1] + '/' + Astro.url.pathname.split('/')[2]}
+								>#{Astro.url.pathname.split('/')[2]}</BreadcrumbLink
+							>
+						</BreadcrumbItem>
+						<BreadcrumbSeparator className='hidden md:block' />
+						<BreadcrumbItem>
+							<BreadcrumbPage>#{Astro.url.pathname.split('/')[3]}</BreadcrumbPage>
+						</BreadcrumbItem>
+					</BreadcrumbList>
+				</Breadcrumb>
+			</header>
+			<div class='flex flex-1 flex-col gap-4 p-4'>
+				<slot />
+			</div>
+		</main>
+	</body><style lang='scss'>
+		body {
+			display: flex;
+			flex-direction: row;
+		}
+	</style>
+</html>
