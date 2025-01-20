@@ -34,17 +34,6 @@ export function ChatPage() {
 		}
 	}, []);
 
-	// useEffect(() => {
-	// 	const timer = setTimeout(() => {
-	// 		setLoading(false);
-	// 		setTimeout(() => {
-	// 			setIsVisible(false);
-	// 		}, 300); // Duration of the fade-out transition
-	// 	}, 2000); // Adjust the time as needed
-
-	// 	return () => clearTimeout(timer);
-	// }, []);
-
 	return (
 		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] w-full gap-y-4'>
 			<ChatContainer replyingTo={replyingTo} onReplyClick={handleReplyClick} />
