@@ -26,9 +26,10 @@ export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string
 	return (
 		<div className='chat-container overflow-auto'>
 			<div className='wrapper pr-4'>
-				{Array.from({ length: 25 }, (i, j) => {
+				{Array.from({ length: 5 }, (i, j) => {
 					return <Message messageId={j.toString()} key={j} onReplyClick={onReplyClick} isHighlighted={replyingTo === j.toString()} />;
 				})}
+				<Message messageId='6' key={6} onReplyClick={onReplyClick} isHighlighted={replyingTo === '6'} variant='inline' />
 			</div>
 		</div>
 	);

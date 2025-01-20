@@ -115,7 +115,9 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 						<CurlyBraces className='w-4 h-4'></CurlyBraces>
 					</Button>
 
-					<div className={cn('text-lg transition-all overflow-hidden', state === 'collapsed' ? 'max-w-0' : 'max-w-20 ml-2')}>
+					<div
+						className={cn('text-lg transition-all overflow-hidden cursor-pointer', state === 'collapsed' ? 'max-w-0' : 'max-w-20 ml-2')}
+						onClick={toggleSidebar}>
 						<span>{appName}</span>
 					</div>
 				</div>

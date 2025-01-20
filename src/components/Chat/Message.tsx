@@ -74,19 +74,19 @@ function ReactionPicker({ onEmojiClick }: { onEmojiClick: (emojiName: string) =>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className='p-1'>
 				<div className='flex gap-x-1'>
-					<OptionsButton variant='outline' emoji onEmojiClick={onEmojiClick}>
+					<OptionsButton variant='outline' emoji onEmojiClick={() => onEmojiClick('Smile')}>
 						<Smile></Smile>
 					</OptionsButton>
-					<OptionsButton variant='outline' emoji onEmojiClick={onEmojiClick}>
+					<OptionsButton variant='outline' emoji onEmojiClick={() => onEmojiClick('Laugh')}>
 						<Laugh></Laugh>
 					</OptionsButton>
-					<OptionsButton variant='outline' emoji onEmojiClick={onEmojiClick}>
+					<OptionsButton variant='outline' emoji onEmojiClick={() => onEmojiClick('ThumbsUp')}>
 						<ThumbsUp></ThumbsUp>
 					</OptionsButton>
-					<OptionsButton variant='outline' emoji onEmojiClick={onEmojiClick}>
+					<OptionsButton variant='outline' emoji onEmojiClick={() => onEmojiClick('ThumbsDown')}>
 						<ThumbsDown></ThumbsDown>
 					</OptionsButton>
-					<OptionsButton variant='outline' emoji onEmojiClick={onEmojiClick}>
+					<OptionsButton variant='outline' emoji onEmojiClick={() => onEmojiClick('PartyPopper')}>
 						<PartyPopper></PartyPopper>
 					</OptionsButton>
 				</div>
@@ -125,7 +125,17 @@ function EmojiReaction({ emojiName, count }: { emojiName: string; count: number 
 	);
 }
 
-export function Message({ messageId, onReplyClick, isHighlighted }: { messageId: string; onReplyClick?: (msgId: string) => void; isHighlighted?: boolean }) {
+export function Message({
+	messageId,
+	onReplyClick,
+	isHighlighted,
+	variant = 'default',
+}: {
+	messageId: string;
+	onReplyClick?: (msgId: string) => void;
+	isHighlighted?: boolean;
+	variant?: 'default' | 'inline';
+}) {
 	const [reactions, setReactions] = useState<{ emojiName: string; count: number }[]>([]);
 	const messageRef = useRef<HTMLDivElement | null>(null);
 
@@ -152,19 +162,28 @@ export function Message({ messageId, onReplyClick, isHighlighted }: { messageId:
 			<Tooltip>
 				<TooltipTrigger asChild>
 					<div
-						className={cn('message flex items-start gap-x-4 my-1 p-2 rounded-lg first:mt-0 transition-colors', {
+						className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors', {
 							'bg-primary/20 hover:bg-primary/15': isHighlighted,
 							'hover:bg-secondary/50': !isHighlighted,
+							'my-1 p-2 items-start': variant === 'default',
+							'!pb-0 !mb-0':
+								messageRef.current?.nextElementSibling?.hasAttribute('data-message-type') &&
+								messageRef.current?.nextElementSibling?.getAttribute('data-message-type') === 'inline',
+							'px-2 items-center': variant === 'inline',
 						})}
 						ref={messageRef}
-						data-message-id={messageId}>
+						data-message-id={messageId}
+						data-message-type={variant}>
 						<div className='avatar'>
-							<CustomAvatar alt='' fallback='P' src='' />
+							<CustomAvatar alt='' fallback='P' src='' className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
 						</div>
+
 						<div className='content flex flex-col w-full'>
-							<div className='info flex'>
-								<div className='username'>plop</div>
-							</div>
+							{variant === 'default' && (
+								<div className='info flex'>
+									<div className='username'>plop</div>
+								</div>
+							)}
 							<div className='text'>hey guys first message</div>
 
 							<div className='reactions flex gap-x-2 mt-1'>
@@ -173,10 +192,12 @@ export function Message({ messageId, onReplyClick, isHighlighted }: { messageId:
 								))}
 							</div>
 						</div>
-						<div className='dates flex gap-x-8 flex-1 items-end flex-col'>
-							<div className='sent'>{date}</div>
-							<div className='expiry text-xs text-red-900'>{date}</div>
-						</div>
+						{variant === 'default' && (
+							<div className='dates flex gap-x-8 flex-1 items-end flex-col'>
+								<div className='sent'>{date}</div>
+								<div className='expiry text-xs text-red-900'>{date}</div>
+							</div>
+						)}
 					</div>
 				</TooltipTrigger>
 
