@@ -81,5 +81,8 @@
 	},
 	"devDependencies": {
 		"sass": "^1.83.1"
+	},
+	"optionalDependencies": {
+		"@rollup/rollup-linux-x64-gnu": "4.9.5"
 	}
 }
