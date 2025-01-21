@@ -1,11 +1,12 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import CustomAvatar from '@/components/custom/CustomAvatar';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
+import { Copy, Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 function OptionsButton({
 	children,
@@ -136,8 +137,14 @@ export function Message({
 	isHighlighted?: boolean;
 	variant?: 'default' | 'inline';
 }) {
+	const { toast } = useToast();
 	const [reactions, setReactions] = useState<{ emojiName: string; count: number }[]>([]);
 	const messageRef = useRef<HTMLDivElement | null>(null);
+
+	const handleCopyMessage = () => {
+		navigator.clipboard.writeText(messageRef.current?.querySelector('.text')?.textContent ?? '');
+		toast({ title: 'Message copied to clipboard', variant: 'success' });
+	};
 
 	const handleAddReaction = (emojiName: string) => {
 		setReactions(prevReactions => {
@@ -179,11 +186,9 @@ export function Message({
 						</div>
 
 						<div className='content flex flex-col w-full'>
-							{variant === 'default' && (
-								<div className='info flex'>
-									<div className='username'>plop</div>
-								</div>
-							)}
+							<div className={cn('info flex', { hidden: variant === 'inline' })}>
+								<div className='username'>plop</div>
+							</div>
 							<div className='text'>hey guys first message</div>
 
 							<div className='reactions flex gap-x-2 mt-1'>
@@ -192,12 +197,11 @@ export function Message({
 								))}
 							</div>
 						</div>
-						{variant === 'default' && (
-							<div className='dates flex gap-x-8 flex-1 items-end flex-col'>
-								<div className='sent'>{date}</div>
-								<div className='expiry text-xs text-red-900'>{date}</div>
-							</div>
-						)}
+
+						<div className={cn('dates flex gap-x-8 flex-1 items-end flex-col', { hidden: variant === 'inline' })}>
+							<div className='sent'>{date}</div>
+							<div className='expiry text-xs text-red-900'>{date}</div>
+						</div>
 					</div>
 				</TooltipTrigger>
 
@@ -209,6 +213,10 @@ export function Message({
 						</OptionsButton>
 
 						<Separator orientation='vertical' className='bg-primary h-full'></Separator>
+
+						<OptionsButton variant='outline' onClick={handleCopyMessage}>
+							<Copy></Copy>
+						</OptionsButton>
 
 						<OptionsButton variant='destructive'>
 							<Trash2></Trash2>
