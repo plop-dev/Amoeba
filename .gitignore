@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # Million Lint
 .million
+
+# vercel build output
+.vercel

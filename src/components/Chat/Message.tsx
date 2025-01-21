@@ -96,11 +96,17 @@ function ReactionPicker({ onEmojiClick }: { onEmojiClick: (emojiName: string) =>
 	);
 }
 
-function EmojiReaction({ emojiName, count }: { emojiName: string; count: number }) {
+function EmojiReaction({ emojiName, count, messageVariant }: { emojiName: string; count: number; messageVariant: 'default' | 'inline' }) {
 	const style = 'w-4 h-4';
 
 	return (
-		<div className='emoji-reaction flex gap-x-2 rounded-lg border border-border px-1 items-center hover:border-primary/75 transition-colors duration-300'>
+		<div
+			className={cn(
+				'emoji-reaction flex gap-x-2 rounded-lg border border-border px-1 items-center hover:border-primary/75 transition-colors duration-300',
+				{
+					'mb-1': messageVariant === 'inline',
+				},
+			)}>
 			<TooltipProvider delayDuration={50}>
 				<Tooltip>
 					<TooltipTrigger asChild>
@@ -193,7 +199,7 @@ export function Message({
 
 							<div className='reactions flex gap-x-2 mt-1'>
 								{reactions.map((reaction, index) => (
-									<EmojiReaction key={index} emojiName={reaction.emojiName} count={reaction.count} />
+									<EmojiReaction key={index} messageVariant={variant} emojiName={reaction.emojiName} count={reaction.count} />
 								))}
 							</div>
 						</div>

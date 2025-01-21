@@ -8,5 +8,3 @@ declare global {
 		onDelete: (id: string) => void;
 	}
 }
-
-export {};

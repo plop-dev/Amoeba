@@ -12,6 +12,7 @@
 	"dependencies": {
 		"@astrojs/react": "^4.1.2",
 		"@astrojs/tailwind": "^5.1.4",
+		"@astrojs/vercel": "^8.0.2",
 		"@hookform/resolvers": "^3.10.0",
 		"@lexical/file": "^0.23.1",
 		"@lexical/react": "^0.23.1",
@@ -61,6 +62,7 @@
 		"lodash-es": "^4.17.21",
 		"lowlight": "^3.3.0",
 		"lucide-react": "^0.469.0",
+		"million": "^3.1.11",
 		"next-themes": "^0.4.4",
 		"react": "^19.0.0",
 		"react-colorful": "^5.6.1",
