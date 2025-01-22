@@ -17,6 +17,7 @@ export default defineConfig({
 		schema: {
 			PORT: envField.number({ context: 'server', access: 'public', default: 3000 }),
 			APPNAME: envField.string({ context: 'server', access: 'public', default: 'Amoeba' }),
+			TIPTAP_APPID: envField.string({ context: 'client', access: 'public', default: '7j9y6m10' }),
 		},
 	},
 	adapter: vercel({

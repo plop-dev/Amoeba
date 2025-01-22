@@ -8,6 +8,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
+import '@/server';
 
 const defaultSidebarOpen = Astro.cookies.get('sidebar:state')?.value === 'true';
 

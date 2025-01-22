@@ -30,7 +30,10 @@ function NewChannelDialog(props: { children: React.ReactNode; channelType: strin
 	return (
 		<AlertDialog>
 			<AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
-			<AlertDialogContent>
+			<AlertDialogContent
+				onClick={e => {
+					e.stopPropagation();
+				}}>
 				<AlertDialogHeader>
 					<AlertDialogTitle>New {props.channelType} Channel</AlertDialogTitle>
 					<AlertDialogDescription className='flex flex-col gap-y-2'>
@@ -68,7 +71,10 @@ export function NavMain({ items }: { items: NavMainProps[] }) {
 													className={cn(
 														buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
 														'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
-													)}>
+													)}
+													onClick={e => {
+														e.stopPropagation();
+													}}>
 													<Plus></Plus>
 												</span>
 											</NewChannelDialog>
