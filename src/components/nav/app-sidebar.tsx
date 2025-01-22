@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AudioWaveform, Book, CurlyBraces, Droplet, MessageCircle, Settings, TreePine, Worm } from 'lucide-react';
+import { AudioWaveform, Book, CurlyBraces, Droplet, Home, MessageCircle, Settings, TreePine, Worm, type LucideProps } from 'lucide-react';
 
 import { NavMain } from '@/components/nav/nav-main';
 import { NavUser } from '@/components/nav/nav-user';
@@ -7,6 +7,7 @@ import { TeamSwitcher } from '@/components/nav/team-switcher';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Separator } from '../ui/separator';
 
 // This is sample data.
 
@@ -17,7 +18,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	const { isMobile, state, toggleSidebar } = useSidebar();
 
-	const data = {
+	const data: AppSidebarData = {
 		user: {
 			name: 'plop',
 			id: '02dfjkd023',
@@ -37,10 +38,16 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 		],
 		navMain: [
 			{
+				title: 'Home',
+				url: '/dashboard',
+				icon: Home,
+			},
+			{
 				title: 'Chats',
 				url: '/dashboard/chats',
 				icon: MessageCircle,
 				isActive: true,
+				canCreate: true,
 				items: [
 					{
 						title: '#general',
@@ -56,6 +63,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 				title: 'VCs',
 				url: '/dashboard/vcs',
 				icon: AudioWaveform,
+				canCreate: true,
 				items: [
 					{
 						title: '#general',
@@ -72,6 +80,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 				url: '/dashboard/boards',
 				icon: Book,
 				isActive: true,
+				canCreate: true,
 				items: [
 					{
 						title: '#general',
@@ -88,6 +97,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 				title: 'Ned',
 				url: '/dashboard/ned',
 				icon: Worm,
+				canCreate: true,
 				items: [
 					{
 						title: 'Control Centre',
@@ -108,9 +118,9 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	};
 
 	return (
-		<Sidebar collapsible='icon' {...props}>
+		<Sidebar collapsible='icon' {...props} className=''>
 			<SidebarHeader className='relative'>
-				<div className={cn('logo flex items-center', state === 'expanded' && 'px-2')}>
+				<div className={cn('logo flex items-center h-[calc(3rem-1rem-1px)]', state === 'expanded' && 'px-2')}>
 					<Button variant={'outline'} className='aspect-square size-8 p-0 flex items-center justify-center' onClick={toggleSidebar}>
 						<CurlyBraces className='w-4 h-4'></CurlyBraces>
 					</Button>
@@ -121,6 +131,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 						<span>{appName}</span>
 					</div>
 				</div>
+				<Separator orientation='horizontal' className='relative -left-full min-w-[100vw] w-screen'></Separator>
 				<TeamSwitcher teams={data.teams} />
 			</SidebarHeader>
 			<SidebarContent>

@@ -25,7 +25,7 @@ export function TeamSwitcher({
 	const [activeTeam, setActiveTeam] = React.useState(teams[0]);
 
 	return (
-		<SidebarMenu>
+		<SidebarMenu className=''>
 			<SidebarMenuItem>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>

@@ -1,4 +1,4 @@
-import { ChevronRight, type LucideIcon } from 'lucide-react';
+import { ChevronRight, Plus, type LucideIcon } from 'lucide-react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -11,24 +11,46 @@ import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
-export function NavMain({
-	items,
-}: {
-	items: {
-		title: string;
-		url: string;
-		icon?: LucideIcon;
-		isActive?: boolean;
-		items?: {
-			title: string;
-			url: string;
-			usersOnline?: number;
-		}[];
-	}[];
-}) {
+function NewChannelDialog(props: { children: React.ReactNode; channelType: string }) {
 	return (
-		<SidebarGroup>
+		<AlertDialog>
+			<AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>New {props.channelType} Channel</AlertDialogTitle>
+					<AlertDialogDescription className='flex flex-col gap-y-2'>
+						<span>This will create a new {props.channelType} channel. Fill in all fields below.</span>
+
+						<Input type='text' placeholder='Channel Name'></Input>
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogAction>Continue</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	);
+}
+
+export function NavMain({ items }: { items: NavMainProps[] }) {
+	return (
+		<SidebarGroup className=''>
 			<SidebarGroupLabel>Platform</SidebarGroupLabel>
 			<SidebarMenu>
 				{items.map(item => {
@@ -37,10 +59,21 @@ export function NavMain({
 						<Collapsible key={item.title} asChild defaultOpen={item.isActive} className='group/collapsible'>
 							<SidebarMenuItem>
 								<CollapsibleTrigger asChild>
-									<SidebarMenuButton tooltip={item.title}>
+									<SidebarMenuButton tooltip={item.title} className='relative'>
 										{item.icon && <item.icon />}
 										<span>{item.title}</span>
-										<ChevronRight className='ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+										{item.canCreate && (
+											<NewChannelDialog channelType={item.title.split('').pop() === 's' ? item.title.slice(0, -1) : item.title}>
+												<span
+													className={cn(
+														buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+														'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
+													)}>
+													<Plus></Plus>
+												</span>
+											</NewChannelDialog>
+										)}
+										<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
 									</SidebarMenuButton>
 								</CollapsibleTrigger>
 								<CollapsibleContent>

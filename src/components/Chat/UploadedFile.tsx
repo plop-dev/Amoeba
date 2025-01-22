@@ -13,7 +13,7 @@ export function UploadedFile(props: { file: FilePreview; onDelete: (id: string) 
 				<TooltipTrigger asChild>
 					<div className={'rounded-lg bg-secondary flex items-center justify-center flex-col gap-1 p-2'}>
 						<img src={props.file.src} alt={props.file.name} className='rounded-lg max-h-24 min-h-24 aspect-square' />
-						<small>{props.file.name.substring(0, 10) + '...'}</small>
+						<small className='truncate w-[6.5rem]'>{props.file.name}</small>
 					</div>
 				</TooltipTrigger>
 

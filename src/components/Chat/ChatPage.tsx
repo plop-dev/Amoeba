@@ -35,7 +35,7 @@ export function ChatPage() {
 	}, []);
 
 	return (
-		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] w-full gap-y-4'>
+		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-4 max-w-full'>
 			<ChatContainer replyingTo={replyingTo} onReplyClick={handleReplyClick} />
 			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} />
 
