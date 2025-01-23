@@ -19,8 +19,7 @@ import { useEffect } from 'react';
 import * as Y from 'yjs';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
-import { HocuspocusProvider } from '@hocuspocus/provider';
-import { TiptapCollabProvider } from '@hocuspocus/provider';
+import { HocuspocusProvider, TiptapCollabProvider } from '@hocuspocus/provider';
 import { TIPTAP_APPID } from 'astro:env/client';
 
 const doc = new Y.Doc(); // Initialize Y.Doc for shared editing
@@ -28,6 +27,7 @@ const doc = new Y.Doc(); // Initialize Y.Doc for shared editing
 const provider = new HocuspocusProvider({
 	url: 'ws://127.0.0.1:80',
 	name: 'board.general',
+	document: doc,
 });
 
 export interface UseMinimalTiptapEditorProps extends UseEditorOptions {
@@ -233,14 +233,33 @@ export const useMinimalTiptapEditor = ({
 		...props,
 	});
 
+	let usersConnected = 0;
+
 	useEffect(() => {
-		// const provider = new TiptapCollabProvider({
-		// 	name: 'board.general', // Unique document identifier for syncing. This is your document name.
-		// 	appId: TIPTAP_APPID, // Your Cloud Dashboard AppID or `baseURL` for on-premises
-		// 	token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzc1ODgwMjQsIm5iZiI6MTczNzU4ODAyNCwiZXhwIjoxNzM3Njc0NDI0LCJpc3MiOiJodHRwczovL2Nsb3VkLnRpcHRhcC5kZXYiLCJhdWQiOiIwazNkNG9ubSJ9.Tuv-Oz2oqTNb-jRh05zPSl6URiE6FDgg2LBjvAlGnsQ', // Your JWT token
-		// 	document: doc,
-		// });
+		provider.on('stateless', (event: any) => {
+			if (typeof event.payload === 'string' && event.payload.startsWith('usersConnected: ')) {
+				const count = parseInt(event.payload.split(': ')[1], 10);
+				window.dispatchEvent(new CustomEvent('usersConnectedUpdate', { detail: { count } }));
+			}
+		});
+
+		const intervalId = setInterval(() => {
+			provider.sendStateless('usersConnected');
+		}, 1000);
+
+		return () => {
+			clearInterval(intervalId);
+		};
 	}, []);
+
+	// useEffect(() => {
+	// const provider = new TiptapCollabProvider({
+	// 	name: 'board.general', // Unique document identifier for syncing. This is your document name.
+	// 	appId: TIPTAP_APPID, // Your Cloud Dashboard AppID or `baseURL` for on-premises
+	// 	token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzc1ODgwMjQsIm5iZiI6MTczNzU4ODAyNCwiZXhwIjoxNzM3Njc0NDI0LCJpc3MiOiJodHRwczovL2Nsb3VkLnRpcHRhcC5kZXYiLCJhdWQiOiIwazNkNG9ubSJ9.Tuv-Oz2oqTNb-jRh05zPSl6URiE6FDgg2LBjvAlGnsQ', // Your JWT token
+	// 	document: doc,
+	// });
+	// }, []);
 
 	return editor;
 };

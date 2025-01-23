@@ -1,6 +1,21 @@
 'use client';
 
-import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from 'lucide-react';
+import {
+	BadgeCheck,
+	Bell,
+	ChevronsUpDown,
+	CreditCard,
+	HeadphoneOff,
+	Headphones,
+	LogOut,
+	Mic,
+	MicOff,
+	PhoneOff,
+	ScreenShare,
+	Signal,
+	Sparkles,
+	Undo2,
+} from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
 	DropdownMenu,
@@ -12,6 +27,9 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '../ui/button';
+import { useState } from 'react';
 
 export function NavUser({
 	user,
@@ -23,9 +41,48 @@ export function NavUser({
 	};
 }) {
 	const { isMobile } = useSidebar();
+	const [isVoiceConnected, setIsVoiceConnected] = useState(true);
+	const [micMuted, setMicMuted] = useState(false);
+	const [isDeafened, setDeafen] = useState(false);
 
 	return (
 		<SidebarMenu>
+			{isVoiceConnected && (
+				<SidebarMenuItem className='bottom-2'>
+					<Card className='rounded-lg border-border'>
+						<CardHeader className='p-3 pb-0 space-y-1'>
+							<CardTitle className='flex items-center gap-x-1'>
+								<Signal className='size-4'></Signal>Voice Connected
+							</CardTitle>
+							<CardDescription className='flex items-center gap-x-1 text-xs'>
+								<p className='text-success'>Connected to:</p>
+								<Button variant={'link'} className='p-0 text-muted-foreground text-sm'>
+									<a href='/dashboard/vcs/general' target='_blank' rel='noopener noreferrer'>
+										#general
+									</a>
+								</Button>
+							</CardDescription>
+						</CardHeader>
+						<CardFooter className='p-2 pt-0 gap-x-1'>
+							<Button size={'icon'} variant={'ghost'} className='size-8'>
+								<Undo2></Undo2>
+							</Button>
+							<Button size={'icon'} variant={'ghost'} className='size-8'>
+								<ScreenShare></ScreenShare>
+							</Button>
+							<Button size={'icon'} variant={'ghost'} className='size-8' onClick={() => setMicMuted(!micMuted)}>
+								{micMuted ? <MicOff></MicOff> : <Mic></Mic>}
+							</Button>
+							<Button size={'icon'} variant={'ghost'} className='size-8' onClick={() => setDeafen(!isDeafened)}>
+								{isDeafened ? <HeadphoneOff></HeadphoneOff> : <Headphones></Headphones>}
+							</Button>
+							<Button size={'icon'} variant={'ghost'} className='size-8' onClick={() => setIsVoiceConnected(false)}>
+								<PhoneOff />
+							</Button>
+						</CardFooter>
+					</Card>
+				</SidebarMenuItem>
+			)}
 			<SidebarMenuItem>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
