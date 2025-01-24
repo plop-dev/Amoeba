@@ -31,5 +31,6 @@ interface NavMainProps {
 		title: string;
 		url: string;
 		usersOnline?: number;
+		userConnected?: boolean;
 	}[];
 }

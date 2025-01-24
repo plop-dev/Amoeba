@@ -221,8 +221,8 @@ export const useMinimalTiptapEditor = ({
 		],
 		editorProps: {
 			attributes: {
-				autocomplete: 'off',
-				autocorrect: 'off',
+				autocomplete: 'on',
+				autocorrect: 'on',
 				autocapitalize: 'off',
 				class: cn('focus:outline-none', editorClassName),
 			},
@@ -233,22 +233,20 @@ export const useMinimalTiptapEditor = ({
 		...props,
 	});
 
-	let usersConnected = 0;
-
 	useEffect(() => {
-		provider.on('stateless', (event: any) => {
+		function handleStatus(event: any) {
 			if (typeof event.payload === 'string' && event.payload.startsWith('usersConnected: ')) {
 				const count = parseInt(event.payload.split(': ')[1], 10);
 				window.dispatchEvent(new CustomEvent('usersConnectedUpdate', { detail: { count } }));
 			}
-		});
-
+		}
+		provider.on('stateless', handleStatus);
 		const intervalId = setInterval(() => {
 			provider.sendStateless('usersConnected');
 		}, 1000);
-
 		return () => {
 			clearInterval(intervalId);
+			provider.off('stateless', handleStatus);
 		};
 	}, []);
 

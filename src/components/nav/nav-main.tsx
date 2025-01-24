@@ -85,7 +85,11 @@ export function NavMain({ items }: { items: NavMainProps[] }) {
 								<CollapsibleContent>
 									<SidebarMenuSub>
 										{item.items?.map(subItem => (
-											<SidebarMenuSubItem key={subItem.title}>
+											<SidebarMenuSubItem
+												key={subItem.title}
+												className={cn('transition-colors', {
+													'border-primary border rounded-lg': subItem.userConnected,
+												})}>
 												<SidebarMenuSubButton asChild>
 													<a href={subItem.url}>
 														<span className='flex items-center w-full'>

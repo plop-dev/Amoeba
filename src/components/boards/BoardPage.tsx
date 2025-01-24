@@ -13,7 +13,7 @@ export function BoardPage() {
 			<MinimalTiptapEditor
 				value={value}
 				onChange={setValue}
-				className='w-full'
+				className='w-full h-full'
 				editorContentClassName='p-5'
 				output='json'
 				placeholder='Board [name]...'
