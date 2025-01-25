@@ -2,10 +2,7 @@
 import '@/styles/global.css';
 import Sidebar from '@/components/Sidebar';
 import { ClientRouter } from 'astro:transitions';
-import { Separator } from '@radix-ui/react-separator';
-import { AppSidebar } from '@/components/nav/app-sidebar';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import '@/server';
@@ -34,6 +31,7 @@ const { APPNAME: appName } = import.meta.env;
 		<ClientRouter />
 	</head>
 	<body class='flex flex-row'>
+		<Toaster client:load />
 		<Sidebar appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} className={className} transition:persist />
 
 		<main

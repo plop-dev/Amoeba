@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { Message } from '@/components/Chat/Message';
-import { Toaster } from '@/components/ui/toaster';
 
 export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string | null; onReplyClick: (msgId: string) => void }) {
 	useEffect(() => {
@@ -26,7 +25,6 @@ export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string
 
 	return (
 		<div className='chat-container overflow-auto'>
-			<Toaster />
 			<div className='wrapper pr-4'>
 				{Array.from({ length: 5 }, (i, j) => {
 					return <Message messageId={j.toString()} key={j} onReplyClick={onReplyClick} isHighlighted={replyingTo === j.toString()} />;
