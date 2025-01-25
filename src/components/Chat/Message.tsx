@@ -149,7 +149,7 @@ export function Message({
 
 	const handleCopyMessage = () => {
 		navigator.clipboard.writeText(messageRef.current?.querySelector('.text')?.textContent ?? '');
-		toast({ title: 'Message copied to clipboard', variant: 'success' });
+		toast({ title: 'Message copied to clipboard', variant: 'default' });
 	};
 
 	const handleAddReaction = (emojiName: string) => {
@@ -211,7 +211,12 @@ export function Message({
 					</div>
 				</TooltipTrigger>
 
-				<TooltipContent border={true} className='p-1' asChild>
+				<TooltipContent
+					border={true}
+					className='p-1'
+					asChild
+					onMouseEnter={() => messageRef.current?.classList.add('bg-secondary/50')}
+					onMouseLeave={() => messageRef.current?.classList.remove('bg-secondary/50')}>
 					<div className='flex gap-x-1'>
 						<ReactionPicker onEmojiClick={handleAddReaction} />
 						<OptionsButton variant='outline' messageId={messageId} onClick={() => onReplyClick?.(messageId)}>
