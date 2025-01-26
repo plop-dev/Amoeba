@@ -1,0 +1,40 @@
+---
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import DefaultLayout from '@/layouts/DefaultLayout.astro';
+import { ColourPicker } from '@/components/ColourPicker';
+---
+
+<DefaultLayout title='Settings'>
+	<form>
+		<h1 class='text-2xl mb-4'>Settings</h1>
+		<div class='flex flex-col space-y-8 w-1/2'>
+			<div class='p-4 rounded-xl border bg-accent/20 space-y-4'>
+				<div class='flex flex-col gap-y-1'>
+					<h2 class='text-lg'>Username</h2>
+					<p class='text-sm text-muted-foreground'>Your username will be seen by everyone on Chats, VCs and Boards.</p>
+				</div>
+
+				<Input type='text' id='username' placeholder='plop' />
+			</div>
+
+			<div class='p-4 rounded-xl border bg-accent/20 space-y-4'>
+				<div class='flex flex-col gap-y-1'>
+					<h2 class='text-lg'>Primary Colour</h2>
+					<p class='text-sm text-muted-foreground'>This colour will be in your profile, chat accent and board cursor.</p>
+				</div>
+
+				<ColourPicker client:only='react' className='mt-4' />
+			</div>
+
+			<div class='p-4 rounded-xl border bg-accent/20 space-y-4'>
+				<div class='flex flex-col gap-y-1'>
+					<h2 class='text-lg'>Profile Picture</h2>
+					<p class='text-sm text-muted-foreground'>Your profile picture will be seen by everyone on Chats, VCs and Boards.</p>
+				</div>
+
+				<Input type='text' id='username' placeholder='plop' />
+			</div>
+		</div>
+	</form>
+</DefaultLayout>
