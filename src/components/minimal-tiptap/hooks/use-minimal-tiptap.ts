@@ -24,11 +24,11 @@ import { TIPTAP_APPID } from 'astro:env/client';
 
 const doc = new Y.Doc(); // Initialize Y.Doc for shared editing
 
-const provider = new HocuspocusProvider({
-	url: 'ws://127.0.0.1:80',
-	name: 'board.general',
-	document: doc,
-});
+// const provider = new HocuspocusProvider({
+// 	url: 'ws://127.0.0.1:80',
+// 	name: 'board.general',
+// 	document: doc,
+// });
 
 export interface UseMinimalTiptapEditorProps extends UseEditorOptions {
 	value?: Content;
@@ -194,29 +194,29 @@ export const useMinimalTiptapEditor = ({
 
 	const editor = useEditor({
 		extensions: [
-			Collaboration.configure({
-				document: provider.document,
-			}),
-			CollaborationCursor.configure({
-				provider: provider,
-				render: user => {
-					const cursor = document.createElement('span');
-					cursor.classList.add('collaboration-cursor__caret');
-					cursor.setAttribute('style', `border-color: ${user.color}`);
+			// Collaboration.configure({
+			// 	document: provider.document,
+			// }),
+			// CollaborationCursor.configure({
+			// 	provider: provider,
+			// 	render: user => {
+			// 		const cursor = document.createElement('span');
+			// 		cursor.classList.add('collaboration-cursor__caret');
+			// 		cursor.setAttribute('style', `border-color: ${user.color}`);
 
-					const label = document.createElement('div');
-					label.classList.add('collaboration-cursor__label');
-					label.setAttribute('style', `background-color: ${user.color}`);
-					label.insertBefore(document.createTextNode(user.name), null);
+			// 		const label = document.createElement('div');
+			// 		label.classList.add('collaboration-cursor__label');
+			// 		label.setAttribute('style', `background-color: ${user.color}`);
+			// 		label.insertBefore(document.createTextNode(user.name), null);
 
-					cursor.insertBefore(label, null);
-					return cursor;
-				},
-				user: {
-					name: 'plop',
-					color: '#f783ac',
-				},
-			}),
+			// 		cursor.insertBefore(label, null);
+			// 		return cursor;
+			// 	},
+			// 	user: {
+			// 		name: 'plop',
+			// 		color: '#f783ac',
+			// 	},
+			// }),
 			...createExtensions(placeholder),
 		],
 		editorProps: {
@@ -233,30 +233,21 @@ export const useMinimalTiptapEditor = ({
 		...props,
 	});
 
-	useEffect(() => {
-		function handleStatus(event: any) {
-			if (typeof event.payload === 'string' && event.payload.startsWith('usersConnected: ')) {
-				const count = parseInt(event.payload.split(': ')[1], 10);
-				window.dispatchEvent(new CustomEvent('usersConnectedUpdate', { detail: { count } }));
-			}
-		}
-		provider.on('stateless', handleStatus);
-		const intervalId = setInterval(() => {
-			provider.sendStateless('usersConnected');
-		}, 1000);
-		return () => {
-			clearInterval(intervalId);
-			provider.off('stateless', handleStatus);
-		};
-	}, []);
-
 	// useEffect(() => {
-	// const provider = new TiptapCollabProvider({
-	// 	name: 'board.general', // Unique document identifier for syncing. This is your document name.
-	// 	appId: TIPTAP_APPID, // Your Cloud Dashboard AppID or `baseURL` for on-premises
-	// 	token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3Mzc1ODgwMjQsIm5iZiI6MTczNzU4ODAyNCwiZXhwIjoxNzM3Njc0NDI0LCJpc3MiOiJodHRwczovL2Nsb3VkLnRpcHRhcC5kZXYiLCJhdWQiOiIwazNkNG9ubSJ9.Tuv-Oz2oqTNb-jRh05zPSl6URiE6FDgg2LBjvAlGnsQ', // Your JWT token
-	// 	document: doc,
-	// });
+	// 	function handleStatus(event: any) {
+	// 		if (typeof event.payload === 'string' && event.payload.startsWith('usersConnected: ')) {
+	// 			const count = parseInt(event.payload.split(': ')[1], 10);
+	// 			window.dispatchEvent(new CustomEvent('usersConnectedUpdate', { detail: { count } }));
+	// 		}
+	// 	}
+	// 	provider.on('stateless', handleStatus);
+	// 	const intervalId = setInterval(() => {
+	// 		provider.sendStateless('usersConnected');
+	// 	}, 1000);
+	// 	return () => {
+	// 		clearInterval(intervalId);
+	// 		provider.off('stateless', handleStatus);
+	// 	};
 	// }, []);
 
 	return editor;
