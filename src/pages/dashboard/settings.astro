@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import DefaultLayout from '@/layouts/DefaultLayout.astro';
 import { ColourPicker } from '@/components/ColourPicker';
 import AvatarPicker from '@/components/AvatarPicker';
+import { Button } from '@/components/ui/button';
 ---
 
 <DefaultLayout title='Settings'>
@@ -36,6 +37,35 @@ import AvatarPicker from '@/components/AvatarPicker';
 
 				<AvatarPicker className='flex-row items-center mt-4' client:load />
 			</div>
+
+			<Button variant={'default'} type='submit'>Save</Button>
 		</div>
 	</form>
 </DefaultLayout>
+
+<script>
+	const form = document.querySelector('form');
+
+	if (form) {
+		form.addEventListener('submit', handleSubmit);
+	}
+
+	function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		const username = (document.getElementById('username') as HTMLInputElement)?.value;
+		const primaryColour = (document.getElementById('currentColour') as HTMLDivElement)?.textContent;
+
+		const avatar = (document.getElementById('uploadPFP') as HTMLInputElement)?.files?.[0];
+
+		const reader = new FileReader();
+		reader.onload = function (e) {
+			const base64 = e.target?.result as string;
+			console.log(base64);
+		};
+		if (avatar) {
+			reader.readAsDataURL(avatar);
+		}
+
+		console.log(username, primaryColour);
+	}
+</script>

@@ -20,7 +20,7 @@ type ColorMode = 'hex' | 'rgba' | 'hsla';
 type CopyState = { [key in ColorMode]: boolean };
 
 export function ColourPicker({ color = '#000000', onChange, className }: ColorPickerProps) {
-	const [currentColor, setCurrentColor] = React.useState(color);
+	const [currentColour, setCurrentColor] = React.useState(color);
 	const [colorMode, setColorMode] = React.useState<ColorMode>('hex');
 	const [copied, setCopied] = React.useState<CopyState>({
 		hex: false,
@@ -30,7 +30,7 @@ export function ColourPicker({ color = '#000000', onChange, className }: ColorPi
 	const colorPlaneRef = React.useRef<HTMLDivElement>(null);
 	const isDragging = React.useRef(false);
 
-	const rgb = ColorUtils.hexToRgb(currentColor) || { r: 0, g: 0, b: 0 };
+	const rgb = ColorUtils.hexToRgb(currentColour) || { r: 0, g: 0, b: 0 };
 	const hsl = ColorUtils.rgbToHsl(rgb);
 	const rgbaString = ColorUtils.formatRgba(rgb);
 	const hslaString = ColorUtils.formatHsla(hsl);
@@ -132,8 +132,10 @@ export function ColourPicker({ color = '#000000', onChange, className }: ColorPi
 			<PopoverTrigger asChild className={className}>
 				<Button variant='outline' className='w-[240px] justify-start text-left font-normal'>
 					<div className='w-full flex items-center gap-2'>
-						<div className='h-4 w-4 rounded !bg-center !bg-cover transition-all border' style={{ backgroundColor: currentColor }} />
-						<div className='truncate flex-1'>{currentColor}</div>
+						<div className='h-4 w-4 rounded !bg-center !bg-cover transition-all border' style={{ backgroundColor: currentColour }} />
+						<div className='truncate flex-1' id='currentColour'>
+							{currentColour}
+						</div>
 					</div>
 				</Button>
 			</PopoverTrigger>
@@ -160,7 +162,7 @@ export function ColourPicker({ color = '#000000', onChange, className }: ColorPi
 							style={{
 								left: `${hsl.s}%`,
 								top: `${100 - hsl.l}%`,
-								backgroundColor: currentColor,
+								backgroundColor: currentColour,
 							}}
 						/>
 					</div>
@@ -212,8 +214,8 @@ export function ColourPicker({ color = '#000000', onChange, className }: ColorPi
 
 						<TabsContent value='hex' className='mt-2'>
 							<div className='flex gap-2'>
-								<Input value={currentColor} onChange={e => handleHexChange(e.target.value)} className='font-mono' />
-								<Button variant='ghost' size='icon' className='shrink-0' onClick={() => copyToClipboard(currentColor, 'hex')}>
+								<Input value={currentColour} onChange={e => handleHexChange(e.target.value)} className='font-mono' />
+								<Button variant='ghost' size='icon' className='shrink-0' onClick={() => copyToClipboard(currentColour, 'hex')}>
 									{copied.hex ? <Check className='h-4 w-4' /> : <Copy className='h-4 w-4' />}
 								</Button>
 							</div>
@@ -278,7 +280,7 @@ export function ColourPicker({ color = '#000000', onChange, className }: ColorPi
 						</TabsContent>
 					</Tabs>
 
-					<div className='h-6 rounded border' style={{ backgroundColor: currentColor }} />
+					<div className='h-6 rounded border' style={{ backgroundColor: currentColour }} />
 				</div>
 			</PopoverContent>
 		</Popover>

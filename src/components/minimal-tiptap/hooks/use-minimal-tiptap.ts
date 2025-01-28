@@ -16,13 +16,13 @@ import { useThrottle } from '../hooks/use-throttle';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 
-import * as Y from 'yjs';
-import Collaboration from '@tiptap/extension-collaboration';
-import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
-import { HocuspocusProvider, TiptapCollabProvider } from '@hocuspocus/provider';
-import { TIPTAP_APPID } from 'astro:env/client';
+// import * as Y from 'yjs';
+// import Collaboration from '@tiptap/extension-collaboration';
+// import CollaborationCursor from '@tiptap/extension-collaboration-cursor';
+// import { HocuspocusProvider, TiptapCollabProvider } from '@hocuspocus/provider';
+// import { TIPTAP_APPID } from 'astro:env/client';
 
-const doc = new Y.Doc(); // Initialize Y.Doc for shared editing
+// const doc = new Y.Doc();
 
 // const provider = new HocuspocusProvider({
 // 	url: 'ws://127.0.0.1:80',
