@@ -5,12 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Upload, SendHorizonal, Trash2 } from 'lucide-react';
 
-import DefaultLayout from '@/layouts/DefaultLayout.astro';
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
 import { ChatPage } from '@/components/Chat/ChatPage';
 
 const channelTitle = Astro.url.pathname.replace('/dashboard/chats/', '');
 ---
 
-<DefaultLayout title={channelTitle} className=''>
+<DashboardLayout title={channelTitle} className=''>
 	<ChatPage client:only='react' />
-</DefaultLayout>
+</DashboardLayout>

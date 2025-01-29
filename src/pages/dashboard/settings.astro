@@ -1,13 +1,13 @@
 ---
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import DefaultLayout from '@/layouts/DefaultLayout.astro';
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
 import { ColourPicker } from '@/components/ColourPicker';
 import AvatarPicker from '@/components/AvatarPicker';
 import { Button } from '@/components/ui/button';
 ---
 
-<DefaultLayout title='Settings'>
+<DashboardLayout title='Settings'>
 	<form>
 		<h1 class='text-2xl mb-4'>Settings</h1>
 		<div class='flex flex-col gap-y-8 w-full xl:w-1/2 md:w-3/4'>
@@ -41,7 +41,7 @@ import { Button } from '@/components/ui/button';
 			<Button variant={'default'} type='submit'>Save</Button>
 		</div>
 	</form>
-</DefaultLayout>
+</DashboardLayout>
 
 <script>
 	const form = document.querySelector('form');
