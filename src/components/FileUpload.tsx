@@ -85,14 +85,6 @@ export function FileUpload() {
 							<p className='text-5xl thicc-text opacity-50'>{fileName?.split('.').pop()?.toUpperCase()}</p>
 						</div>
 						<div className='absolute inset-0 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100' />
-						<div className='absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity group-hover:opacity-100'>
-							<Button size='sm' variant='secondary' onClick={handleThumbnailClick} className='h-9 w-9 p-0'>
-								<Upload className='h-4 w-4' />
-							</Button>
-							<Button size='sm' variant='destructive' onClick={handleRemove} className='h-9 w-9 p-0'>
-								<Trash2 className='h-4 w-4' />
-							</Button>
-						</div>
 					</div>
 					{fileName && (
 						<div className='mt-2 flex items-center gap-2 text-sm text-muted-foreground'>

@@ -1,5 +1,5 @@
-import { ChatContainer } from '@/components/Chat/ChatContainer';
-import { ChatInput } from '@/components/Chat/ChatInput';
+import { ChatContainer } from '@/components/chat/ChatContainer';
+import { ChatInput } from '@/components/chat/ChatInput';
 import { useState, useEffect } from 'react';
 import { LoaderCircle } from 'lucide-react';
 

@@ -34,3 +34,11 @@ interface NavMainProps {
 		userConnected?: boolean;
 	}[];
 }
+
+interface LoginStatusStep {
+	id: number;
+	title: string;
+	description: string;
+	icon: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
+	status: 'complete' | 'current' | 'upcoming';
+}

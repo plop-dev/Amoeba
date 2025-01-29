@@ -2,11 +2,11 @@
 import { Button, buttonVariants } from '@/components/ui/button';
 import { FileUpload } from '@/components/FileUpload';
 import AuthLayout from '@/layouts/AuthLayout.astro';
-import { CurlyBraces, GalleryVerticalEnd } from 'lucide-react';
+import { CurlyBraces, Lock, User, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp';
 import { CustomInputOTS } from '@/components/custom/CustomInputOTS';
-import { Separator } from '@/components/ui/separator';
+import LoginTimeline from '@/components/auth/LoginTimeline';
+import { LoginTimelineProvider } from '@/context/LoginTimelineContext';
 
 const { APPNAME } = import.meta.env;
 ---
@@ -26,6 +26,11 @@ const { APPNAME } = import.meta.env;
 				<a href='#' class='underline underline-offset-4'>Deal with it.</a>
 			</div>
 		</div>
+
+		<div class='' id='login-timeline'>
+			<LoginTimeline className='w-[28rem] mx-0' client:load />
+		</div>
+
 		<div class='w-[28rem] flex gap-x-8 overflow-hidden' id='login-wrapper'>
 			<div class='min-w-[28rem] w-[28rem]'>
 				<form id='login-key'>
@@ -68,22 +73,36 @@ const { APPNAME } = import.meta.env;
 </AuthLayout>
 
 <script>
+	import { updateStepStatus } from '@/stores/LoginTimelineStore';
+
 	const wrapper = document.getElementById('login-wrapper');
 	const formKey = document.getElementById('login-key');
 	const formOTP = document.getElementById('login-otp');
+	let currentStep = 0;
+
+	const updateStep = (step: number) => {
+		currentStep = step;
+		updateStepStatus(step + 1, 'current');
+		if (step > 0) {
+			updateStepStatus(step, 'complete');
+		}
+	};
 
 	document.getElementById('to-login-key')?.addEventListener('click', e => {
 		e.preventDefault();
 		wrapper?.scrollTo({ left: 0, behavior: 'smooth' });
+		updateStep(0);
 	});
 
 	formKey?.addEventListener('submit', e => {
 		e.preventDefault();
 		wrapper?.scrollTo({ left: wrapper?.scrollWidth, behavior: 'smooth' });
+		updateStep(1);
 	});
 
 	formOTP?.addEventListener('submit', e => {
 		e.preventDefault();
 		console.log('OTP Submitted');
+		updateStep(2);
 	});
 </script>

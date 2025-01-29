@@ -5,7 +5,7 @@ import { Upload, SendHorizonal, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRef, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { UploadedFile } from '@/components/Chat/UploadedFile';
+import { UploadedFile } from '@/components/chat/UploadedFile';
 
 export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | null; onClearReply?: () => void }) {
 	const { toast } = useToast();

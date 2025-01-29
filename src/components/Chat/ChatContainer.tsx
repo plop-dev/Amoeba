@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Message } from '@/components/Chat/Message';
+import { Message } from '@/components/chat/Message';
 
 export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string | null; onReplyClick: (msgId: string) => void }) {
 	useEffect(() => {
