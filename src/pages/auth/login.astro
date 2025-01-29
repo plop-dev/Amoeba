@@ -79,13 +79,19 @@ const { APPNAME } = import.meta.env;
 	const formKey = document.getElementById('login-key');
 	const formOTP = document.getElementById('login-otp');
 	let currentStep = 0;
+	let totalSteps = 3;
 
 	const updateStep = (step: number) => {
 		currentStep = step;
-		updateStepStatus(step + 1, 'current');
 		if (step > 0) {
 			updateStepStatus(step, 'complete');
+		} else {
+			for (let i = 1; i <= totalSteps; i++) {
+				updateStepStatus(i, 'upcoming');
+			}
 		}
+
+		updateStepStatus(step + 1, 'current');
 	};
 
 	document.getElementById('to-login-key')?.addEventListener('click', e => {
