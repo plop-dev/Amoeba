@@ -27,11 +27,6 @@ export default defineConfig({
 	}),
 	output: 'server',
 	vite: {
-		resolve: {
-			alias: {
-				'@': '/src',
-			},
-		},
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
 	},
 });
