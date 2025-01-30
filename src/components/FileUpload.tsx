@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useImageUpload } from '@/hooks/use-image-upload';
-import { ImagePlus, X, Upload, Trash2 } from 'lucide-react';
+import { ImagePlus, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 

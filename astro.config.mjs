@@ -26,12 +26,12 @@ export default defineConfig({
 		// }
 	}),
 	output: 'server',
-	// plugins: [
-	// 	MillionLint.vite({
-	// 		enabled: true,
-	// 	}),
-	// ],
-	// vite: {
-	// 	plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
-	// },
+	vite: {
+		resolve: {
+			alias: {
+				'@': '/src',
+			},
+		},
+		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
+	},
 });
