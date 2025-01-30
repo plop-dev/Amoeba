@@ -21,14 +21,11 @@ export default function LoginTimeline({ className }: { className?: string }) {
 									step.status === 'upcoming' && 'bg-gray-900',
 								)}>
 								{step.status === 'complete' ? (
-									<Check
-										key={`icon-${step.id}-complete`}
-										className='w-5 h-5 text-green-500 transition-opacity duration-500 animate-[fade-in_0.2s_ease-in-out_forwards]'
-									/>
+									<Check key={`icon-${step.id}-complete`} className='w-5 h-5 text-green-500 animate-[fade-in_0.2s_ease-in-out_forwards]' />
 								) : (
 									<step.icon
 										key={`icon-${step.id}-general`}
-										className={cn('w-5 h-5 transition-opacity duration-200', {
+										className={cn('w-5 h-5 animate-[fade-in_0.2s_ease-in-out_forwards]', {
 											'text-blue-500': step.status === 'current',
 											'text-gray-500': step.status === 'upcoming',
 										})}
