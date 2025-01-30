@@ -30,7 +30,7 @@ export default defineConfig({
 	vite: {
 		resolve: {
 			alias: {
-				'@': path.resolve(__dirname, 'src'),
+				'@': path.resolve(process.cwd(), 'src'),
 			},
 		},
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
