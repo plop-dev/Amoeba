@@ -1,5 +1,6 @@
 import MillionLint from '@million/lint';
 // @ts-check
+import path from 'path';
 import { defineConfig, envField } from 'astro/config';
 import million from 'million/compiler';
 import vercel from '@astrojs/vercel';
@@ -27,6 +28,11 @@ export default defineConfig({
 	}),
 	output: 'server',
 	vite: {
+		resolve: {
+			alias: {
+				'@': path.resolve(__dirname, 'src'),
+			},
+		},
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
 	},
 });
