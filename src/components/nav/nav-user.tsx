@@ -30,6 +30,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/c
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '../ui/button';
 import { useState } from 'react';
+import { UserProfile } from '../UserProfile';
 
 export function NavUser({
 	user,
@@ -44,6 +45,7 @@ export function NavUser({
 	const [isVoiceConnected, setIsVoiceConnected] = useState(true);
 	const [micMuted, setMicMuted] = useState(false);
 	const [isDeafened, setDeafen] = useState(false);
+	const [isProfileOpen, setProfileOpen] = useState(false);
 
 	return (
 		<SidebarMenu>
@@ -84,7 +86,10 @@ export function NavUser({
 			<SidebarMenuItem>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<SidebarMenuButton size='lg' className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
+						<SidebarMenuButton
+							onClick={() => setProfileOpen}
+							size='lg'
+							className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
 							<Avatar className='h-8 w-8 rounded-lg'>
 								<AvatarImage src={user.avatar} alt={user.name} />
 								<AvatarFallback className='rounded-lg'>CN</AvatarFallback>
@@ -97,11 +102,11 @@ export function NavUser({
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
-						className='w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg'
+						className='w-[--radix-dropdown-menu-trigger-width rounded-lg'
 						side={isMobile ? 'bottom' : 'right'}
 						align='end'
 						sideOffset={4}>
-						<DropdownMenuLabel className='p-0 font-normal'>
+						{/* <DropdownMenuLabel className='p-0 font-normal'>
 							<div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
 								<Avatar className='h-8 w-8 rounded-lg'>
 									<AvatarImage src={user.avatar} alt={user.name} />
@@ -117,7 +122,19 @@ export function NavUser({
 						<DropdownMenuItem>
 							<LogOut />
 							Log out
-						</DropdownMenuItem>
+						</DropdownMenuItem> */}
+						<UserProfile
+							user={{
+								username: 'plop',
+								accentColor: '#55d38e',
+								avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
+								creationDate: new Date(2024, 1, 30),
+								description: 'i code stuff',
+								role: 'admin',
+							}}
+							isOpen={isProfileOpen}
+							openChange={setProfileOpen}
+							contentOnly={true}></UserProfile>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>

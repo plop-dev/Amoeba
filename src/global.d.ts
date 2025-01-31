@@ -42,3 +42,12 @@ interface LoginStatusStep {
 	icon: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
 	status: 'complete' | 'current' | 'upcoming';
 }
+
+interface UserData {
+	username: string;
+	avatarUrl: string;
+	creationDate: Date;
+	accentColor: string;
+	role: 'admin' | 'user' | 'guest';
+	description: string;
+}

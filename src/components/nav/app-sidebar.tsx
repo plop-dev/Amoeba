@@ -34,7 +34,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 		user: {
 			name: 'plop',
 			id: '02dfjkd023',
-			avatar: '',
+			avatar: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
 		},
 		teams: [
 			{

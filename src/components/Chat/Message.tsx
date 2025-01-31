@@ -194,7 +194,12 @@ export function Message({
 							onClick={() => {
 								setProfileOpen(true);
 							}}>
-							<CustomAvatar alt='' fallback='P' src='' className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
+							<CustomAvatar
+								alt=''
+								fallback='P'
+								src='https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp'
+								className={variant === 'inline' ? 'invisible max-h-0' : undefined}
+							/>
 						</div>
 
 						<div className='content flex flex-col w-full'>
@@ -204,7 +209,7 @@ export function Message({
 										user={{
 											username: 'plop',
 											accentColor: '#55d38e',
-											avatarUrl: '#',
+											avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
 											creationDate: new Date(2024, 1, 30),
 											description: 'i code stuff',
 											role: 'admin',
