@@ -2,7 +2,7 @@ import { formatDate } from '@/utils/formatDate';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CalendarDays, Mail, MessageCircle, UserPlus } from 'lucide-react';
+import { CalendarDays, Mail, MessageCircle, Phone, UserPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -15,14 +15,20 @@ interface UserData {
 	description: string;
 }
 
-export function UserProfile({ user }: { user: UserData }) {
+export function UserProfile({
+	user,
+	children,
+	isOpen,
+	openChange,
+}: {
+	user: UserData;
+	children: React.ReactNode;
+	isOpen: boolean;
+	openChange: (isOpen: boolean) => void;
+}) {
 	return (
-		<HoverCard closeDelay={50000000}>
-			<HoverCardTrigger asChild>
-				<Button variant='link' className='text-base p-0 text-foreground'>
-					@{user.username}
-				</Button>
-			</HoverCardTrigger>
+		<HoverCard open={isOpen} onOpenChange={openChange}>
+			<HoverCardTrigger asChild>{children}</HoverCardTrigger>
 			<HoverCardContent className='w-80'>
 				<div className='flex justify-between space-x-4'>
 					<div className='m-auto'>
@@ -34,7 +40,6 @@ export function UserProfile({ user }: { user: UserData }) {
 					<div className='space-y-1'>
 						<h4 className='text-sm font-semibold'>@{user.username}</h4>
 						<span className='text-sm'>
-							{/* <span className='inline-block w-3 h-3 rounded-full mr-1' style={{ backgroundColor: user.accentColor }}></span> */}
 							<Badge className={cn(`bg-[${user.accentColor}] bg-[#55d38e]`)}>{user.role.charAt(0).toUpperCase() + user.role.slice(1)}</Badge>
 						</span>
 						<div className='flex items-center pt-2'>
@@ -48,12 +53,12 @@ export function UserProfile({ user }: { user: UserData }) {
 				</div>
 				<div className='flex mt-4 space-x-2'>
 					<Button size='sm' className='flex-1'>
-						<UserPlus className='mr-2 h-4 w-4' />
-						Follow
-					</Button>
-					<Button size='sm' variant='outline' className='flex-1'>
 						<MessageCircle className='mr-2 h-4 w-4' />
 						Message
+					</Button>
+					<Button size='sm' variant='outline' className='flex-1'>
+						<Phone className='mr-2 h-4 w-4'></Phone>
+						Call
 					</Button>
 				</div>
 			</HoverCardContent>
