@@ -57,9 +57,7 @@ export function NavUser({
 							<CardDescription className='flex items-center gap-x-1 text-xs'>
 								<p className='text-success'>Connected to:</p>
 								<Button variant={'link'} className='p-0 text-muted-foreground text-sm'>
-									<a href='/dashboard/vcs/general' target='_blank' rel='noopener noreferrer'>
-										#general
-									</a>
+									<a href='/dashboard/vcs/general'>#general</a>
 								</Button>
 							</CardDescription>
 						</CardHeader>
