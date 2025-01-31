@@ -146,6 +146,7 @@ export function Message({
 }) {
 	const { toast } = useToast();
 	const [reactions, setReactions] = useState<{ emojiName: string; count: number }[]>([]);
+	const [isProfileOpen, setProfileOpen] = useState(false);
 	const messageRef = useRef<HTMLDivElement | null>(null);
 
 	const handleCopyMessage = () => {
@@ -188,7 +189,11 @@ export function Message({
 						ref={messageRef}
 						data-message-id={messageId}
 						data-message-type={variant}>
-						<div className='avatar'>
+						<div
+							className='avatar cursor-pointer'
+							onClick={() => {
+								setProfileOpen(true);
+							}}>
 							<CustomAvatar alt='' fallback='P' src='' className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
 						</div>
 
@@ -203,7 +208,13 @@ export function Message({
 											creationDate: new Date(2024, 1, 30),
 											description: 'i code stuff',
 											role: 'admin',
-										}}></UserProfile>
+										}}
+										isOpen={isProfileOpen}
+										openChange={setProfileOpen}>
+										<Button variant='link' className='text-base p-0 m-0 h-auto text-[#55d38e]'>
+											@plop
+										</Button>
+									</UserProfile>
 								</div>
 							</div>
 							<div className='text'>hey guys first message</div>
