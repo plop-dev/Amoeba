@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { UserProfile } from '../UserProfile';
 
 function OptionsButton({
 	children,
@@ -193,7 +194,17 @@ export function Message({
 
 						<div className='content flex flex-col w-full'>
 							<div className={cn('info flex', { hidden: variant === 'inline' })}>
-								<div className='username'>plop</div>
+								<div className='username'>
+									<UserProfile
+										user={{
+											username: 'plop',
+											accentColor: '#55d38e',
+											avatarUrl: '#',
+											creationDate: new Date(2024, 1, 30),
+											description: 'i code stuff',
+											role: 'admin',
+										}}></UserProfile>
+								</div>
 							</div>
 							<div className='text'>hey guys first message</div>
 
