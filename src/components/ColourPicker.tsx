@@ -2,7 +2,7 @@ import * as React from 'react';
 import { Copy, Check } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import * as ColorUtils from '@/utils/colourUtils';
+import * as ColorUtils from '@/utils/colour-utils';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';

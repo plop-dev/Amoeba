@@ -2,7 +2,7 @@ import { formatDate } from '@/utils/formatDate';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { CalendarDays, Mail, MessageCircle, Phone, UserPlus } from 'lucide-react';
+import { CalendarDays, LogOut, Mail, MessageCircle, Phone, Settings, Settings2, UserPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -10,12 +10,14 @@ export function UserProfile({
 	user,
 	children,
 	contentOnly,
+	userControl,
 	isOpen,
 	openChange,
 }: {
 	user: UserData;
 	children?: React.ReactNode;
 	contentOnly?: boolean;
+	userControl?: boolean;
 	isOpen: boolean;
 	openChange: (isOpen: boolean) => void;
 }) {
@@ -43,14 +45,29 @@ export function UserProfile({
 				<p className='text-sm'>{user.description}</p>
 			</div>
 			<div className='flex mt-4 space-x-2'>
-				<Button size='sm' className='flex-1'>
-					<MessageCircle className='mr-2 h-4 w-4' />
-					Message
-				</Button>
-				<Button size='sm' variant='outline' className='flex-1'>
-					<Phone className='mr-2 h-4 w-4'></Phone>
-					Call
-				</Button>
+				{userControl ? (
+					<>
+						<Button size='sm' className='flex-1'>
+							<Settings className='mr-2 h-4 w-4' />
+							Settings
+						</Button>
+						<Button size='sm' variant='outline' className='flex-1'>
+							<LogOut className='mr-2 h-4 w-4' />
+							Log Out
+						</Button>
+					</>
+				) : (
+					<>
+						<Button size='sm' className='flex-1'>
+							<MessageCircle className='mr-2 h-4 w-4' />
+							Message
+						</Button>
+						<Button size='sm' variant='outline' className='flex-1'>
+							<Phone className='mr-2 h-4 w-4'></Phone>
+							Call
+						</Button>
+					</>
+				)}
 			</div>
 		</>
 	);

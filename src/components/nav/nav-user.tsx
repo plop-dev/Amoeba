@@ -41,7 +41,7 @@ export function NavUser({
 		avatar: string;
 	};
 }) {
-	const { isMobile } = useSidebar();
+	const { isMobile, state } = useSidebar();
 	const [isVoiceConnected, setIsVoiceConnected] = useState(true);
 	const [micMuted, setMicMuted] = useState(false);
 	const [isDeafened, setDeafen] = useState(false);
@@ -49,12 +49,12 @@ export function NavUser({
 
 	return (
 		<SidebarMenu>
-			{isVoiceConnected && (
+			{isVoiceConnected && state == 'expanded' && (
 				<SidebarMenuItem className='bottom-2'>
 					<Card className='rounded-lg border-border'>
 						<CardHeader className='p-3 pb-0 space-y-1'>
 							<CardTitle className='flex items-center gap-x-1'>
-								<Signal className='size-4'></Signal>Voice Connected
+								<Signal className='size-4 text-success'></Signal>Voice Connected
 							</CardTitle>
 							<CardDescription className='flex items-center gap-x-1 text-xs'>
 								<p className='text-success'>Connected to:</p>
@@ -76,10 +76,35 @@ export function NavUser({
 							<Button size={'icon'} variant={'ghost'} className='size-8' onClick={() => setDeafen(!isDeafened)}>
 								{isDeafened ? <HeadphoneOff></HeadphoneOff> : <Headphones></Headphones>}
 							</Button>
-							<Button size={'icon'} variant={'ghost'} className='size-8' onClick={() => setIsVoiceConnected(false)}>
+							<Button size={'icon'} variant={'ghost'} className='size-8 text-destructive' onClick={() => setIsVoiceConnected(false)}>
 								<PhoneOff />
 							</Button>
 						</CardFooter>
+					</Card>
+				</SidebarMenuItem>
+			)}
+			{isVoiceConnected && (state == 'collapsed' || isMobile) && (
+				<SidebarMenuItem className='bottom-2'>
+					<Card className='rounded-lg border-border p-1 pb-0 flex flex-col justify-center items-center gap-y-1'>
+						<Signal className='size-4 text-success'></Signal>
+
+						<div className='flex flex-col gap-0'>
+							<Button size={'icon'} variant={'ghost'} className='size-8'>
+								<Undo2></Undo2>
+							</Button>
+							<Button size={'icon'} variant={'ghost'} className='size-8'>
+								<ScreenShare></ScreenShare>
+							</Button>
+							<Button size={'icon'} variant={'ghost'} className='size-8' onClick={() => setMicMuted(!micMuted)}>
+								{micMuted ? <MicOff></MicOff> : <Mic></Mic>}
+							</Button>
+							<Button size={'icon'} variant={'ghost'} className='size-8' onClick={() => setDeafen(!isDeafened)}>
+								{isDeafened ? <HeadphoneOff></HeadphoneOff> : <Headphones></Headphones>}
+							</Button>
+							<Button size={'icon'} variant={'ghost'} className='size-8 text-destructive' onClick={() => setIsVoiceConnected(false)}>
+								<PhoneOff />
+							</Button>
+						</div>
 					</Card>
 				</SidebarMenuItem>
 			)}
@@ -102,27 +127,10 @@ export function NavUser({
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
-						className='w-[--radix-dropdown-menu-trigger-width rounded-lg'
+						className='w-[--radix-dropdown-menu-trigger-width rounded-lg p-0'
 						side={isMobile ? 'bottom' : 'right'}
 						align='end'
 						sideOffset={4}>
-						{/* <DropdownMenuLabel className='p-0 font-normal'>
-							<div className='flex items-center gap-2 px-1 py-1.5 text-left text-sm'>
-								<Avatar className='h-8 w-8 rounded-lg'>
-									<AvatarImage src={user.avatar} alt={user.name} />
-									<AvatarFallback className='rounded-lg'>P</AvatarFallback>
-								</Avatar>
-								<div className='grid flex-1 text-left text-sm leading-tight'>
-									<span className='truncate font-semibold'>{user.name}</span>
-									<span className='truncate text-xs'>{user.id}</span>
-								</div>
-							</div>
-						</DropdownMenuLabel>
-
-						<DropdownMenuItem>
-							<LogOut />
-							Log out
-						</DropdownMenuItem> */}
 						<UserProfile
 							user={{
 								username: 'plop',
@@ -134,7 +142,8 @@ export function NavUser({
 							}}
 							isOpen={isProfileOpen}
 							openChange={setProfileOpen}
-							contentOnly={true}></UserProfile>
+							contentOnly={true}
+							userControl={true}></UserProfile>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>
