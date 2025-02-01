@@ -1,4 +1,5 @@
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from '@/components/ui/input-otp';
+import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import React from 'react';
 
 interface CustomInputOTSProps {
@@ -10,7 +11,7 @@ export function CustomInputOTS({ pattern, groups }: CustomInputOTSProps) {
 	let index = 0;
 
 	return (
-		<InputOTP maxLength={groups.reduce((a, b) => a + b, 0)} pattern={pattern}>
+		<InputOTP maxLength={groups.reduce((a, b) => a + b, 0)} pattern={REGEXP_ONLY_DIGITS}>
 			{groups.map((groupSize, groupIndex) => (
 				<React.Fragment key={groupIndex}>
 					<InputOTPGroup>
