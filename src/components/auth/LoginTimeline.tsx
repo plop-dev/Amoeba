@@ -4,7 +4,7 @@ import { Check, Lock, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stepsStore } from '@/stores/LoginTimelineStore';
 
-export default function LoginTimeline({ className }: { className?: string }) {
+export function LoginTimeline({ className }: { className?: string }) {
 	const steps = useStore(stepsStore);
 
 	return (

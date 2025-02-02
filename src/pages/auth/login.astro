@@ -5,7 +5,8 @@ import AuthLayout from '@/layouts/AuthLayout.astro';
 import { CurlyBraces, Lock, User, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CustomInputOTS } from '@/components/custom/CustomInputOTS';
-import LoginTimeline from '@/components/auth/LoginTimeline';
+import { LoginTimeline } from '@/components/auth/LoginTimeline';
+import { VerificationDialog } from '@/components/auth/VerificationDialog';
 
 const { APPNAME } = import.meta.env;
 ---
@@ -67,12 +68,14 @@ const { APPNAME } = import.meta.env;
 					</div>
 				</form>
 			</div>
+			<VerificationDialog client:load />
 		</div>
 	</div>
 </AuthLayout>
 
 <script>
 	import { updateStepStatus } from '@/stores/LoginTimelineStore';
+	import { updateIsOpenState } from '@/stores/VerificationDialogStore';
 
 	const wrapper = document.getElementById('login-wrapper');
 	const formKey = document.getElementById('login-key');
@@ -109,5 +112,6 @@ const { APPNAME } = import.meta.env;
 		e.preventDefault();
 		console.log('OTP Submitted');
 		updateStep(2);
+		updateIsOpenState(true);
 	});
 </script>
