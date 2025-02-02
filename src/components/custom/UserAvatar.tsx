@@ -10,7 +10,7 @@ interface AvatarProps {
 
 export default function UserAvatar({ src, username, className, size = 8 }: AvatarProps) {
 	return (
-		<Avatar className={cn(`h-${size} w-${size} rounded-full relative border border-success`, className)}>
+		<Avatar className={cn(`h-${size} w-${size} rounded-full relative border-2 border-success`, className)}>
 			<AvatarImage src={src} alt={username.split('')[0].toUpperCase()} />
 			<AvatarFallback>{username.split('')[0].toUpperCase()}</AvatarFallback>
 		</Avatar>
