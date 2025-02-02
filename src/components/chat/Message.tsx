@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import CustomAvatar from '@/components/custom/CustomAvatar';
+import CustomAvatar from '@/components/custom/UserAvatar';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Copy, Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -122,9 +122,9 @@ function EmojiReaction({ emojiName, count, messageVariant }: { emojiName: string
 					</TooltipTrigger>
 					<TooltipContent border={true} asChild>
 						<div className='flex flex-row gap-x-2'>
-							<CustomAvatar alt='P' fallback='P' src='' className='w-8 h-8'></CustomAvatar>
-							<CustomAvatar alt='P' fallback='P' src='' className='w-8 h-8'></CustomAvatar>
-							<CustomAvatar alt='P' fallback='P' src='' className='w-8 h-8'></CustomAvatar>
+							<CustomAvatar username='plop' src='#'></CustomAvatar>
+							<CustomAvatar username='plop' src='#'></CustomAvatar>
+							<CustomAvatar username='plop' src='#'></CustomAvatar>
 						</div>
 					</TooltipContent>
 				</Tooltip>
@@ -195,9 +195,8 @@ export function Message({
 								setProfileOpen(true);
 							}}>
 							<CustomAvatar
-								alt=''
-								fallback='P'
 								src='https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp'
+								username='plop'
 								className={variant === 'inline' ? 'invisible max-h-0' : undefined}
 							/>
 						</div>
