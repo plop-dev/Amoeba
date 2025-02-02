@@ -46,10 +46,14 @@ const { APPNAME: appName } = import.meta.env;
 								>#{Astro.url.pathname.split('/')[2]}</BreadcrumbLink
 							>
 						</BreadcrumbItem>
-						<BreadcrumbSeparator className='hidden md:block' />
-						<BreadcrumbItem>
-							<BreadcrumbPage>#{Astro.url.pathname.split('/')[3]}</BreadcrumbPage>
-						</BreadcrumbItem>
+						{
+							Astro.url.pathname.split('/')[3] && (
+								<BreadcrumbSeparator className='hidden md:block' />
+								<BreadcrumbItem>
+									<BreadcrumbPage>#{Astro.url.pathname.split('/')[3]}</BreadcrumbPage>
+								</BreadcrumbItem>
+							)
+						}
 					</BreadcrumbList>
 				</Breadcrumb>
 			</header>
