@@ -5,7 +5,7 @@ import { LoaderCircle } from 'lucide-react';
 
 export function ChatPage() {
 	const [loading, setLoading] = useState(true);
-	const [isVisible, setIsVisible] = useState(true);
+	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
 	const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
 	const handleReplyClick = (msgId: string) => {
@@ -13,14 +13,14 @@ export function ChatPage() {
 	};
 
 	useEffect(() => {
-		setIsVisible(true);
+		setIsLoadingVisible(true);
 		// callback function to call when event triggers
 		const onPageLoad = () => {
 			console.log('page loaded');
 			setLoading(false);
 
 			setTimeout(() => {
-				setIsVisible(false);
+				setIsLoadingVisible(false);
 			}, 300);
 		};
 
@@ -39,7 +39,7 @@ export function ChatPage() {
 			<ChatContainer replyingTo={replyingTo} onReplyClick={handleReplyClick} />
 			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} />
 
-			{isVisible && (
+			{isLoadingVisible && (
 				<div
 					className={`absolute inset-0 flex items-center justify-center bg-background z-50 transition-opacity duration-300 ${
 						loading ? 'opacity-100' : 'opacity-0'

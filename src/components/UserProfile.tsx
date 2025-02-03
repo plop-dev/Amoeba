@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CalendarDays, LogOut, Mail, MessageCircle, Phone, Settings, Settings2, UserPlus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import UserAvatar from './UserAvatar';
 
 export function UserProfile({
 	user,
@@ -25,10 +26,7 @@ export function UserProfile({
 		<>
 			<div className='flex justify-between space-x-4'>
 				<div className='m-auto'>
-					<Avatar className='w-14 h-14'>
-						<AvatarImage src={user.avatarUrl} />
-						<AvatarFallback>{user.username.slice(0, 1).toUpperCase()}</AvatarFallback>
-					</Avatar>
+					<UserAvatar user={user} size={16}></UserAvatar>
 				</div>
 				<div className='space-y-1'>
 					<h4 className='text-sm font-semibold'>@{user.username}</h4>

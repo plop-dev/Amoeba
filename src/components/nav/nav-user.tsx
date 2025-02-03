@@ -31,16 +31,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '../ui/button';
 import { useState } from 'react';
 import { UserProfile } from '../UserProfile';
+import UserAvatar from '../UserAvatar';
+import User from '@/constants/globalUser';
 
-export function NavUser({
-	user,
-}: {
-	user: {
-		name: string;
-		id: string;
-		avatar: string;
-	};
-}) {
+export function NavUser({ user }: { user: UserData }) {
 	const { isMobile, state } = useSidebar();
 	const [isVoiceConnected, setIsVoiceConnected] = useState(true);
 	const [micMuted, setMicMuted] = useState(false);
@@ -115,13 +109,10 @@ export function NavUser({
 							onClick={() => setProfileOpen}
 							size='lg'
 							className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
-							<Avatar className='h-8 w-8 rounded-full relative border border-success'>
-								<AvatarImage src={user.avatar} alt={user.name.split('')[0].toUpperCase()} />
-								<AvatarFallback>{user.name.split('')[0].toUpperCase()}</AvatarFallback>
-							</Avatar>
+							<UserAvatar user={User}></UserAvatar>
 							<div className='grid flex-1 text-left text-sm leading-tight'>
-								<span className='truncate font-semibold'>{user.name}</span>
-								<span className='truncate text-xs'>{user.id}</span>
+								<span className='truncate font-semibold'>{user.username}</span>
+								<span className='truncate text-xs text-muted-foreground'>{user.id}</span>
 							</div>
 							<ChevronsUpDown className='ml-auto size-4' />
 						</SidebarMenuButton>
@@ -139,6 +130,8 @@ export function NavUser({
 								creationDate: new Date(2024, 1, 30),
 								description: 'i code stuff',
 								role: 'admin',
+								status: 'online',
+								id: '02dfjkd023',
 							}}
 							isOpen={isProfileOpen}
 							openChange={setProfileOpen}

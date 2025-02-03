@@ -8,11 +8,7 @@ interface FilePreview {
 }
 
 interface AppSidebarData {
-	user: {
-		name: string;
-		id: string;
-		avatar: string;
-	};
+	user: UserData;
 	teams: {
 		name: string;
 		logo: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
@@ -44,10 +40,20 @@ interface LoginStatusStep {
 }
 
 interface UserData {
+	id: string;
 	username: string;
 	avatarUrl: string;
 	creationDate: Date;
 	accentColor: string;
+	status: UserStatus;
 	role: 'admin' | 'user' | 'guest';
 	description: string;
 }
+
+interface AvatarProps {
+	user: UserData;
+	className?: string;
+	size?: number;
+}
+
+type UserStatus = 'online' | 'offline' | 'away' | 'busy';

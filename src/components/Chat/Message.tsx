@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import CustomAvatar from '@/components/custom/UserAvatar';
+import CustomAvatar from '@/components/UserAvatar';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Copy, Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { UserProfile } from '../UserProfile';
+import { UserProfile } from '@/components/UserProfile';
+import User from '@/constants/globalUser';
+import UserAvatar from '@/components/UserAvatar';
 
 function OptionsButton({
 	children,
@@ -122,9 +124,7 @@ function EmojiReaction({ emojiName, count, messageVariant }: { emojiName: string
 					</TooltipTrigger>
 					<TooltipContent border={true} asChild>
 						<div className='flex flex-row gap-x-2'>
-							<CustomAvatar username='plop' src='#'></CustomAvatar>
-							<CustomAvatar username='plop' src='#'></CustomAvatar>
-							<CustomAvatar username='plop' src='#'></CustomAvatar>
+							<UserAvatar user={User}></UserAvatar>
 						</div>
 					</TooltipContent>
 				</Tooltip>
@@ -194,27 +194,13 @@ export function Message({
 							onClick={() => {
 								setProfileOpen(true);
 							}}>
-							<CustomAvatar
-								src='https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp'
-								username='plop'
-								className={variant === 'inline' ? 'invisible max-h-0' : undefined}
-							/>
+							<CustomAvatar user={User} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
 						</div>
 
 						<div className='content flex flex-col w-full'>
 							<div className={cn('info flex', { hidden: variant === 'inline' })}>
 								<div className='username'>
-									<UserProfile
-										user={{
-											username: 'plop',
-											accentColor: '#55d38e',
-											avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
-											creationDate: new Date(2024, 1, 30),
-											description: 'i code stuff',
-											role: 'admin',
-										}}
-										isOpen={isProfileOpen}
-										openChange={setProfileOpen}>
+									<UserProfile user={User} isOpen={isProfileOpen} openChange={setProfileOpen}>
 										<Button variant='link' className='text-base p-0 m-0 h-auto text-[#55d38e]'>
 											@plop
 										</Button>
