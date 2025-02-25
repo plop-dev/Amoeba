@@ -1,0 +1,71 @@
+---
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { ColourPicker } from '@/components/ColourPicker';
+import AvatarPicker from '@/components/AvatarPicker';
+import { Button } from '@/components/ui/button';
+---
+
+<DashboardLayout title='Settings'>
+	<form>
+		<h1 class='text-2xl mb-4'>Settings</h1>
+		<div class='flex flex-col gap-y-8 w-full xl:w-1/2 md:w-3/4'>
+			<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
+				<div class='flex flex-col gap-y-1'>
+					<h2 class='text-lg'>Username</h2>
+					<p class='text-sm text-muted-foreground'>Your username will be seen by everyone on Chats, VCs and Boards.</p>
+				</div>
+
+				<Input type='text' id='username' placeholder='plop' className='mt-4' />
+			</div>
+
+			<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
+				<div class='flex flex-col gap-y-1'>
+					<h2 class='text-lg'>Primary Colour</h2>
+					<p class='text-sm text-muted-foreground'>This colour will be in your profile, chat accent and board cursor.</p>
+				</div>
+
+				<ColourPicker client:only='react' className='mt-4' />
+			</div>
+
+			<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
+				<div class='flex flex-col gap-y-1'>
+					<h2 class='text-lg'>Profile Picture</h2>
+					<p class='text-sm text-muted-foreground'>Your profile picture will be seen by everyone on Chats, VCs and Boards.</p>
+				</div>
+
+				<AvatarPicker className='flex-row items-center mt-4' client:load />
+			</div>
+
+			<Button variant={'default'} type='submit'>Save</Button>
+		</div>
+	</form>
+</DashboardLayout>
+
+<script>
+	const form = document.querySelector('form');
+
+	if (form) {
+		form.addEventListener('submit', handleSubmit);
+	}
+
+	function handleSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		const username = (document.getElementById('username') as HTMLInputElement)?.value;
+		const primaryColour = (document.getElementById('currentColour') as HTMLDivElement)?.textContent;
+
+		const avatar = (document.getElementById('uploadPFP') as HTMLInputElement)?.files?.[0];
+
+		const reader = new FileReader();
+		reader.onload = function (e) {
+			const base64 = e.target?.result as string;
+			console.log(base64);
+		};
+		if (avatar) {
+			reader.readAsDataURL(avatar);
+		}
+
+		console.log(username, primaryColour);
+	}
+</script>

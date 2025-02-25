@@ -1,3 +1,117 @@
 ---
+import { Button, buttonVariants } from '@/components/ui/button';
+import { FileUpload } from '@/components/FileUpload';
+import AuthLayout from '@/layouts/AuthLayout.astro';
+import { CurlyBraces, Lock, User, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { CustomInputOTS } from '@/components/custom/CustomInputOTS';
+import { LoginTimeline } from '@/components/auth/LoginTimeline';
+import { VerificationDialog } from '@/components/auth/VerificationDialog';
 
+const { APPNAME } = import.meta.env;
 ---
+
+<AuthLayout title='Login'>
+	<div class='flex min-h-svh min-w-full flex-col items-center justify-center gap-6 bg-background p-6 md:p-10'>
+		<div class='flex flex-col items-center gap-2'>
+			<a href='#' class='flex flex-col items-center gap-2 font-medium'>
+				<div class={cn(buttonVariants({ variant: 'outline' }), 'flex h-10 aspect-square items-center justify-center rounded-md cursor-default p-1')}>
+					<CurlyBraces className='size-8' />
+				</div>
+				<span class='sr-only'>{APPNAME}</span>
+			</a>
+			<h1 class='text-xl font-bold'>Welcome to {APPNAME}</h1>
+			<div class='text-center text-sm'>
+				Don&apos;t have an account?{' '}
+				<a href='#' class='underline underline-offset-4'>Deal with it.</a>
+			</div>
+		</div>
+
+		<div class='' id='login-timeline'>
+			<LoginTimeline className='w-[28rem] mx-0' client:load />
+		</div>
+
+		<div class='w-[28rem] flex gap-x-8 overflow-hidden' id='login-wrapper'>
+			<div class='min-w-[28rem] w-[28rem]'>
+				<form id='login-key'>
+					<div class='flex flex-col gap-6'>
+						<div class='flex flex-col gap-6'>
+							<div class='grid gap-2'>
+								<FileUpload client:load />
+							</div>
+							<Button type='submit' className='w-full'>Continue</Button>
+						</div>
+					</div>
+					<div class='text-balance text-center text-xs text-muted-foreground mt-2'>
+						By clicking continue, you agree to our <a class={cn(buttonVariants({ variant: 'link', size: 'sm' }), 'p-0')} href='#'
+							>Terms of Service</a
+						>{' '}
+						and <a class={cn(buttonVariants({ variant: 'link', size: 'sm' }), 'p-0')} href='#'>Privacy Policy</a>.
+					</div>
+				</form>
+			</div>
+
+			<div class='min-w-[28rem] w-[28rem]'>
+				<form id='login-otp'>
+					<div class='flex flex-col gap-6'>
+						<div class='flex flex-col gap-2 items-center'>
+							<h1>Enter your OTP from your phone:</h1>
+							<CustomInputOTS groups={[3, 3]} pattern='[0-9]*' client:only='react' />
+						</div>
+						<div class='flex gap-2 justify-center'>
+							<Button variant='outline' className='w-full' id='to-login-key'>Back</Button>
+							<Button type='submit' className='w-full'>Verify</Button>
+						</div>
+					</div>
+					<div class='text-balance text-center text-xs text-muted-foreground mt-2'>
+						Didn't receive a code? <a class={cn(buttonVariants({ variant: 'link', size: 'sm' }), 'p-0')} href='#'>Try again</a>
+					</div>
+				</form>
+			</div>
+			<VerificationDialog client:load />
+		</div>
+	</div>
+</AuthLayout>
+
+<script>
+	import { updateStepStatus } from '@/stores/LoginTimelineStore';
+	import { updateIsOpenState } from '@/stores/VerificationDialogStore';
+
+	const wrapper = document.getElementById('login-wrapper');
+	const formKey = document.getElementById('login-key');
+	const formOTP = document.getElementById('login-otp');
+	let currentStep = 0;
+	let totalSteps = 3;
+
+	const updateStep = (step: number) => {
+		currentStep = step;
+		if (step > 0) {
+			updateStepStatus(step, 'complete');
+		} else {
+			for (let i = 1; i <= totalSteps; i++) {
+				updateStepStatus(i, 'upcoming');
+			}
+		}
+
+		updateStepStatus(step + 1, 'current');
+	};
+
+	document.getElementById('to-login-key')?.addEventListener('click', e => {
+		e.preventDefault();
+		wrapper?.scrollTo({ left: 0, behavior: 'smooth' });
+		updateStep(0);
+	});
+
+	formKey?.addEventListener('submit', e => {
+		e.preventDefault();
+		wrapper?.scrollTo({ left: wrapper?.scrollWidth, behavior: 'smooth' });
+		updateStep(1);
+	});
+
+	formOTP?.addEventListener('submit', e => {
+		e.preventDefault();
+		console.log('OTP Submitted');
+		updateStep(2);
+		updateIsOpenState(true);
+	});
+</script>

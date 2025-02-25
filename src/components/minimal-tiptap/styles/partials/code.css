@@ -1,86 +1,114 @@
 .minimal-tiptap-editor .ProseMirror code.inline {
-  @apply rounded border border-[var(--mt-code-color)] bg-[var(--mt-code-background)] px-1 py-0.5 text-sm;
+	@apply rounded border border-[var(--mt-code-color)] bg-[var(--mt-code-background)] px-1 py-0.5 text-sm;
 }
 
 .minimal-tiptap-editor .ProseMirror pre {
-  @apply relative overflow-auto rounded border font-mono text-sm;
-  @apply border-[var(--mt-pre-border)] bg-[var(--mt-pre-background)] text-[var(--mt-pre-color)];
-  @apply hyphens-none whitespace-pre text-left;
+	@apply relative overflow-auto rounded border font-mono text-sm;
+	@apply border-[var(--mt-pre-border)] bg-[var(--mt-pre-background)] text-[var(--mt-pre-color)];
+	@apply hyphens-none whitespace-pre text-left;
 }
 
 .minimal-tiptap-editor .ProseMirror code {
-  @apply break-words leading-[1.7em];
+	@apply break-words leading-[1.5em];
 }
 
 .minimal-tiptap-editor .ProseMirror pre code {
-  @apply block overflow-x-auto p-3.5;
+	@apply block overflow-x-auto p-3.5;
 }
 
 .minimal-tiptap-editor .ProseMirror pre {
-  .hljs-keyword,
-  .hljs-operator,
-  .hljs-function,
-  .hljs-built_in,
-  .hljs-builtin-name {
-    color: var(--hljs-keyword);
-  }
+	.hljs {
+		@apply text-[var(--hljs-base)] bg-[var(--hljs-background)];
+	}
 
-  .hljs-attr,
-  .hljs-symbol,
-  .hljs-property,
-  .hljs-attribute,
-  .hljs-variable,
-  .hljs-template-variable,
-  .hljs-params {
-    color: var(--hljs-attr);
-  }
+	.hljs-doctag,
+	.hljs-keyword,
+	.hljs-meta .hljs-keyword,
+	.hljs-template-tag,
+	.hljs-template-variable,
+	.hljs-type,
+	.hljs-variable.language_ {
+		@apply text-[var(--hljs-keyword)];
+	}
 
-  .hljs-name,
-  .hljs-regexp,
-  .hljs-link,
-  .hljs-type,
-  .hljs-addition {
-    color: var(--hljs-name);
-  }
+	.hljs-title,
+	.hljs-title.class_,
+	.hljs-title.class_.inherited__,
+	.hljs-title.function_ {
+		@apply text-[var(--hljs-title)];
+	}
 
-  .hljs-string,
-  .hljs-bullet {
-    color: var(--hljs-string);
-  }
+	.hljs-attr,
+	.hljs-attribute,
+	.hljs-literal,
+	.hljs-meta,
+	.hljs-number,
+	.hljs-operator,
+	.hljs-variable,
+	.hljs-selector-attr,
+	.hljs-selector-class,
+	.hljs-selector-id {
+		@apply text-[var(--hljs-constant)];
+	}
 
-  .hljs-title,
-  .hljs-subst,
-  .hljs-section {
-    color: var(--hljs-title);
-  }
+	.hljs-regexp,
+	.hljs-string,
+	.hljs-meta .hljs-string {
+		@apply text-[var(--hljs-string)];
+	}
 
-  .hljs-literal,
-  .hljs-type,
-  .hljs-deletion {
-    color: var(--hljs-literal);
-  }
+	.hljs-built_in,
+	.hljs-symbol {
+		@apply text-[var(--hljs-variable)];
+	}
 
-  .hljs-selector-tag,
-  .hljs-selector-id,
-  .hljs-selector-class {
-    color: var(--hljs-selector-tag);
-  }
+	.hljs-comment,
+	.hljs-code,
+	.hljs-formula {
+		@apply text-[var(--hljs-comment)];
+	}
 
-  .hljs-number {
-    color: var(--hljs-number);
-  }
+	.hljs-name,
+	.hljs-quote,
+	.hljs-selector-tag,
+	.hljs-selector-pseudo {
+		@apply text-[var(--hljs-entity-tag)];
+	}
 
-  .hljs-comment,
-  .hljs-meta,
-  .hljs-quote {
-    color: var(--hljs-comment);
-  }
+	.hljs-subst {
+		@apply text-[var(--hljs-base)];
+	}
 
-  .hljs-emphasis {
-    @apply italic;
-  }
+	.hljs-section {
+		@apply text-[var(--hljs-heading)] font-bold;
+	}
 
-  .hljs-strong {
-    @apply font-bold;
-  }
+	.hljs-bullet {
+		@apply text-[var(--hljs-list)];
+	}
+
+	.hljs-emphasis {
+		@apply text-[var(--hljs-base)] italic;
+	}
+
+	.hljs-strong {
+		@apply text-[var(--hljs-base)] font-bold;
+	}
+
+	.hljs-addition {
+		@apply text-[var(--hljs-inserted)] bg-[var(--hljs-inserted-background)];
+	}
+
+	.hljs-deletion {
+		@apply text-[var(--hljs-deleted)] bg-[var(--hljs-deleted-background)];
+	}
+
+	.hljs-char.escape_,
+	.hljs-link,
+	.hljs-params,
+	.hljs-property,
+	.hljs-punctuation,
+	.hljs-tag {
+		/* intentionally left unstyled */
+	}
 }

@@ -1,0 +1,32 @@
+---
+import '@/styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import { Toaster } from '@/components/ui/toaster';
+// import '@/server';
+
+interface Props {
+	title: string;
+	className?: string;
+}
+
+const { title, className = '' } = Astro.props;
+const { APPNAME: appName } = import.meta.env;
+---
+
+<!doctype html>
+<html lang='en'>
+	<head>
+		<meta charset='UTF-8' />
+		<meta name='viewport' content='width=device-width' />
+		<link rel='icon' type='image/svg+xml' href='/favicon.svg' />
+		<meta name='generator' content={Astro.generator} />
+		<title>{title} - {appName}</title>
+
+		<!-- <script src='https://unpkg.com/react-scan/dist/auto.global.js'></script> -->
+		<ClientRouter />
+	</head>
+	<body class='flex flex-row'>
+		<Toaster client:only='react' />
+		<slot />
+	</body>
+</html>

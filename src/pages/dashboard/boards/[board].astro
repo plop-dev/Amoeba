@@ -1,10 +1,10 @@
 ---
 import { BoardPage } from '@/components/boards/BoardPage';
-import DefaultLayout from '@/layouts/DefaultLayout.astro';
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
 
 const boardTitle = Astro.url.pathname.replace('/dashboard/boards/', '');
 ---
 
-<DefaultLayout title={boardTitle}>
-	<BoardPage client:only='react' />
-</DefaultLayout>
+<DashboardLayout title={boardTitle} containerClassName='p-0'>
+	<BoardPage client:only='react' boardName={boardTitle} />
+</DashboardLayout>

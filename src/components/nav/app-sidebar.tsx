@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { AudioWaveform, Book, CurlyBraces, Droplet, Home, MessageCircle, Settings, TreePine, Worm, type LucideProps } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 import { NavMain } from '@/components/nav/nav-main';
 import { NavUser } from '@/components/nav/nav-user';
@@ -17,12 +18,28 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	const { isMobile, state, toggleSidebar } = useSidebar();
+	const [usersConnected, setUsersConnected] = useState(0);
+
+	useEffect(() => {
+		function handleUsersConnectedUpdate(e: CustomEvent<{ count: number }>) {
+			setUsersConnected(e.detail.count);
+		}
+		window.addEventListener('usersConnectedUpdate', handleUsersConnectedUpdate as EventListener);
+		return () => {
+			window.removeEventListener('usersConnectedUpdate', handleUsersConnectedUpdate as EventListener);
+		};
+	}, []);
 
 	const data: AppSidebarData = {
 		user: {
-			name: 'plop',
+			username: 'plop',
 			id: '02dfjkd023',
-			avatar: '',
+			avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
+			role: 'admin',
+			status: 'online',
+			accentColor: '#55d38e',
+			creationDate: new Date(2024, 1, 30),
+			description: 'i code stuff',
 		},
 		teams: [
 			{
@@ -63,6 +80,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 				title: 'VCs',
 				url: '/dashboard/vcs',
 				icon: AudioWaveform,
+				isActive: true,
 				canCreate: true,
 				items: [
 					{
@@ -85,27 +103,12 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 					{
 						title: '#general',
 						url: '/dashboard/boards/general',
-						usersOnline: 3,
+						usersOnline: usersConnected,
+						userConnected: true,
 					},
 					{
 						title: '#off-topic',
 						url: '/dashboard/boards/off-topic',
-					},
-				],
-			},
-			{
-				title: 'Ned',
-				url: '/dashboard/ned',
-				icon: Worm,
-				canCreate: true,
-				items: [
-					{
-						title: 'Control Centre',
-						url: '/dashboard/ned/control-centre',
-					},
-					{
-						title: 'Stats',
-						url: '/dashboard/ned/stats',
 					},
 				],
 			},
