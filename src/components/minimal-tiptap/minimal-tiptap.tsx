@@ -20,34 +20,39 @@ export interface MinimalTiptapProps extends Omit<UseMinimalTiptapEditorProps, 'o
 	onChange?: (value: Content) => void;
 	className?: string;
 	editorContentClassName?: string;
+	border?: boolean;
+	toolbarClassName?: string;
 }
 
-const Toolbar = ({ editor }: { editor: Editor }) => (
-	<div className='shrink-0 overflow-x-auto border-b border-border p-2'>
-		<div className='flex w-max items-center gap-px'>
-			<SectionOne editor={editor} activeLevels={[1, 2, 3, 4, 5, 6]} />
+const Toolbar = ({ editor, className }: { editor: Editor; className: string }) => (
+	<>
+		<div className='toolbar-spacer h-8 mb-4'></div>
+		<div className={cn('shrink-0 overflow-x-auto border-b border-border p-2', className)}>
+			<div className='flex w-max items-center gap-px'>
+				<SectionOne editor={editor} activeLevels={[1, 2, 3, 4, 5, 6]} />
 
-			<Separator orientation='vertical' className='mx-2 h-7' />
+				<Separator orientation='vertical' className='mx-2 h-7' />
 
-			<SectionTwo editor={editor} activeActions={['bold', 'italic', 'underline', 'strikethrough', 'code', 'clearFormatting']} mainActionCount={3} />
+				<SectionTwo editor={editor} activeActions={['bold', 'italic', 'underline', 'strikethrough', 'code', 'clearFormatting']} mainActionCount={3} />
 
-			<Separator orientation='vertical' className='mx-2 h-7' />
+				<Separator orientation='vertical' className='mx-2 h-7' />
 
-			<SectionThree editor={editor} />
+				<SectionThree editor={editor} />
 
-			<Separator orientation='vertical' className='mx-2 h-7' />
+				<Separator orientation='vertical' className='mx-2 h-7' />
 
-			<SectionFour editor={editor} activeActions={['orderedList', 'bulletList']} mainActionCount={0} />
+				<SectionFour editor={editor} activeActions={['orderedList', 'bulletList']} mainActionCount={0} />
 
-			<Separator orientation='vertical' className='mx-2 h-7' />
+				<Separator orientation='vertical' className='mx-2 h-7' />
 
-			<SectionFive editor={editor} activeActions={['codeBlock', 'blockquote', 'horizontalRule']} mainActionCount={0} />
+				<SectionFive editor={editor} activeActions={['codeBlock', 'blockquote', 'horizontalRule']} mainActionCount={0} />
+			</div>
 		</div>
-	</div>
+	</>
 );
 
 export const MinimalTiptapEditor = React.forwardRef<HTMLDivElement, MinimalTiptapProps>(
-	({ value, onChange, className, editorContentClassName, ...props }, ref) => {
+	({ value, onChange, className, editorContentClassName, border = true, toolbarClassName, ...props }, ref) => {
 		const editor = useMinimalTiptapEditor({
 			value,
 			onUpdate: onChange,
@@ -63,8 +68,12 @@ export const MinimalTiptapEditor = React.forwardRef<HTMLDivElement, MinimalTipta
 				as='div'
 				name='editor'
 				ref={ref}
-				className={cn('flex h-auto min-h-72 w-full flex-col rounded-md border border-input shadow-sm focus-within:border-primary/75', className)}>
-				<Toolbar editor={editor} />
+				className={cn(
+					'flex h-auto min-h-72 w-full flex-col',
+					border ? 'rounded-md border border-input shadow-sm focus-within:border-primary/75' : '',
+					className,
+				)}>
+				<Toolbar editor={editor} className={toolbarClassName || ''} />
 				<EditorContent editor={editor} className={cn('minimal-tiptap-editor', editorContentClassName)} />
 				<LinkBubbleMenu editor={editor} />
 			</MeasuredContainer>

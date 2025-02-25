@@ -5,6 +5,6 @@ import DashboardLayout from '@/layouts/DashboardLayout.astro';
 const boardTitle = Astro.url.pathname.replace('/dashboard/boards/', '');
 ---
 
-<DashboardLayout title={boardTitle}>
+<DashboardLayout title={boardTitle} containerClassName='p-0'>
 	<BoardPage client:only='react' />
 </DashboardLayout>

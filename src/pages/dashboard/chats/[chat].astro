@@ -5,6 +5,6 @@ import { ChatPage } from '@/components/chat/ChatPage.tsx';
 const channelTitle = Astro.url.pathname.replace('/dashboard/chats/', '');
 ---
 
-<DashboardLayout title={channelTitle} className=''>
+<DashboardLayout title={channelTitle} containerClassName=''>
 	<ChatPage client:only='react' />
 </DashboardLayout>

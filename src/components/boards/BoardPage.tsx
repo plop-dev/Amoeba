@@ -45,6 +45,8 @@ export function BoardPage() {
 				autofocus={true}
 				editable={true}
 				editorClassName='focus:outline-none'
+				border={false}
+				toolbarClassName='fixed z-50 bg-background w-full shadow-sm'
 				onContentError={() => {
 					toast({ title: 'Error', description: 'Invalid content', variant: 'destructive' });
 				}}
@@ -57,7 +59,7 @@ export function BoardPage() {
 					}`}>
 					<div className='flex flex-col items-center gap-4'>
 						<LoaderCircle className='animate-spin'></LoaderCircle>
-						<p className='text-sm font-medium'>Loading Chats...</p>
+						<p className='text-sm font-medium'>Loading Boards...</p>
 					</div>
 				</div>
 			)}
