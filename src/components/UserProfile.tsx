@@ -42,13 +42,15 @@ export function UserProfile({
 			<div className='mt-4'>
 				<p className='text-sm'>{user.description}</p>
 			</div>
-			<div className='flex mt-4 space-x-2'>
+			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1'>
 				{userControl ? (
 					<>
-						<Button size='sm' className='flex-1'>
-							<Settings className='mr-2 h-4 w-4' />
-							Settings
-						</Button>
+						<a href='/dashboard/settings' className='flex flex-1'>
+							<Button size='sm' className='flex-1'>
+								<Settings className='mr-2 h-4 w-4' />
+								Settings
+							</Button>
+						</a>
 						<Button size='sm' variant='outline' className='flex-1'>
 							<LogOut className='mr-2 h-4 w-4' />
 							Log Out

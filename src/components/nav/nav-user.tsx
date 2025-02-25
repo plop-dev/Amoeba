@@ -59,7 +59,9 @@ export function NavUser({ user }: { user: UserData }) {
 						</CardHeader>
 						<CardFooter className='p-2 pt-0 gap-x-1'>
 							<Button size={'icon'} variant={'ghost'} className='size-8'>
-								<Undo2></Undo2>
+								<a href='/dashboard/vcs/general'>
+									<Undo2></Undo2>
+								</a>
 							</Button>
 							<Button size={'icon'} variant={'ghost'} className='size-8'>
 								<ScreenShare></ScreenShare>
@@ -84,7 +86,9 @@ export function NavUser({ user }: { user: UserData }) {
 
 						<div className='flex flex-col gap-0'>
 							<Button size={'icon'} variant={'ghost'} className='size-8'>
-								<Undo2></Undo2>
+								<a href='/dashboard/vcs/general'>
+									<Undo2></Undo2>
+								</a>
 							</Button>
 							<Button size={'icon'} variant={'ghost'} className='size-8'>
 								<ScreenShare></ScreenShare>
