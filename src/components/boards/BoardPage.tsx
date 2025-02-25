@@ -5,7 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { LoaderCircle } from 'lucide-react';
 
-export function BoardPage() {
+export function BoardPage({ boardName }: { boardName: string }) {
 	const { toast } = useToast();
 	const [loading, setLoading] = useState(true);
 	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
@@ -41,7 +41,7 @@ export function BoardPage() {
 				className='w-full h-full'
 				editorContentClassName='p-5'
 				output='json'
-				placeholder='Board [name]...'
+				placeholder={`Start typing in ${boardName}...`}
 				autofocus={true}
 				editable={true}
 				editorClassName='focus:outline-none'

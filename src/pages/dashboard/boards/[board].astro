@@ -6,5 +6,5 @@ const boardTitle = Astro.url.pathname.replace('/dashboard/boards/', '');
 ---
 
 <DashboardLayout title={boardTitle} containerClassName='p-0'>
-	<BoardPage client:only='react' />
+	<BoardPage client:only='react' boardName={boardTitle} />
 </DashboardLayout>
