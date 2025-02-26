@@ -64,24 +64,41 @@ export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | 
 				</div>
 			)}
 
-			{replyingTo && (
-				<div className='replying-to flex items-center gap-2 p-2 text-sm bg-muted'>
-					<span>Replying to {document.querySelector(`.message[data-message-id="${replyingTo}"]`)?.querySelector('.username')?.textContent}</span>
-					<X className='cursor-pointer' onClick={onClearReply} />
+			<div className='input-container grid gap-x-4 grid-cols-[100fr_1fr_5fr] grid-rows-1 align-bottom'>
+				<div className=''>
+					{replyingTo && (
+						<div className='replying-to flex items-center gap-2 p-2 text-sm border-2 border-b-0 rounded-b-none rounded-lg'>
+							<span>
+								Replying to {document.querySelector(`.message[data-message-id="${replyingTo}"]`)?.querySelector('.username')?.textContent}
+							</span>
+							<X className='cursor-pointer flex flex-1' onClick={onClearReply} />
+						</div>
+					)}
+
+					<div className='typing-indicator flex items-center gap-2 p-2 text-sm border-2 border-b-0 rounded-b-none rounded-lg'>
+						<span className='font-bold'>plop</span>
+						<span>is typing</span>
+						<div className='flex items-center'>
+							<span className='dot-anim'>•</span>
+							<span className='dot-anim'>•</span>
+							<span className='dot-anim'>•</span>
+						</div>
+					</div>
+
+					<Input placeholder='Type message' type='text' className='py-6' />
 				</div>
-			)}
 
-			<div className='input-container grid gap-x-4 grid-cols-[100fr_1fr_5fr] grid-rows-1'>
-				<Input placeholder='Type message' type='text' className='py-6' />
-
-				<input type='file' id='uploadFile' className='hidden' ref={fileInputRef} multiple onChange={handleFileChange} />
-				<label htmlFor='uploadFile' className={buttonVariants({ variant: 'outline', size: 'icon' }) + ' p-6 cursor-pointer'}>
-					<Upload />
-				</label>
-
-				<Button size='icon' className='p-6' onClick={handleSend}>
-					<SendHorizonal />
-				</Button>
+				<div className='flex items-end'>
+					<input type='file' id='uploadFile' className='hidden' ref={fileInputRef} multiple onChange={handleFileChange} />
+					<label htmlFor='uploadFile' className={buttonVariants({ variant: 'outline', size: 'icon' }) + ' p-6 cursor-pointer'}>
+						<Upload />
+					</label>
+				</div>
+				<div className='flex items-end'>
+					<Button size='icon' className='p-6' onClick={handleSend}>
+						<SendHorizonal />
+					</Button>
+				</div>
 			</div>
 		</>
 	);
