@@ -3,16 +3,40 @@ import { v4 as uuidv4 } from 'uuid';
 import { Input } from '@/components/ui/input';
 import { Upload, SendHorizonal, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { UploadedFile } from '@/components/chat/UploadedFile';
+import { cn } from '@/lib/utils';
+
+import '@/styles/animations.css';
 
 export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | null; onClearReply?: () => void }) {
 	const { toast } = useToast();
 	const [files, setFiles] = useState<{ id: string; file: File }[]>([]);
 	const [previews, setPreviews] = useState<FilePreview[]>([]);
+	const [closingReply, setClosingReply] = useState(false);
+	const [containerHeight, setContainerHeight] = useState('auto');
+
+	// Refs for measuring height
+	const typingIndicatorRef = useRef<HTMLDivElement>(null);
+	const replyContainerRef = useRef<HTMLDivElement>(null);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	// Handle container height transitions
+	useEffect(() => {
+		if (replyingTo && !closingReply) {
+			// Sum of both heights when replying
+			const height = (typingIndicatorRef.current?.offsetHeight || 0) + (replyContainerRef.current?.offsetHeight || 0);
+			setContainerHeight(`${height}px`);
+		} else if (closingReply) {
+			// Just typing indicator height when closing reply
+			setContainerHeight(`${typingIndicatorRef.current?.offsetHeight || 0}px`);
+		} else {
+			// Just typing indicator in normal state
+			setContainerHeight(`${typingIndicatorRef.current?.offsetHeight || 0}px`);
+		}
+	}, [replyingTo, closingReply]);
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const input = event.target;
@@ -50,6 +74,14 @@ export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | 
 		setPreviews(prevPreviews => prevPreviews.filter(preview => preview.id !== id));
 	};
 
+	const handleClearReply = () => {
+		setClosingReply(true);
+		setTimeout(() => {
+			setClosingReply(false);
+			onClearReply?.();
+		}, 300);
+	};
+
 	const handleSend = () => {
 		console.log('send');
 	};
@@ -66,26 +98,47 @@ export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | 
 
 			<div className='input-container grid gap-x-4 grid-cols-[100fr_1fr_5fr] grid-rows-1 align-bottom'>
 				<div className=''>
-					{replyingTo && (
-						<div className='replying-to flex items-center gap-2 p-2 text-sm border-2 border-b-0 rounded-b-none rounded-lg'>
-							<span>
-								Replying to {document.querySelector(`.message[data-message-id="${replyingTo}"]`)?.querySelector('.username')?.textContent}
-							</span>
-							<X className='cursor-pointer flex flex-1' onClick={onClearReply} />
-						</div>
-					)}
+					{/* Animated container for typing indicator and reply */}
+					<div className='animated-container overflow-hidden transition-all duration-300' style={{ height: containerHeight }}>
+						{false && (
+							<div
+								ref={typingIndicatorRef}
+								className={cn(
+									'typing-indicator sticky top-0 z-40 bg-background h-10 flex items-center gap-2 p-2 text-sm border-2 border-b-0 rounded-b-none rounded-lg',
+								)}>
+								<span className='font-bold'>plop</span>
+								<span>is typing</span>
+								<div className='flex items-center'>
+									<span className='dot-anim'>•</span>
+									<span className='dot-anim'>•</span>
+									<span className='dot-anim'>•</span>
+								</div>
+							</div>
+						)}
 
-					<div className='typing-indicator flex items-center gap-2 p-2 text-sm border-2 border-b-0 rounded-b-none rounded-lg'>
-						<span className='font-bold'>plop</span>
-						<span>is typing</span>
-						<div className='flex items-center'>
-							<span className='dot-anim'>•</span>
-							<span className='dot-anim'>•</span>
-							<span className='dot-anim'>•</span>
-						</div>
+						{/* Reply container with animation */}
+						{(replyingTo || closingReply) && (
+							<div
+								ref={replyContainerRef}
+								className={cn(
+									'replying-to h-10 w-full flex items-center gap-2 p-2 z-0 relative text-sm border-2 border-b-0 rounded-b-none rounded-lg transition-all duration-300 transform',
+									closingReply ? 'animate-slideOutDown' : 'animate-slideInUp',
+								)}>
+								<span className='flex justify-start'>
+									Replying to{' '}
+									{document
+										.querySelector(`.message[data-message-id="${replyingTo}"]`)
+										?.querySelector('.username')
+										?.textContent?.replace('@', '')}
+								</span>
+								<div className='flex justify-end ml-auto'>
+									<X className='cursor-pointer opacity-80' onClick={handleClearReply} />
+								</div>
+							</div>
+						)}
 					</div>
 
-					<Input placeholder='Type message' type='text' className='py-6' />
+					<Input placeholder='Type message' type='text' className='py-6 z-50 relative bg-background' />
 				</div>
 
 				<div className='flex items-end'>
