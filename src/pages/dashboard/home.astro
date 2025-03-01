@@ -1,5 +1,13 @@
 ---
+export const prerender = false;
+import UsersOnlineBadge from '@/components/UsersOnlineBadge';
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
+
+const usersOnline = 2;
+const workspaceTitle = 'Project 1';
 ---
 
-<DashboardLayout title='Home' />
+<DashboardLayout title='Home'>
+	<h1>Dashboard Home</h1>
+	<p class='text-sm text-muted-foreground flex'>Users in {workspaceTitle} online: <UsersOnlineBadge usersOnline={usersOnline} /></p>
+</DashboardLayout>
