@@ -5,7 +5,7 @@ export default function UserAvatar({ user, className, size = 8 }: AvatarProps) {
 	return (
 		<Avatar
 			className={cn(
-				`h-${size} w-${size} rounded-full relative border-2`,
+				`rounded-full relative border-2 size-${size}`,
 				{
 					'border-green-500': user.status === 'online',
 					'border-gray-500': user.status === 'offline',

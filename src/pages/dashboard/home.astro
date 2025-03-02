@@ -1,13 +1,74 @@
 ---
 export const prerender = false;
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import UserAvatar from '@/components/UserAvatar';
+import { UserProfile } from '@/components/UserProfile';
 import UsersOnlineBadge from '@/components/UsersOnlineBadge';
+import User from '@/constants/globalUser';
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
 
-const usersOnline = 2;
+const usersOnline = 10;
 const workspaceTitle = 'Project 1';
+const tags = Array.from({ length: 50 }).map((_, i, a) => `v1.2.0-beta.${a.length - i}`);
 ---
 
 <DashboardLayout title='Home'>
-	<h1>Dashboard Home</h1>
-	<p class='text-sm text-muted-foreground flex'>Users in {workspaceTitle} online: <UsersOnlineBadge usersOnline={usersOnline} /></p>
+	<h1 class='text-2xl'>Dashboard Home</h1>
+
+	<div class='grid'>
+		<div class='users flex flex-col gap-4'>
+			<div class='text-sm flex gap-2'>
+				<p>
+					Users in {workspaceTitle} online:
+				</p>
+				<UsersOnlineBadge usersOnline={usersOnline} />
+			</div>
+
+			<ScrollArea className='users-online border-border border-2 rounded-lg w-min' client:only="react">
+					<div class='flex flex-col gap-2 p-4 w-min'>
+						{
+							Array.from({ length: usersOnline }).map((_, index) => (
+								<UserProfile key={index} user={User} contentOnly={true} />
+								<Separator></Separator>
+							))
+						}
+					</div>
+			</ScrollArea>
+		</div>
+	</div>
 </DashboardLayout>
+
+<style>
+	.scroll-area-dynamic {
+		height: calc(100vh - 12rem); /* Subtract space for header and margins */
+		max-height: calc(100vh - 2rem); /* Prevent overflow */
+	}
+</style>
+
+<script>
+	const scrollArea = document.querySelector('.users-online') as HTMLElement;
+	
+	if (scrollArea) {
+		scrollArea.classList.add('scroll-area-dynamic');
+		
+		let resizeTimeout: number;
+		const MIN_HEIGHT = 300;
+		const BOTTOM_MARGIN = 20;
+		
+		const adjustHeight = () => {
+			if (resizeTimeout) {
+				cancelAnimationFrame(resizeTimeout);
+			}
+			
+			resizeTimeout = requestAnimationFrame(() => {
+				const viewportHeight = window.innerHeight;
+				const top = scrollArea.getBoundingClientRect().top;
+				scrollArea.style.height = `${Math.max(MIN_HEIGHT, viewportHeight - top - BOTTOM_MARGIN)}px`;
+			});
+		};
+		
+		adjustHeight();
+		window.addEventListener('resize', adjustHeight, { passive: true });
+	}
+</script>

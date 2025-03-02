@@ -6,25 +6,30 @@ import { CalendarDays, LogOut, Mail, MessageCircle, Phone, Settings, Settings2, 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import UserAvatar from './UserAvatar';
+import User from '@/constants/globalUser';
 
 export function UserProfile({
-	user,
+	user = User,
 	children,
-	contentOnly,
-	userControl,
-	isOpen,
-	openChange,
+	contentOnly = false,
+	userControl = false,
+	isOpen = false,
+	openChange = () => {},
+	key = 0,
+	useChildrenAsTrigger = false,
 }: {
 	user: UserData;
 	children?: React.ReactNode;
 	contentOnly?: boolean;
 	userControl?: boolean;
-	isOpen: boolean;
-	openChange: (isOpen: boolean) => void;
+	isOpen?: boolean;
+	openChange?: (isOpen: boolean) => void;
+	key?: number;
+	useChildrenAsTrigger?: boolean;
 }) {
 	const content = (
 		<>
-			<div className='flex justify-between space-x-4'>
+			<div className='flex justify-between space-x-4' key={key}>
 				<div className='m-auto'>
 					<UserAvatar user={user} size={16}></UserAvatar>
 				</div>
@@ -42,7 +47,7 @@ export function UserProfile({
 			<div className='mt-4'>
 				<p className='text-sm'>{user.description}</p>
 			</div>
-			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1'>
+			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1' key={key}>
 				{userControl ? (
 					<>
 						<a href='/dashboard/settings' className='flex flex-1'>
