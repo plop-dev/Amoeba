@@ -123,6 +123,14 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	return (
 		<Sidebar collapsible='icon' {...props} className=''>
 			<SidebarHeader className='relative'>
+				{isMobile && (
+					<div className='absolute top-0 left-0'>
+						<Button variant={'outline'} className='aspect-square size-8 p-0 flex items-center justify-center' onClick={toggleSidebar}>
+							<CurlyBraces className='w-4 h-4'></CurlyBraces>
+						</Button>
+					</div>
+				)}
+
 				<div className={cn('logo flex items-center h-[calc(3rem-1rem-1px)]', state === 'expanded' && 'px-2')}>
 					<Button variant={'outline'} className='aspect-square size-8 p-0 flex items-center justify-center' onClick={toggleSidebar}>
 						<CurlyBraces className='w-4 h-4'></CurlyBraces>

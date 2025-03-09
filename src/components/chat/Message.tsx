@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/components/UserProfile';
-import User from '@/constants/globalUser';
+import UserConstant from '@/constants/globalUser';
 import UserAvatar from '@/components/UserAvatar';
 
 function OptionsButton({
@@ -124,7 +124,7 @@ function EmojiReaction({ emojiName, count, messageVariant }: { emojiName: string
 					</TooltipTrigger>
 					<TooltipContent border={true} asChild>
 						<div className='flex flex-row gap-x-2'>
-							<UserAvatar user={User}></UserAvatar>
+							<UserAvatar user={UserConstant}></UserAvatar>
 						</div>
 					</TooltipContent>
 				</Tooltip>
@@ -194,13 +194,13 @@ export function Message({
 							onClick={() => {
 								setProfileOpen(true);
 							}}>
-							<CustomAvatar user={User} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
+							<CustomAvatar user={UserConstant} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
 						</div>
 
 						<div className='content flex flex-col w-full'>
 							<div className={cn('info flex', { hidden: variant === 'inline' })}>
 								<div className='username'>
-									<UserProfile user={User} isOpen={isProfileOpen} openChange={setProfileOpen}>
+									<UserProfile user={UserConstant} isOpen={isProfileOpen} openChange={setProfileOpen}>
 										<Button variant='link' className='text-base p-0 m-0 h-auto text-[#55d38e]'>
 											@plop
 										</Button>

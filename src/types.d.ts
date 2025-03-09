@@ -8,7 +8,7 @@ interface FilePreview {
 }
 
 interface AppSidebarData {
-	user: UserData;
+	user: User;
 	teams: {
 		name: string;
 		logo: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
@@ -39,21 +39,54 @@ interface LoginStatusStep {
 	status: 'complete' | 'current' | 'upcoming';
 }
 
-interface UserData {
+type UserRoles = 'admin' | 'user' | 'guest';
+
+interface User {
 	id: string;
 	username: string;
 	avatarUrl: string;
 	creationDate: Date;
 	accentColor: string;
 	status: UserStatus;
-	role: 'admin' | 'user' | 'guest';
+	role: UserRoles;
 	description: string;
 }
 
 interface AvatarProps {
-	user: UserData;
+	user: User;
 	className?: string;
 	size?: number;
 }
 
 type UserStatus = 'online' | 'offline' | 'away' | 'busy';
+
+interface SSEMessage {
+	message: Message | any;
+	event: {
+		author: 'server' | 'client';
+		type: 'welcome' | 'message' | 'file' | 'status';
+		variant?: UserStatus | any;
+	};
+}
+
+interface Message {
+	content: string;
+	id: string;
+	sent: Date;
+	expires: Date;
+	reactions: Map<string, number>;
+	replyTo?: string;
+	pinned?: boolean;
+	channelId: string;
+}
+
+type ChannelTypes = 'chat' | 'voice' | 'board';
+
+interface Channel {
+	id: string;
+	name: string;
+	description: string;
+	type: ChannelTypes;
+	creationDate: Date;
+	members: string[];
+}

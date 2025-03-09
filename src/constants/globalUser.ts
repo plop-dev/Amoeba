@@ -1,4 +1,4 @@
-const User: UserData = {
+const UserConstant: User = {
 	username: 'plop',
 	id: '02dfjkd023',
 	avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
@@ -9,4 +9,4 @@ const User: UserData = {
 	description: 'i code stuff',
 };
 
-export default User;
+export default UserConstant;

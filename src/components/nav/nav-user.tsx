@@ -32,7 +32,7 @@ import { Button } from '../ui/button';
 import { useState } from 'react';
 import { UserProfile } from '../UserProfile';
 import UserAvatar from '../UserAvatar';
-import User from '@/constants/globalUser';
+import UserConstant from '@/constants/globalUser';
 
 export function NavUser({ user }: { user: UserData }) {
 	const { isMobile, state } = useSidebar();
@@ -113,7 +113,7 @@ export function NavUser({ user }: { user: UserData }) {
 							onClick={() => setProfileOpen}
 							size='lg'
 							className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
-							<UserAvatar user={User}></UserAvatar>
+							<UserAvatar user={UserConstant}></UserAvatar>
 							<div className='grid flex-1 text-left text-sm leading-tight'>
 								<span className='truncate font-semibold'>{user.username}</span>
 								<span className='truncate text-xs text-muted-foreground'>{user.id}</span>
