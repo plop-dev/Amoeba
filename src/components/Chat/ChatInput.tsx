@@ -9,8 +9,17 @@ import { UploadedFile } from '@/components/chat/UploadedFile';
 import { cn } from '@/lib/utils';
 
 import '@/styles/animations.css';
+import { UserConstant, UserConstant2 } from '@/constants/globalUser';
 
-export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | null; onClearReply?: () => void }) {
+export function ChatInput({
+	replyingTo,
+	onClearReply,
+	handleSendMessage,
+}: {
+	replyingTo?: string | null;
+	onClearReply?: () => void;
+	handleSendMessage: (message: Message) => void;
+}) {
 	const { toast } = useToast();
 	const [files, setFiles] = useState<{ id: string; file: File }[]>([]);
 	const [previews, setPreviews] = useState<FilePreview[]>([]);
@@ -83,7 +92,19 @@ export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | 
 	};
 
 	const handleSend = () => {
-		console.log('send');
+		const messageData: Message = {
+			id: '0',
+			author: UserConstant,
+			channelId: '/irish-potatoes/chat/general',
+			content: 'hello everyone',
+			sent: new Date(),
+			reactions: new Map([
+				['ThumbsUp', [UserConstant, UserConstant2]],
+				['ThumbsDown', [UserConstant]],
+			]),
+		};
+
+		handleSendMessage(messageData);
 	};
 
 	return (
@@ -116,7 +137,6 @@ export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | 
 							</div>
 						)}
 
-						{/* Reply container with animation */}
 						{(replyingTo || closingReply) && (
 							<div
 								ref={replyContainerRef}

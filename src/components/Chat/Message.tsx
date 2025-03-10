@@ -167,13 +167,11 @@ function EmojiReaction({
 }
 
 export function Message({
-	messageId,
 	data,
 	onReplyClick,
 	isHighlighted,
 	variant = 'default',
 }: {
-	messageId: string;
 	data: Message;
 	onReplyClick?: (msgId: string) => void;
 	isHighlighted?: boolean;
@@ -233,7 +231,7 @@ export function Message({
 			<Tooltip delayDuration={50}>
 				<TooltipTrigger asChild>
 					<div
-						className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors', {
+						className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-all animate-fade-down animate-duration-250 animate-ease-out', {
 							'bg-primary/20 hover:bg-primary/15': isHighlighted,
 							'hover:bg-secondary/50': !isHighlighted,
 							'my-1 p-2 items-start': variant === 'default',
@@ -243,7 +241,7 @@ export function Message({
 							'px-2 items-center': variant === 'inline',
 						})}
 						ref={messageRef}
-						data-message-id={messageId}
+						data-message-id={data.id}
 						data-message-type={variant}>
 						<div
 							className='avatar cursor-pointer'
@@ -294,7 +292,7 @@ export function Message({
 					onMouseLeave={() => messageRef.current?.classList.remove('bg-secondary/50')}>
 					<div className='flex gap-x-1'>
 						<ReactionPicker onEmojiClick={handleAddReaction} />
-						<OptionsButton variant='outline' messageId={messageId} onClick={() => onReplyClick?.(messageId)}>
+						<OptionsButton variant='outline' messageId={data.id} onClick={() => onReplyClick?.(data.id)}>
 							<Reply />
 						</OptionsButton>
 

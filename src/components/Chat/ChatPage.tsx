@@ -1,15 +1,31 @@
 import { ChatContainer } from '@/components/chat/ChatContainer';
 import { ChatInput } from '@/components/chat/ChatInput';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useReducer } from 'react';
 import { LoaderCircle } from 'lucide-react';
 
+const messagesReducer = (state: Message[], action: any) => {
+	switch (action.type) {
+		case 'ADD_MESSAGE':
+			return [...state, action.payload];
+		case 'RESET':
+			return [];
+		default:
+			return state;
+	}
+};
+
 export function ChatPage() {
+	const [messages, dispatch] = useReducer(messagesReducer, []);
 	const [loading, setLoading] = useState(true);
 	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
 	const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
 	const handleReplyClick = (msgId: string) => {
 		setReplyingTo(msgId);
+	};
+
+	const handleSendMessage = (message: Message) => {
+		dispatch({ type: 'ADD_MESSAGE', payload: message });
 	};
 
 	useEffect(() => {
@@ -36,8 +52,8 @@ export function ChatPage() {
 
 	return (
 		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-4 max-w-full'>
-			<ChatContainer replyingTo={replyingTo} onReplyClick={handleReplyClick} />
-			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} />
+			<ChatContainer messages={messages} replyingTo={replyingTo} onReplyClick={handleReplyClick} />
+			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} handleSendMessage={handleSendMessage} />
 
 			{isLoadingVisible && (
 				<div

@@ -78,6 +78,7 @@ interface Message {
 	replyTo?: string;
 	pinned?: boolean;
 	channelId: string;
+	files?: File[];
 }
 
 type ChannelTypes = 'chat' | 'voice' | 'board';

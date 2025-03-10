@@ -1,8 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useReducer } from 'react';
 import { Message } from '@/components/chat/Message';
 import { UserConstant, UserConstant2 } from '@/constants/globalUser';
 
-export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string | null; onReplyClick: (msgId: string) => void }) {
+export function ChatContainer({
+	messages,
+	replyingTo,
+	onReplyClick,
+}: {
+	messages: Message[];
+	replyingTo: string | null;
+	onReplyClick: (msgId: string) => void;
+}) {
 	useEffect(() => {
 		const chatContainer = document.querySelector('.chat-container');
 		if (chatContainer) {
@@ -39,10 +47,8 @@ export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string
 	return (
 		<div className='chat-container overflow-auto'>
 			<div className='wrapper pr-4'>
-				{Array.from({ length: 5 }, (i, j) => {
-					return (
-						<Message data={messageData} messageId={j.toString()} key={j} onReplyClick={onReplyClick} isHighlighted={replyingTo === j.toString()} />
-					);
+				{messages.map((message, i) => {
+					return <Message data={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message.id} />;
 				})}
 			</div>
 		</div>
