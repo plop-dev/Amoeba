@@ -32,9 +32,9 @@ import { Button } from '../ui/button';
 import { useState } from 'react';
 import { UserProfile } from '../UserProfile';
 import UserAvatar from '../UserAvatar';
-import UserConstant from '@/constants/globalUser';
+import { UserConstant } from '@/constants/globalUser';
 
-export function NavUser({ user }: { user: UserData }) {
+export function NavUser({ user }: { user: User }) {
 	const { isMobile, state } = useSidebar();
 	const [isVoiceConnected, setIsVoiceConnected] = useState(true);
 	const [micMuted, setMicMuted] = useState(false);
@@ -129,7 +129,7 @@ export function NavUser({ user }: { user: UserData }) {
 						<UserProfile
 							user={{
 								username: 'plop',
-								accentColor: '#55d38e',
+								accentColour: '#55d38e',
 								avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
 								creationDate: new Date(2024, 1, 30),
 								description: 'i code stuff',

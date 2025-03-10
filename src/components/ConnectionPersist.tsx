@@ -1,5 +1,5 @@
 import { EventSource } from 'eventsource';
-import UserConstant from '@/constants/globalUser';
+import { UserConstant } from '@/constants/globalUser';
 
 export function ConnectionPersist() {
 	const projectEventSource = new EventSource('http://localhost:8000/irish-potatoes/');

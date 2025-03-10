@@ -8,7 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/components/UserProfile';
-import UserConstant from '@/constants/globalUser';
+import { UserConstant } from '@/constants/globalUser';
 import UserAvatar from '@/components/UserAvatar';
 
 function OptionsButton({
@@ -51,7 +51,7 @@ function OptionsButton({
 					emojiName = 'PartyPopper';
 					break;
 				default:
-					emojiName = 'Unknown';
+					emojiName = 'Ban';
 			}
 
 			onEmojiClick?.(emojiName);
@@ -99,32 +99,65 @@ function ReactionPicker({ onEmojiClick }: { onEmojiClick: (emojiName: string) =>
 	);
 }
 
-function EmojiReaction({ emojiName, count, messageVariant }: { emojiName: string; count: number; messageVariant: 'default' | 'inline' }) {
-	const style = 'w-4 h-4';
+function EmojiReaction({
+	emojiName,
+	users,
+	messageVariant,
+	isActive = false,
+	onToggle,
+}: {
+	emojiName: string;
+	users: User[];
+	messageVariant: 'default' | 'inline';
+	isActive?: boolean;
+	onToggle?: () => void;
+}) {
+	// Use a single state to track the index of the user profile currently open
+	const [openUser, setOpenUser] = useState<number | null>(null);
+
+	const handleToggle = () => {
+		onToggle?.();
+	};
 
 	return (
 		<div
-			className={cn(
-				'emoji-reaction flex gap-x-2 rounded-lg border border-border px-1 items-center hover:border-primary/75 transition-colors duration-300',
-				{
-					'mb-1': messageVariant === 'inline',
-				},
-			)}>
-			<TooltipProvider delayDuration={50}>
-				<Tooltip>
+			className={cn('emoji-reaction flex gap-x-2 rounded-lg border border-border items-center transition-colors duration-150', {
+				'mb-1': messageVariant === 'inline',
+				'!border-primary/75': isActive,
+			})}>
+			<TooltipProvider delayDuration={500}>
+				<Tooltip onOpenChange={open => !open && setOpenUser(null)}>
 					<TooltipTrigger asChild>
-						<span className='flex gap-x-1 items-center px-2 py-1'>
-							<p>{count}</p>
-							{emojiName === 'Smile' && <Smile className={style} />}
-							{emojiName === 'Laugh' && <Laugh className={style} />}
-							{emojiName === 'ThumbsUp' && <ThumbsUp className={style} />}
-							{emojiName === 'ThumbsDown' && <ThumbsDown className={style} />}
-							{emojiName === 'PartyPopper' && <PartyPopper className={style} />}
-						</span>
+						<Button
+							variant='ghost'
+							onClick={handleToggle}
+							className={cn('flex gap-x-1 items-center px-2 h-7', {
+								'bg-primary/10': isActive,
+							})}
+							size={'default'}>
+							<p>{users.length}</p>
+							{emojiName === 'Smile' && <Smile className='!size-4' />}
+							{emojiName === 'Laugh' && <Laugh className='!size-4' />}
+							{emojiName === 'ThumbsUp' && <ThumbsUp className='!size-4' />}
+							{emojiName === 'ThumbsDown' && <ThumbsDown className='!size-4' />}
+							{emojiName === 'PartyPopper' && <PartyPopper className='!size-4' />}
+						</Button>
 					</TooltipTrigger>
 					<TooltipContent border={true} asChild>
 						<div className='flex flex-row gap-x-2'>
-							<UserAvatar user={UserConstant}></UserAvatar>
+							{users.map((user, i) => (
+								<UserProfile
+									key={i}
+									user={user}
+									isOpen={openUser === i}
+									openChange={(open: boolean) => {
+										setOpenUser(open ? i : openUser === i ? null : openUser);
+									}}>
+									<div className='cursor-pointer' onClick={() => setOpenUser(i)}>
+										<UserAvatar user={user} />
+									</div>
+								</UserProfile>
+							))}
 						</div>
 					</TooltipContent>
 				</Tooltip>
@@ -135,17 +168,20 @@ function EmojiReaction({ emojiName, count, messageVariant }: { emojiName: string
 
 export function Message({
 	messageId,
+	data,
 	onReplyClick,
 	isHighlighted,
 	variant = 'default',
 }: {
 	messageId: string;
+	data: Message;
 	onReplyClick?: (msgId: string) => void;
 	isHighlighted?: boolean;
 	variant?: 'default' | 'inline';
 }) {
 	const { toast } = useToast();
-	const [reactions, setReactions] = useState<{ emojiName: string; count: number }[]>([]);
+	const [reactions, setReactions] = useState<Map<string, User[]>>(data.reactions);
+	const [userReactions, setUserReactions] = useState<Set<string>>(new Set());
 	const [isProfileOpen, setProfileOpen] = useState(false);
 	const messageRef = useRef<HTMLDivElement | null>(null);
 
@@ -155,26 +191,46 @@ export function Message({
 	};
 
 	const handleAddReaction = (emojiName: string) => {
+		const currentUser = UserConstant; // current user
+
 		setReactions(prevReactions => {
-			const reactionIndex = prevReactions.findIndex(r => r.emojiName === emojiName);
-			if (reactionIndex !== -1) {
-				const updatedReactions = [...prevReactions];
-				updatedReactions[reactionIndex].count += 1;
-				return updatedReactions;
+			const newReactions = new Map(prevReactions);
+			const reactionUsers = newReactions.get(emojiName) || [];
+			const hasReacted = reactionUsers.some(user => user.id === currentUser.id);
+
+			if (hasReacted) {
+				// User is removing their reaction
+				const updatedUsers = reactionUsers.filter(user => user.id !== currentUser.id);
+				if (updatedUsers.length === 0) {
+					newReactions.delete(emojiName);
+				} else {
+					newReactions.set(emojiName, updatedUsers);
+				}
+				setUserReactions(prev => {
+					const newUserReactions = new Set(prev);
+					newUserReactions.delete(emojiName);
+					return newUserReactions;
+				});
 			} else {
-				return [...prevReactions, { emojiName, count: 1 }];
+				// User is adding a reaction
+				newReactions.set(emojiName, [...reactionUsers, currentUser]);
+				setUserReactions(prev => {
+					const newUserReactions = new Set(prev);
+					newUserReactions.add(emojiName);
+					return newUserReactions;
+				});
 			}
+
+			return newReactions;
 		});
 
 		if (!messageRef.current) return;
 		messageRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	};
 
-	const date = new Date(Date.now() + Math.random() * 10000000000).toLocaleTimeString();
-
 	return (
-		<TooltipProvider delayDuration={50}>
-			<Tooltip>
+		<TooltipProvider>
+			<Tooltip delayDuration={50}>
 				<TooltipTrigger asChild>
 					<div
 						className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors', {
@@ -194,31 +250,38 @@ export function Message({
 							onClick={() => {
 								setProfileOpen(true);
 							}}>
-							<CustomAvatar user={UserConstant} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
+							<UserAvatar user={UserConstant} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
 						</div>
 
 						<div className='content flex flex-col w-full'>
 							<div className={cn('info flex', { hidden: variant === 'inline' })}>
 								<div className='username'>
 									<UserProfile user={UserConstant} isOpen={isProfileOpen} openChange={setProfileOpen}>
-										<Button variant='link' className='text-base p-0 m-0 h-auto text-[#55d38e]'>
-											@plop
+										<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: data.author.accentColour }}>
+											@{data.author.username}
 										</Button>
 									</UserProfile>
 								</div>
 							</div>
-							<div className='text'>hey guys first message</div>
+							<div className='text'>{data.content}</div>
 
 							<div className='reactions flex gap-x-2 mt-1'>
-								{reactions.map((reaction, index) => (
-									<EmojiReaction key={index} messageVariant={variant} emojiName={reaction.emojiName} count={reaction.count} />
+								{Array.from(reactions).map(([emojiName, users], index) => (
+									<EmojiReaction
+										key={index}
+										messageVariant={variant}
+										emojiName={emojiName}
+										users={users}
+										isActive={userReactions.has(emojiName)}
+										onToggle={() => handleAddReaction(emojiName)}
+									/>
 								))}
 							</div>
 						</div>
 
 						<div className={cn('dates flex gap-x-8 flex-1 items-end flex-col', { hidden: variant === 'inline' })}>
-							<div className='sent'>{date}</div>
-							<div className='expiry text-xs text-red-900'>{date}</div>
+							<div className=''>{data.sent.toLocaleTimeString()}</div>
+							<div className='text-xs text-muted-foreground'>{data.sent.toLocaleDateString()}</div>
 						</div>
 					</div>
 				</TooltipTrigger>

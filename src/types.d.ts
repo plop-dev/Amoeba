@@ -46,7 +46,7 @@ interface User {
 	username: string;
 	avatarUrl: string;
 	creationDate: Date;
-	accentColor: string;
+	accentColour: string;
 	status: UserStatus;
 	role: UserRoles;
 	description: string;
@@ -71,10 +71,10 @@ interface SSEMessage {
 
 interface Message {
 	content: string;
+	author: User;
 	id: string;
 	sent: Date;
-	expires: Date;
-	reactions: Map<string, number>;
+	reactions: Map<string, User[]>;
 	replyTo?: string;
 	pinned?: boolean;
 	channelId: string;

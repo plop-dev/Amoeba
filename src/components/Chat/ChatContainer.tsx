@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Message } from '@/components/chat/Message';
+import { UserConstant, UserConstant2 } from '@/constants/globalUser';
 
 export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string | null; onReplyClick: (msgId: string) => void }) {
 	useEffect(() => {
@@ -23,13 +24,26 @@ export function ChatContainer({ replyingTo, onReplyClick }: { replyingTo: string
 		}
 	}, [replyingTo]);
 
+	const messageData: Message = {
+		id: '0',
+		author: UserConstant,
+		channelId: '/irish-potatoes/chat/general',
+		content: 'hello everyone',
+		sent: new Date(),
+		reactions: new Map([
+			['ThumbsUp', [UserConstant, UserConstant2]],
+			['ThumbsDown', [UserConstant]],
+		]),
+	};
+
 	return (
 		<div className='chat-container overflow-auto'>
 			<div className='wrapper pr-4'>
 				{Array.from({ length: 5 }, (i, j) => {
-					return <Message messageId={j.toString()} key={j} onReplyClick={onReplyClick} isHighlighted={replyingTo === j.toString()} />;
+					return (
+						<Message data={messageData} messageId={j.toString()} key={j} onReplyClick={onReplyClick} isHighlighted={replyingTo === j.toString()} />
+					);
 				})}
-				<Message messageId='6' key={6} onReplyClick={onReplyClick} isHighlighted={replyingTo === '6'} variant='inline' />
 			</div>
 		</div>
 	);

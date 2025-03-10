@@ -5,7 +5,7 @@ import { CalendarDays, LogOut, Mail, MessageCircle, Phone, Settings, Settings2, 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
-import UserConstant from '@/constants/globalUser';
+import { UserConstant } from '@/constants/globalUser';
 import UsersOnlineBadge from './UsersOnlineBadge';
 import { Separator } from './ui/separator';
 import { statusClasses } from '@/utils/statusClass';
@@ -34,7 +34,9 @@ export function UserProfile({
 					<UserAvatar user={user} size={16}></UserAvatar>
 				</div>
 				<div className='space-y-1'>
-					<h4 className='text-sm font-semibold'>@{user.username}</h4>
+					<h4 className='text-sm font-semibold' style={{ color: user.accentColour }}>
+						@{user.username}
+					</h4>
 					<span className='text-sm h-6 flex gap-x-2 items-center'>
 						<Badge variant={'outline'} className={cn('h-6', statusClasses[user.status])}>
 							{user.status.charAt(0).toUpperCase() + user.status.slice(1)}
@@ -93,7 +95,7 @@ export function UserProfile({
 		);
 	} else {
 		return (
-			<HoverCard open={isOpen} onOpenChange={openChange}>
+			<HoverCard open={isOpen} onOpenChange={openChange} openDelay={10000} closeDelay={10000}>
 				<HoverCardTrigger asChild>{children}</HoverCardTrigger>
 				<HoverCardContent className='w-80'>{content}</HoverCardContent>
 			</HoverCard>

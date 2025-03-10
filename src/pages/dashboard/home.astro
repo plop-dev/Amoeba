@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import UserAvatar from '@/components/UserAvatar';
 import { UserProfile } from '@/components/UserProfile';
 import UsersOnlineBadge from '@/components/UsersOnlineBadge';
-import User from '@/constants/globalUser';
+import {UserConstant, UserConstant2} from '@/constants/globalUser';
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
 
 const usersOnline = 10;
@@ -29,7 +29,7 @@ const tags = Array.from({ length: 50 }).map((_, i, a) => `v1.2.0-beta.${a.length
 					<div class='flex flex-col gap-2 p-4 w-min'>
 						{
 							Array.from({ length: usersOnline }).map((_, index) => (
-								<UserProfile key={index} user={User} contentOnly={true} />
+								<UserProfile key={index} user={UserConstant} contentOnly={true} />
 								<Separator></Separator>
 							))
 						}

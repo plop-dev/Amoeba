@@ -37,7 +37,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 			avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
 			role: 'admin',
 			status: 'online',
-			accentColor: '#55d38e',
+			accentColour: '#55d38e',
 			creationDate: new Date(2024, 1, 30),
 			description: 'i code stuff',
 		},
