@@ -188,6 +188,19 @@ export function Message({
 		toast({ title: 'Message copied to clipboard', variant: 'default' });
 	};
 
+	useEffect(() => {
+		const currentUser = UserConstant; // current user
+		const userReactionsSet = new Set<string>();
+
+		data.reactions.forEach((users, emojiName) => {
+			if (users.some(user => user.id === currentUser.id)) {
+				userReactionsSet.add(emojiName);
+			}
+		});
+
+		setUserReactions(userReactionsSet);
+	}, [data.reactions]);
+
 	const handleAddReaction = (emojiName: string) => {
 		const currentUser = UserConstant; // current user
 
