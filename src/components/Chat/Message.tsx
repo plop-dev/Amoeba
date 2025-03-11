@@ -231,7 +231,7 @@ export function Message({
 			<Tooltip delayDuration={50}>
 				<TooltipTrigger asChild>
 					<div
-						className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-all animate-fade-down animate-duration-250 animate-ease-out', {
+						className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors animate-fade-down animate-duration-300', {
 							'bg-primary/20 hover:bg-primary/15': isHighlighted,
 							'hover:bg-secondary/50': !isHighlighted,
 							'my-1 p-2 items-start': variant === 'default',

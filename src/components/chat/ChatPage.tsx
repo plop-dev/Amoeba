@@ -1,6 +1,6 @@
 import { ChatContainer } from '@/components/chat/ChatContainer';
 import { ChatInput } from '@/components/chat/ChatInput';
-import { useState, useEffect, useReducer } from 'react';
+import { useState, useEffect, useReducer, useRef } from 'react';
 import { LoaderCircle } from 'lucide-react';
 
 const messagesReducer = (state: Message[], action: any) => {
@@ -16,6 +16,7 @@ const messagesReducer = (state: Message[], action: any) => {
 
 export function ChatPage() {
 	const [messages, dispatch] = useReducer(messagesReducer, []);
+	const messageEndRef = useRef<HTMLDivElement | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
 	const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export function ChatPage() {
 
 	return (
 		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-4 max-w-full'>
-			<ChatContainer messages={messages} replyingTo={replyingTo} onReplyClick={handleReplyClick} />
+			<ChatContainer messageEndRef={messageEndRef} messages={messages} replyingTo={replyingTo} onReplyClick={handleReplyClick} />
 			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} handleSendMessage={handleSendMessage} />
 
 			{isLoadingVisible && (

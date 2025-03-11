@@ -105,6 +105,11 @@ export function ChatInput({
 		};
 
 		handleSendMessage(messageData);
+
+		const chatContainer = document.querySelector('.chat-container');
+		if (chatContainer) {
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+		}
 	};
 
 	return (

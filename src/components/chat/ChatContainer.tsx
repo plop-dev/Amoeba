@@ -3,20 +3,19 @@ import { Message } from '@/components/chat/Message';
 import { UserConstant, UserConstant2 } from '@/constants/globalUser';
 
 export function ChatContainer({
+	messageEndRef: messageEndRef,
 	messages,
 	replyingTo,
 	onReplyClick,
 }: {
+	messageEndRef: React.RefObject<HTMLDivElement | null>;
 	messages: Message[];
 	replyingTo: string | null;
 	onReplyClick: (msgId: string) => void;
 }) {
 	useEffect(() => {
-		const chatContainer = document.querySelector('.chat-container');
-		if (chatContainer) {
-			chatContainer.scrollTo(0, chatContainer.scrollHeight);
-		}
-	}, []);
+		messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+	}, [messages]);
 
 	useEffect(() => {
 		const chatContainer = document.querySelector('.chat-container');
@@ -50,6 +49,7 @@ export function ChatContainer({
 				{messages.map((message, i) => {
 					return <Message data={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message.id} />;
 				})}
+				<div ref={messageEndRef}></div>
 			</div>
 		</div>
 	);
