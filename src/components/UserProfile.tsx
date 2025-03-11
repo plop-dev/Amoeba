@@ -10,6 +10,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -36,9 +37,16 @@ export function UserProfile({
 	openChange?: (isOpen: boolean) => void;
 	key?: number;
 }) {
+	const [status, setStatus] = useState(user.status);
+
+	const handleStatusChange = (newStatus: UserStatus) => {
+		setStatus(newStatus);
+		// add backend call to update user status
+	};
+
 	const content = (
 		<>
-			<div className='flex justify-between space-x-4'>
+			<div className='grid grid-cols-[5fr,9fr] grid-rows-1 space-x-4'>
 				<div className='m-auto'>
 					<UserAvatar user={user} size={16}></UserAvatar>
 				</div>
@@ -49,28 +57,28 @@ export function UserProfile({
 					<span className='text-sm h-6 flex gap-x-2 items-center'>
 						<DropdownMenu>
 							<DropdownMenuTrigger>
-								<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[user.status])}>
-									{user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+								<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[status])}>
+									{status.charAt(0).toUpperCase() + status.slice(1)}
 									<ChevronsUpDown className='size-4 text-muted-foreground'></ChevronsUpDown>
 								</Badge>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className='!w-24 !min-w-0' sideOffset={10}>
-								<DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleStatusChange('online')}>
 									<Badge variant={'outline'} className={cn('h-6', statusClasses['online'])}>
 										Online
 									</Badge>
 								</DropdownMenuItem>
-								<DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleStatusChange('away')}>
 									<Badge variant={'outline'} className={cn('h-6', statusClasses['away'])}>
 										Away
 									</Badge>
 								</DropdownMenuItem>
-								<DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleStatusChange('busy')}>
 									<Badge variant={'outline'} className={cn('h-6', statusClasses['busy'])}>
 										Busy
 									</Badge>
 								</DropdownMenuItem>
-								<DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleStatusChange('offline')}>
 									<Badge variant={'outline'} className={cn('h-6', statusClasses['offline'])}>
 										Offline
 									</Badge>
