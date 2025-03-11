@@ -27,6 +27,10 @@ export function ChatPage() {
 
 	const handleSendMessage = (message: Message) => {
 		dispatch({ type: 'ADD_MESSAGE', payload: message });
+
+		setTimeout(() => {
+			messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+		}, 5);
 	};
 
 	useEffect(() => {

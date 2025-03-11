@@ -13,9 +13,9 @@ export function ChatContainer({
 	replyingTo: string | null;
 	onReplyClick: (msgId: string) => void;
 }) {
-	useEffect(() => {
-		messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-	}, [messages]);
+	// useEffect(() => {
+	// 	messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+	// }, [messages]);
 
 	useEffect(() => {
 		const chatContainer = document.querySelector('.chat-container');
