@@ -1,7 +1,16 @@
 import { formatDate } from '@/utils/formatDate';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, LogOut, Mail, MessageCircle, Phone, Settings, Settings2, UserPlus } from 'lucide-react';
+import { CalendarDays, ChevronsUpDown, LogOut, Mail, MessageCircle, Phone, Settings, Settings2, UserPlus } from 'lucide-react';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
@@ -38,9 +47,36 @@ export function UserProfile({
 						@{user.username}
 					</h4>
 					<span className='text-sm h-6 flex gap-x-2 items-center'>
-						<Badge variant={'outline'} className={cn('h-6', statusClasses[user.status])}>
-							{user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-						</Badge>
+						<DropdownMenu>
+							<DropdownMenuTrigger>
+								<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[user.status])}>
+									{user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+									<ChevronsUpDown className='size-4 text-muted-foreground'></ChevronsUpDown>
+								</Badge>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className='!w-24 !min-w-0' sideOffset={10}>
+								<DropdownMenuItem>
+									<Badge variant={'outline'} className={cn('h-6', statusClasses['online'])}>
+										Online
+									</Badge>
+								</DropdownMenuItem>
+								<DropdownMenuItem>
+									<Badge variant={'outline'} className={cn('h-6', statusClasses['away'])}>
+										Away
+									</Badge>
+								</DropdownMenuItem>
+								<DropdownMenuItem>
+									<Badge variant={'outline'} className={cn('h-6', statusClasses['busy'])}>
+										Busy
+									</Badge>
+								</DropdownMenuItem>
+								<DropdownMenuItem>
+									<Badge variant={'outline'} className={cn('h-6', statusClasses['offline'])}>
+										Offline
+									</Badge>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 
 						<Separator orientation='vertical' className='h-4'></Separator>
 
@@ -57,7 +93,7 @@ export function UserProfile({
 			<div className='mt-4'>
 				<p className='text-sm'>{user.description}</p>
 			</div>
-			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1' key={key}>
+			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1'>
 				{userControl ? (
 					<>
 						<a href='/dashboard/settings' className='flex flex-1'>
