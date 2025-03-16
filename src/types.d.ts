@@ -39,6 +39,8 @@ interface LoginStatusStep {
 	status: 'complete' | 'current' | 'upcoming';
 }
 
+type KeyCheckProgressType = 'Sending' | 'Hashing' | 'Comparing' | 'Success';
+
 type UserRoles = 'admin' | 'user' | 'guest';
 
 interface User {

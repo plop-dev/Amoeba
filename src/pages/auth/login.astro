@@ -6,7 +6,7 @@ import { CurlyBraces, Lock, User, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CustomInputOTS } from '@/components/custom/CustomInputOTS';
 import { LoginTimeline } from '@/components/auth/LoginTimeline';
-import { VerificationDialog } from '@/components/auth/VerificationDialog';
+import { Loader2 } from 'lucide-react';
 
 const { APPNAME } = import.meta.env;
 ---
@@ -28,7 +28,7 @@ const { APPNAME } = import.meta.env;
 		</div>
 
 		<div class='' id='login-timeline'>
-			<LoginTimeline className='w-[28rem] mx-0' client:load />
+			<LoginTimeline className='w-[36rem] mx-0' client:load />
 		</div>
 
 		<div class='w-[28rem] flex gap-x-8 overflow-hidden' id='login-wrapper'>
@@ -37,7 +37,7 @@ const { APPNAME } = import.meta.env;
 					<div class='flex flex-col gap-6'>
 						<div class='flex flex-col gap-6'>
 							<div class='grid gap-2'>
-								<FileUpload client:load />
+								<FileUpload id='login-key' client:load />
 							</div>
 							<Button type='submit' className='w-full'>Continue</Button>
 						</div>
@@ -52,6 +52,13 @@ const { APPNAME } = import.meta.env;
 			</div>
 
 			<div class='min-w-[28rem] w-[28rem]'>
+				<div id='check-key' class='flex items-center justify-center flex-col gap-4'>
+					<Loader2 className='animate-spin' />
+					<h1 class='text-muted-foreground' id='key-check-header'></h1>
+				</div>
+			</div>
+
+			<div class='min-w-[28rem] w-[28rem]'>
 				<form id='login-otp'>
 					<div class='flex flex-col gap-6'>
 						<div class='flex flex-col gap-2 items-center'>
@@ -59,7 +66,7 @@ const { APPNAME } = import.meta.env;
 							<CustomInputOTS groups={[3, 3]} pattern='[0-9]*' client:only='react' />
 						</div>
 						<div class='flex gap-2 justify-center'>
-							<Button variant='outline' className='w-full' id='to-login-key'>Back</Button>
+							<Button variant='outline' className='w-full timeline-back'>Back</Button>
 							<Button type='submit' className='w-full'>Verify</Button>
 						</div>
 					</div>
@@ -68,50 +75,202 @@ const { APPNAME } = import.meta.env;
 					</div>
 				</form>
 			</div>
-			<VerificationDialog client:load />
+
+			<div class='min-w-[28rem] w-[28rem]'>
+				<div id='check-key' class='grid place-items-center'>
+					<h1 class='text-success text-lg'>Verified</h1>
+					<p class='text-muted-foreground text-sm'>You have successfully been logged in and verified.</p>
+
+					<div class='flex flex-col items-center justify-center p-6'>
+						<div class={`relative w-24 h-24`}>
+							<video src='/media/tickanim.webm' muted autoplay></video>
+						</div>
+					</div>
+
+					<Button variant={'default'} size={'lg'}> Proceed to Dashboard </Button>
+				</div>
+			</div>
 		</div>
 	</div>
 </AuthLayout>
 
 <script>
 	import { updateStepStatus } from '@/stores/LoginTimelineStore';
-	import { updateIsOpenState } from '@/stores/VerificationDialogStore';
+	import { keyCheckProgressStore, nextStep, previousStep } from '@/stores/KeyCheckProgress';
+	import { remToPixels } from '@/utils/remToPixels';
+	import { EventSource } from 'eventsource';
+	import JSEncrypt from 'jsencrypt';
+	import { challenge, setChallenge, publicKey, setPublicKey, keyInput, setKeyInput } from '@/stores/Auth';
+	import { arrayBufferToBase64 } from '@/utils/arrayToBase64';
+	import { pemToArrayBuffer } from '@/utils/pemToArrayBuffer';
+	import { convertPkcs1ToSpki } from '@/utils/rsaKeyConverter';
+
+	async function fetchChallenge() {
+		const res = await fetch('http://localhost:8000/auth/challenge');
+		const data = await res.json();
+		setChallenge(data.challenge);
+		setPublicKey(data.publicKey);
+	}
+
+	async function computeHMAC(key: string, message: string): Promise<string> {
+		const enc = new TextEncoder();
+		const keyData = enc.encode(key);
+		const cryptoKey = await window.crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+		const signature = await window.crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
+		const byteArray = new Uint8Array(signature);
+		return Array.from(byteArray)
+			.map(b => b.toString(16).padStart(2, '0'))
+			.join('');
+	}
+
+	// Encrypt the AES key using RSA-OAEP with the Web Crypto API.
+	async function encryptAesKey(aesKeyRaw: ArrayBuffer, pemPublicKey: string): Promise<string> {
+		try {
+			// Log the public key format for debugging
+			console.log('Public key format:', pemPublicKey.substring(0, 50) + '...');
+
+			// Convert PKCS#1 format to SPKI format if necessary
+			const spkiKey = convertPkcs1ToSpki(pemPublicKey);
+			console.log('Converted key format:', spkiKey.substring(0, 50) + '...');
+
+			const publicKeyBuffer = pemToArrayBuffer(spkiKey);
+
+			// Try to import the key with better error handling
+			try {
+				const importedKey = await window.crypto.subtle.importKey(
+					'spki',
+					publicKeyBuffer,
+					{
+						name: 'RSA-OAEP',
+						hash: 'SHA-256',
+					},
+					false,
+					['encrypt'],
+				);
+
+				const encrypted = await window.crypto.subtle.encrypt({ name: 'RSA-OAEP' }, importedKey, aesKeyRaw);
+				return arrayBufferToBase64(encrypted);
+			} catch (cryptoError: any) {
+				console.error('Crypto operation error:', cryptoError);
+				console.debug('Public key buffer size:', publicKeyBuffer.byteLength);
+				throw new Error(`Crypto operation failed: ${cryptoError.message}`);
+			}
+		} catch (error) {
+			console.error('Error in encryptAesKey:', error);
+			throw error;
+		}
+	}
+
+	async function handleLogin() {
+		try {
+			// Ensure challenge and public key are available.
+			if (!challenge.get() || !publicKey.get()) {
+				await fetchChallenge();
+			}
+
+			const rawKey = keyInput.get(); // 10KB key file content as text
+			if (!rawKey) {
+				alert('Please upload your key file first');
+				return;
+			}
+
+			// --- Generate a random AES key (256-bit) ---
+			const aesKey = await window.crypto.subtle.generateKey(
+				{ name: 'AES-CBC', length: 256 },
+				true, // extractable
+				['encrypt', 'decrypt'],
+			);
+			// Export the AES key as raw bytes.
+			const aesKeyRaw = await window.crypto.subtle.exportKey('raw', aesKey);
+
+			// --- Generate a random IV (16 bytes for AES-CBC) ---
+			const ivBuffer = window.crypto.getRandomValues(new Uint8Array(16));
+
+			// --- Encrypt the key file using AES-CBC ---
+			const enc = new TextEncoder();
+			const encryptedFileBuffer = await window.crypto.subtle.encrypt({ name: 'AES-CBC', iv: ivBuffer }, aesKey, enc.encode(rawKey));
+
+			// Convert encrypted file, IV, and AES key to base64 strings.
+			const encryptedFile = arrayBufferToBase64(encryptedFileBuffer);
+			const iv = arrayBufferToBase64(ivBuffer.buffer);
+
+			// --- Encrypt the AES key using RSA-OAEP ---
+			const encryptedAesKey = await encryptAesKey(aesKeyRaw, publicKey.get());
+
+			// --- Compute the challenge response using the raw key file ---
+			const response = await computeHMAC(rawKey, challenge.get());
+
+			// --- Send the payload to the server ---
+			const res = await fetch('http://localhost:8000/auth/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ encryptedAesKey, encryptedFile, iv, response }),
+			});
+			const result = await res.json();
+			if (result.success) {
+				alert('Login successful!');
+			} else {
+				alert(`Login failed: ${result.error}`);
+			}
+		} catch (error: any) {
+			console.error('Error in handleLogin:', error);
+			alert(`Login failed: ${error.message}`);
+		}
+	}
+
+	//#region Login Store
 
 	const wrapper = document.getElementById('login-wrapper');
 	const formKey = document.getElementById('login-key');
 	const formOTP = document.getElementById('login-otp');
-	let currentStep = 0;
-	let totalSteps = 3;
+	const keyCheckHeader = document.getElementById('key-check-header');
+
+	let currentLoginStep = 0;
+	let totalLoginSteps = 4;
 
 	const updateStep = (step: number) => {
-		currentStep = step;
+		currentLoginStep = step;
 		if (step > 0) {
 			updateStepStatus(step, 'complete');
 		} else {
-			for (let i = 1; i <= totalSteps; i++) {
+			for (let i = 1; i <= totalLoginSteps; i++) {
 				updateStepStatus(i, 'upcoming');
 			}
 		}
 
 		updateStepStatus(step + 1, 'current');
+		wrapper?.scrollTo({ left: ((wrapper?.scrollWidth + remToPixels(2)) / totalLoginSteps) * currentLoginStep, behavior: 'smooth' });
 	};
 
-	document.getElementById('to-login-key')?.addEventListener('click', e => {
-		e.preventDefault();
-		wrapper?.scrollTo({ left: 0, behavior: 'smooth' });
-		updateStep(0);
+	document.querySelectorAll('.timeline-back')?.forEach(btn => {
+		btn.addEventListener('click', e => {
+			e.preventDefault();
+			updateStep(currentLoginStep - 1);
+		});
 	});
 
 	formKey?.addEventListener('submit', e => {
 		e.preventDefault();
-		wrapper?.scrollTo({ left: wrapper?.scrollWidth, behavior: 'smooth' });
 		updateStep(1);
+
+		if (keyCheckHeader) keyCheckHeader.textContent = `${keyCheckProgressStore.get()}...`;
+
+		// start auth process here
+
+		handleLogin().then(() => {
+			updateStep(2);
+		});
+		// change to 2fa when auth is done (key checking)
 	});
 
 	formOTP?.addEventListener('submit', e => {
 		e.preventDefault();
-		console.log('OTP Submitted');
-		updateStep(2);
-		updateIsOpenState(true);
+		updateStep(3);
 	});
+
+	//#endregion
+
+	//#region Key Check Progress
+
+	//#endregion
 </script>
