@@ -55,7 +55,7 @@ const { APPNAME } = import.meta.env;
 
 			<div class='min-w-[28rem] w-[28rem]'>
 				<div id='check-key' class='flex items-center justify-center flex-col gap-4'>
-					<Loader2 className='animate-spin' />
+					<Loader2 className='animate-spin' id='key-check-loading' />
 					<h1 class='text-muted-foreground' id='key-check-header'></h1>
 				</div>
 			</div>
@@ -68,7 +68,7 @@ const { APPNAME } = import.meta.env;
 							<CustomInputOTS groups={[3, 3]} pattern='[0-9]*' client:only='react' />
 						</div>
 						<div class='flex gap-2 justify-center'>
-							<Button variant='outline' className='w-full timeline-back'>Back</Button>
+							<Button variant='outline' className='w-full timeline-back' id='to-key-login'>Back</Button>
 							<Button type='submit' className='w-full'>Verify</Button>
 						</div>
 					</div>
@@ -232,6 +232,7 @@ const { APPNAME } = import.meta.env;
 	const formKey = document.getElementById('login-key');
 	const formOTP = document.getElementById('login-otp');
 	const keyCheckHeader = document.getElementById('key-check-header');
+	const keyCheckLoading = document.getElementById('key-check-loading');
 	const alertContainer = document.getElementById('alert-container');
 
 	// Initialize React root for Toast container
@@ -262,12 +263,21 @@ const { APPNAME } = import.meta.env;
 	document.querySelectorAll('.timeline-back')?.forEach(btn => {
 		btn.addEventListener('click', e => {
 			e.preventDefault();
-			updateStep(currentLoginStep - 1);
+
+			if (btn.id === 'to-key-login') updateStep(0);
+			else updateStep(currentLoginStep - 1);
 		});
 	});
 
-	function updateKeyCheckHeader(message: string) {
+	function updateKeyCheckHeader(message: string, loading: boolean = true) {
 		if (keyCheckHeader) keyCheckHeader.textContent = message;
+		if (!loading) {
+			keyCheckLoading?.classList.add('hidden');
+
+			const tick = document.createElement('svg');
+			tick.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
+			keyCheckLoading?.insertAdjacentElement('afterend', tick);
+		}
 	}
 
 	formKey?.addEventListener('submit', async e => {
@@ -291,8 +301,8 @@ const { APPNAME } = import.meta.env;
 
 		handleLogin().then(async res => {
 			if (res) {
-				updateKeyCheckHeader('Key file verified successfully');
-				setTimeout(() => updateStep(2), 1000);
+				updateKeyCheckHeader('Key file verified successfully', false);
+				setTimeout(() => updateStep(2), 1500);
 			} else {
 				// toast({
 				// 	variant: 'destructive',
@@ -319,15 +329,15 @@ const { APPNAME } = import.meta.env;
 		keyCheckProgressStore.set(data.message);
 		if (keyCheckHeader) {
 			if (data.event.variant === 'error') {
-				keyCheckHeader.textContent = `${data.message}...`;
+				keyCheckHeader.textContent = `${data.message}`;
 				toast({
 					variant: 'destructive',
 					title: 'Key check failed',
 					description: data.message,
 				});
-				updateStep(0);
+				setTimeout(() => updateStep(0), 1500);
 			}
-			keyCheckHeader.textContent = `${data.message}...`;
+			keyCheckHeader.textContent = `${data.message}`;
 		}
 	});
 
