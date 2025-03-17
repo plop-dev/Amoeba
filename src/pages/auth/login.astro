@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { CustomInputOTS } from '@/components/custom/CustomInputOTS';
 import { LoginTimeline } from '@/components/auth/LoginTimeline';
 import { Loader2 } from 'lucide-react';
+// Add Toast imports
+import { ToastProvider, ToastViewport } from '@/components/ui/toast';
 
 const { APPNAME } = import.meta.env;
 ---
@@ -92,6 +94,7 @@ const { APPNAME } = import.meta.env;
 			</div>
 		</div>
 	</div>
+	<div class='absolute bottom-4 right-4' id='alert-container'></div>
 </AuthLayout>
 
 <script>
@@ -99,13 +102,17 @@ const { APPNAME } = import.meta.env;
 	import { keyCheckProgressStore, nextStep, previousStep } from '@/stores/KeyCheckProgress';
 	import { remToPixels } from '@/utils/remToPixels';
 	import { EventSource } from 'eventsource';
-	import JSEncrypt from 'jsencrypt';
-	import { challenge, setChallenge, publicKey, setPublicKey, keyInput, setKeyInput } from '@/stores/Auth';
+	import { challenge, setChallenge, publicKey, setPublicKey, keyInput } from '@/stores/Auth';
 	import { arrayBufferToBase64 } from '@/utils/arrayToBase64';
 	import { pemToArrayBuffer } from '@/utils/pemToArrayBuffer';
 	import { convertPkcs1ToSpki } from '@/utils/rsaKeyConverter';
+	import { createRoot } from 'react-dom/client';
+	import { toast } from '@/hooks/use-toast';
+	import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from '@/components/ui/toast';
+	import * as React from 'react';
 
 	async function fetchChallenge() {
+		updateKeyCheckHeader('Generating challenge...');
 		const res = await fetch('http://localhost:8000/auth/challenge');
 		const data = await res.json();
 		setChallenge(data.challenge);
@@ -170,8 +177,7 @@ const { APPNAME } = import.meta.env;
 
 			const rawKey = keyInput.get(); // 10KB key file content as text
 			if (!rawKey) {
-				alert('Please upload your key file first');
-				return;
+				return false;
 			}
 
 			// --- Generate a random AES key (256-bit) ---
@@ -201,6 +207,7 @@ const { APPNAME } = import.meta.env;
 			const response = await computeHMAC(rawKey, challenge.get());
 
 			// --- Send the payload to the server ---
+			updateKeyCheckHeader('Sending encrypted key file...');
 			const res = await fetch('http://localhost:8000/auth/login', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -208,13 +215,14 @@ const { APPNAME } = import.meta.env;
 			});
 			const result = await res.json();
 			if (result.success) {
-				alert('Login successful!');
+				return true;
 			} else {
-				alert(`Login failed: ${result.error}`);
+				console.log(`Login failed: ${result.error}`);
+				return false;
 			}
 		} catch (error: any) {
 			console.error('Error in handleLogin:', error);
-			alert(`Login failed: ${error.message}`);
+			return false;
 		}
 	}
 
@@ -224,6 +232,15 @@ const { APPNAME } = import.meta.env;
 	const formKey = document.getElementById('login-key');
 	const formOTP = document.getElementById('login-otp');
 	const keyCheckHeader = document.getElementById('key-check-header');
+	const alertContainer = document.getElementById('alert-container');
+
+	// Initialize React root for Toast container
+	let toastRoot;
+	if (alertContainer) {
+		toastRoot = createRoot(alertContainer);
+		// Render the toast provider and viewport
+		toastRoot.render(React.createElement(ToastProvider, {}, React.createElement(ToastViewport, {})));
+	}
 
 	let currentLoginStep = 0;
 	let totalLoginSteps = 4;
@@ -249,18 +266,42 @@ const { APPNAME } = import.meta.env;
 		});
 	});
 
-	formKey?.addEventListener('submit', e => {
+	function updateKeyCheckHeader(message: string) {
+		if (keyCheckHeader) keyCheckHeader.textContent = message;
+	}
+
+	formKey?.addEventListener('submit', async e => {
 		e.preventDefault();
+
+		if (!keyInput.get()) {
+			// Show toast for no key file selected
+			toast({
+				variant: 'destructive',
+				title: 'No key file selected',
+				description: 'Please select a valid key file to continue',
+			});
+			return;
+		}
+
 		updateStep(1);
 
-		if (keyCheckHeader) keyCheckHeader.textContent = `${keyCheckProgressStore.get()}...`;
+		updateKeyCheckHeader('Starting...');
 
-		// start auth process here
+		setTimeout(() => {}, 200);
 
-		handleLogin().then(() => {
-			updateStep(2);
+		handleLogin().then(async res => {
+			if (res) {
+				updateKeyCheckHeader('Key file verified successfully');
+				setTimeout(() => updateStep(2), 1000);
+			} else {
+				// toast({
+				// 	variant: 'destructive',
+				// 	title: 'Authentication failed',
+				// 	description: 'Please try again.',
+				// });
+				updateStep(0);
+			}
 		});
-		// change to 2fa when auth is done (key checking)
 	});
 
 	formOTP?.addEventListener('submit', e => {
@@ -271,6 +312,24 @@ const { APPNAME } = import.meta.env;
 	//#endregion
 
 	//#region Key Check Progress
+
+	const keyCheckSource = new EventSource('http://localhost:8000/auth/key-check-events');
+	keyCheckSource.addEventListener('message', e => {
+		const data: SSEMessage = JSON.parse(e.data);
+		keyCheckProgressStore.set(data.message);
+		if (keyCheckHeader) {
+			if (data.event.variant === 'error') {
+				keyCheckHeader.textContent = `${data.message}...`;
+				toast({
+					variant: 'destructive',
+					title: 'Key check failed',
+					description: data.message,
+				});
+				updateStep(0);
+			}
+			keyCheckHeader.textContent = `${data.message}...`;
+		}
+	});
 
 	//#endregion
 </script>
