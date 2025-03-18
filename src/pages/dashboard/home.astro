@@ -29,7 +29,7 @@ const tags = Array.from({ length: 50 }).map((_, i, a) => `v1.2.0-beta.${a.length
 					<div class='flex flex-col gap-2 p-4 w-min'>
 						{
 							Array.from({ length: usersOnline }).map((_, index) => (
-								<UserProfile key={index} user={UserConstant} contentOnly={true} />
+								<UserProfile key={index} user={UserConstant} contentOnly={true} client:only="react" />
 								<Separator></Separator>
 							))
 						}

@@ -4,6 +4,11 @@ type UserRoles = 'admin' | 'user' | 'guest';
 
 interface User {
 	id: string;
+	auth: {
+		keyHash: string;
+		salt: string;
+		iterations: number;
+	};
 	username: string;
 	description: string;
 	avatarUrl: string;

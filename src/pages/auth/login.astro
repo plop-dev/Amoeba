@@ -9,6 +9,7 @@ import { LoginTimeline } from '@/components/auth/LoginTimeline';
 import { Loader2 } from 'lucide-react';
 // Add Toast imports
 import { ToastProvider, ToastViewport } from '@/components/ui/toast';
+import { Input } from '@/components/ui/input';
 
 const { APPNAME } = import.meta.env;
 ---
@@ -54,9 +55,13 @@ const { APPNAME } = import.meta.env;
 			</div>
 
 			<div class='min-w-[28rem] w-[28rem]'>
-				<div id='check-key' class='flex items-center justify-center flex-col gap-4'>
-					<Loader2 className='animate-spin' id='key-check-loading' />
+				<div id='check-key' class='flex items-center justify-center flex-col gap-4 p-4'>
+					<Input type='text' placeholder='Your Account ID' id='login-account-id' client:load />
+
+					<Loader2 className='animate-spin hidden' id='key-check-loading' />
 					<h1 class='text-muted-foreground' id='key-check-header'></h1>
+
+					<Button variant={'default'} type='submit' className='w-full'>Login</Button>
 				</div>
 			</div>
 
@@ -89,7 +94,7 @@ const { APPNAME } = import.meta.env;
 						</div>
 					</div>
 
-					<Button variant={'default'} size={'lg'}> Proceed to Dashboard </Button>
+					<Button variant={'default'} size={'lg'}><a href='/dashboard/home'> Proceed to Dashboard </a></Button>
 				</div>
 			</div>
 		</div>
@@ -110,6 +115,15 @@ const { APPNAME } = import.meta.env;
 	import { toast } from '@/hooks/use-toast';
 	import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from '@/components/ui/toast';
 	import * as React from 'react';
+
+	const wrapper = document.getElementById('login-wrapper');
+	const formKey = document.getElementById('login-key');
+	const formOTP = document.getElementById('login-otp');
+	const checkKeyContainer = document.getElementById('check-key');
+	const keyCheckHeader = document.getElementById('key-check-header');
+	const keyCheckLoading = document.getElementById('key-check-loading');
+	const accountIdInput = document.getElementById('login-account-id') as HTMLInputElement;
+	const alertContainer = document.getElementById('alert-container');
 
 	async function fetchChallenge() {
 		updateKeyCheckHeader('Generating challenge...');
@@ -211,7 +225,7 @@ const { APPNAME } = import.meta.env;
 			const res = await fetch('http://localhost:8000/auth/login', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ encryptedAesKey, encryptedFile, iv, response }),
+				body: JSON.stringify({ encryptedAesKey, encryptedFile, iv, response, accountId: accountIdInput.value }),
 			});
 			const result = await res.json();
 			if (result.success) {
@@ -227,13 +241,6 @@ const { APPNAME } = import.meta.env;
 	}
 
 	//#region Login Store
-
-	const wrapper = document.getElementById('login-wrapper');
-	const formKey = document.getElementById('login-key');
-	const formOTP = document.getElementById('login-otp');
-	const keyCheckHeader = document.getElementById('key-check-header');
-	const keyCheckLoading = document.getElementById('key-check-loading');
-	const alertContainer = document.getElementById('alert-container');
 
 	// Initialize React root for Toast container
 	let toastRoot;
@@ -277,6 +284,8 @@ const { APPNAME } = import.meta.env;
 			const tick = document.createElement('svg');
 			tick.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
 			keyCheckLoading?.insertAdjacentElement('afterend', tick);
+		} else {
+			keyCheckLoading?.classList.remove('hidden');
 		}
 	}
 
@@ -294,24 +303,32 @@ const { APPNAME } = import.meta.env;
 		}
 
 		updateStep(1);
+	});
 
-		updateKeyCheckHeader('Starting...');
+	checkKeyContainer?.querySelector('button')?.addEventListener('click', async e => {
+		e.preventDefault();
 
-		setTimeout(() => {}, 200);
+		if (accountIdInput.value.trim() === '') {
+			toast({
+				variant: 'destructive',
+				title: 'No account ID',
+				description: 'Please enter your account ID to continue',
+			});
+			return;
+		}
+
+		updateKeyCheckHeader('Processing...', true);
 
 		handleLogin().then(async res => {
 			if (res) {
 				updateKeyCheckHeader('Key file verified successfully', false);
-				setTimeout(() => updateStep(2), 1500);
+				setTimeout(() => updateStep(2), 750);
 			} else {
-				// toast({
-				// 	variant: 'destructive',
-				// 	title: 'Authentication failed',
-				// 	description: 'Please try again.',
-				// });
 				updateStep(0);
 			}
 		});
+
+		updateKeyCheckHeader('Starting...');
 	});
 
 	formOTP?.addEventListener('submit', e => {
