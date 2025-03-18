@@ -1,3 +1,78 @@
+// User Related Types
+type UserStatus = 'online' | 'offline' | 'away' | 'busy';
+type UserRoles = 'admin' | 'user' | 'guest';
+
+interface User {
+	id: string;
+	username: string;
+	description: string;
+	avatarUrl: string;
+	creationDate: Date;
+	accentColour: string;
+	status: UserStatus;
+	workspaces: UserWorkspace[];
+}
+
+interface AvatarProps {
+	user: User;
+	className?: string;
+	size?: number;
+}
+
+// Workspace Related Types
+interface UserWorkspace {
+	id: string;
+	name: string;
+	creationDate: Date;
+	role: UserRoles;
+	channels: Channel[];
+}
+
+interface Workspace {
+	id: string;
+	name: string;
+	creationDate: Date;
+	members: { userId: User['id']; role: UserRoles }[];
+}
+
+// Channel Related Types
+type ChannelTypes = 'chat' | 'voice' | 'board';
+
+interface Channel {
+	id: string;
+	workspaces: Workspace['id'];
+	name: string;
+	description: string;
+	type: ChannelTypes;
+	creationDate: Date;
+	members: User['id'][];
+}
+
+// Message Related Types
+interface Message {
+	content: string;
+	author: User;
+	id: string;
+	channelId: Channel['id'];
+	workspaceId: Workspace['id'];
+	sent: Date;
+	reactions: Map<string, User[]>;
+	replyTo?: string;
+	pinned?: boolean;
+	channelId: string;
+	files?: File[];
+}
+
+interface SSEMessage {
+	message: Message | any;
+	event: {
+		author: 'server' | 'client';
+		type: 'welcome' | 'message' | 'file' | 'status';
+		variant?: UserStatus | any;
+	};
+}
+
+// UI Component Types
 interface FilePreview {
 	id: string;
 	src: string;
@@ -31,65 +106,14 @@ interface NavMainProps {
 	}[];
 }
 
+// Utility
+
+type KeyCheckProgressType = 'Sending' | 'Hashing' | 'Comparing' | 'Success';
+
 interface LoginStatusStep {
 	id: number;
 	title: string;
 	description: string;
 	icon: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
 	status: 'complete' | 'current' | 'upcoming';
-}
-
-type KeyCheckProgressType = 'Sending' | 'Hashing' | 'Comparing' | 'Success';
-
-type UserRoles = 'admin' | 'user' | 'guest';
-
-interface User {
-	id: string;
-	username: string;
-	avatarUrl: string;
-	creationDate: Date;
-	accentColour: string;
-	status: UserStatus;
-	role: UserRoles;
-	description: string;
-}
-
-interface AvatarProps {
-	user: User;
-	className?: string;
-	size?: number;
-}
-
-type UserStatus = 'online' | 'offline' | 'away' | 'busy';
-
-interface SSEMessage {
-	message: Message | any;
-	event: {
-		author: 'server' | 'client';
-		type: 'welcome' | 'message' | 'file' | 'status';
-		variant?: UserStatus | any;
-	};
-}
-
-interface Message {
-	content: string;
-	author: User;
-	id: string;
-	sent: Date;
-	reactions: Map<string, User[]>;
-	replyTo?: string;
-	pinned?: boolean;
-	channelId: string;
-	files?: File[];
-}
-
-type ChannelTypes = 'chat' | 'voice' | 'board';
-
-interface Channel {
-	id: string;
-	name: string;
-	description: string;
-	type: ChannelTypes;
-	creationDate: Date;
-	members: string[];
 }
