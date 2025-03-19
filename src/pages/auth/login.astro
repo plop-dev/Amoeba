@@ -147,13 +147,7 @@ const { APPNAME } = import.meta.env;
 	// Encrypt the AES key using RSA-OAEP with the Web Crypto API.
 	async function encryptAesKey(aesKeyRaw: ArrayBuffer, pemPublicKey: string): Promise<string> {
 		try {
-			// Log the public key format for debugging
-			console.log('Public key format:', pemPublicKey.substring(0, 50) + '...');
-
-			// Convert PKCS#1 format to SPKI format if necessary
 			const spkiKey = convertPkcs1ToSpki(pemPublicKey);
-			console.log('Converted key format:', spkiKey.substring(0, 50) + '...');
-
 			const publicKeyBuffer = pemToArrayBuffer(spkiKey);
 
 			// Try to import the key with better error handling
@@ -231,7 +225,7 @@ const { APPNAME } = import.meta.env;
 			if (result.success) {
 				return true;
 			} else {
-				console.log(`Login failed: ${result.error}`);
+				console.error(`Login failed: ${result.error}`);
 				return false;
 			}
 		} catch (error: any) {
