@@ -220,6 +220,7 @@ const { APPNAME } = import.meta.env;
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ encryptedAesKey, encryptedFile, iv, response, accountId: accountIdInput.value }),
+				credentials: 'include',
 			});
 			const result = await res.json();
 			if (result.success) {

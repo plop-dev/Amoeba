@@ -10,7 +10,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -19,6 +19,7 @@ import { UserConstant } from '@/constants/globalUser';
 import UsersOnlineBadge from './UsersOnlineBadge';
 import { Separator } from './ui/separator';
 import { statusClasses } from '@/utils/statusClass';
+import { useToast } from '@/hooks/use-toast';
 
 export function UserProfile({
 	user = UserConstant,
@@ -27,7 +28,6 @@ export function UserProfile({
 	userControl = false,
 	isOpen = false,
 	openChange = () => {},
-	key = 0,
 }: {
 	user: User;
 	children?: React.ReactNode;
@@ -35,13 +35,29 @@ export function UserProfile({
 	userControl?: boolean;
 	isOpen?: boolean;
 	openChange?: (isOpen: boolean) => void;
-	key?: number;
 }) {
+	const { toast } = useToast();
 	const [status, setStatus] = useState(user.status);
 
 	const handleStatusChange = (newStatus: UserStatus) => {
 		setStatus(newStatus);
 		// add backend call to update user status
+	};
+
+	const handleLogout = async () => {
+		const res = await fetch('http://localhost:8000/auth/logout', {
+			method: 'POST',
+			credentials: 'include',
+		});
+
+		const data = await res.json();
+		if (data.success) {
+			toast({ title: 'Logged out', description: 'You have been logged out', variant: 'success' });
+			window.location.href = '/auth/login';
+			setStatus('offline');
+		} else {
+			toast({ title: 'Error', description: 'An error occurred while logging out', variant: 'destructive' });
+		}
 	};
 
 	const content = (
@@ -89,7 +105,8 @@ export function UserProfile({
 						<Separator orientation='vertical' className='h-4'></Separator>
 
 						<Badge variant={'outline'} className='h-6'>
-							{user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+							{/* {user.role.charAt(0).toUpperCase() + user.role.slice(1)} */}
+							Admin
 						</Badge>
 					</span>
 					<div className='flex items-center pt-2'>
@@ -110,7 +127,7 @@ export function UserProfile({
 								Settings
 							</Button>
 						</a>
-						<Button size='sm' variant='outline' className='flex-1'>
+						<Button size='sm' variant='outline' className='flex-1' onClick={handleLogout}>
 							<LogOut className='mr-2 h-4 w-4' />
 							Log Out
 						</Button>

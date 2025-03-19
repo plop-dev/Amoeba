@@ -9,13 +9,13 @@ export function ConnectionPersist() {
 
 		if (data.event.author === 'server') {
 			if (data.event.type === 'welcome') {
-				console.log('Welcome message received\n');
+				// console.log('Welcome message received\n');
 				// create message, add to container
 			}
 		} else if (data.event.author === 'client') {
 			if (data.event.type === 'status') {
 				const status = data.event.variant;
-				console.log(`User ${data.message} is now ${status}\n`);
+				// console.log(`User ${data.message} is now ${status}\n`);
 			}
 		}
 	});

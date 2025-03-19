@@ -122,3 +122,9 @@ interface LoginStatusStep {
 	icon: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
 	status: 'complete' | 'current' | 'upcoming';
 }
+
+declare namespace App {
+	interface Locals {
+		userId: string;
+	}
+}
