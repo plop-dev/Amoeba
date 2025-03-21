@@ -1,4 +1,4 @@
-import { ChevronRight, Home, MessageCircle, Plus, type LucideIcon } from 'lucide-react';
+import { AudioWaveform, Book, ChevronRight, Home, MessageCircle, Plus, type LucideIcon } from 'lucide-react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -25,13 +25,12 @@ import {
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
-('use client');
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
 	channelName: z.string().min(2, { message: 'Channel name must be at least 2 characters.' }).max(50),
@@ -134,8 +133,30 @@ export function NavMain({ channels }: { channels: Channel[] }) {
 					url: `/dashboard/chats/${channel.name}`,
 				})),
 			});
-		} else if (channel.type === 'voice') {
 		} else if (channel.type === 'board') {
+			const boardChannels = channels.filter(channel => channel.type === 'board');
+
+			categories.push({
+				title: 'Boards',
+				icon: Book,
+				url: '/dashboard/boards',
+				items: boardChannels.map(channel => ({
+					...channel,
+					url: `/dashboard/boards/${channel.name}`,
+				})),
+			});
+		} else if (channel.type === 'voice') {
+			const voiceChannels = channels.filter(channel => channel.type === 'voice');
+
+			categories.push({
+				title: 'Voices',
+				icon: AudioWaveform,
+				url: '/dashboard/vcs',
+				items: voiceChannels.map(channel => ({
+					...channel,
+					url: `/dashboard/vcs/${channel.name}`,
+				})),
+			});
 		}
 	});
 

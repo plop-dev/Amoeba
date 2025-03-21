@@ -16,7 +16,6 @@ import {
 	Sparkles,
 	Undo2,
 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -40,8 +39,6 @@ export function NavUser({ user }: { user: User }) {
 	const [micMuted, setMicMuted] = useState(false);
 	const [isDeafened, setDeafen] = useState(false);
 	const [isProfileOpen, setProfileOpen] = useState(false);
-
-	console.log(user);
 
 	return (
 		<SidebarMenu>

@@ -64,15 +64,17 @@
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"cmdk": "^1.0.4",
+		"dompurify": "^3.2.4",
 		"eventsource": "^3.0.5",
 		"framer-motion": "^12.4.11",
 		"input-otp": "^1.4.2",
+		"jsdom": "^26.0.0",
 		"jsencrypt": "^3.3.2",
 		"katex": "^0.16.20",
 		"lexical": "^0.23.1",
 		"lodash-es": "^4.17.21",
 		"lowlight": "^3.3.0",
-		"lucide-react": "^0.469.0",
+		"lucide-react": "^0.483.0",
 		"million": "^3.1.11",
 		"nanostores": "^0.11.3",
 		"next-themes": "^0.4.4",
@@ -95,6 +97,7 @@
 		"zod": "^3.24.1"
 	},
 	"devDependencies": {
+		"@types/jsdom": "^21.1.7",
 		"sass": "^1.83.1"
 	},
 	"optionalDependencies": {

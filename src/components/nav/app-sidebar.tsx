@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { AudioWaveform, Book, CurlyBraces, Droplet, Home, MessageCircle, Settings, TreePine, Worm, type LucideProps } from 'lucide-react';
+import { AudioWaveform, Book, CurlyBraces, Droplet, Home, MessageCircle, Settings, TreePine, Worm } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 
 import { NavMain } from '@/components/nav/NavMain';
@@ -10,8 +10,6 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '../ui/separator';
 import { UserConstant } from '@/constants/globalUser';
-
-// This is sample data.
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 	appName: string;
@@ -30,7 +28,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 
 		const fetchData = async () => {
 			try {
-				const res = await fetch(`http://localhost:8000/user/${userId}`);
+				const res = await fetch(`http://localhost:8000/user/${userId}`, { credentials: 'include' });
 				const data = await res.json();
 
 				if (data) {
@@ -51,7 +49,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 				setTimeout(fetchData, 1000);
 			} else {
 				console.log('All retries failed, redirecting to logout');
-				fetch('http://localhost:8000/auth/logout');
+				fetch('http://localhost:8000/auth/logout', { credentials: 'include' });
 				window.location.href = '/auth/login';
 			}
 		};

@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/UserAvatar';
 import { UserConstant } from '@/constants/globalUser';
-import UsersOnlineBadge from './UsersOnlineBadge';
 import { Separator } from './ui/separator';
 import { statusClasses } from '@/utils/statusClass';
 import { useToast } from '@/hooks/use-toast';
@@ -74,6 +73,8 @@ export function UserProfile({
 				<div className='space-y-1'>
 					<h4 className='text-sm font-semibold' style={{ color: user.accentColour }}>
 						@{user.username}
+						<br></br>
+						<span className='text-xs text-muted-foreground'>{user.id}</span>
 					</h4>
 					<span className='text-sm h-6 flex gap-x-2 items-center'>
 						<DropdownMenu>
