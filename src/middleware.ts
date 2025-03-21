@@ -17,6 +17,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 			const data = await res.json();
 			if (data.success) {
 				context.locals.userId = data.userId;
+
 				if (context.url.pathname.includes('auth')) {
 					return context.redirect('/dashboard');
 				}

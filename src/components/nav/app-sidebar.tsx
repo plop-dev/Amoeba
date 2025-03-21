@@ -1,14 +1,15 @@
 import * as React from 'react';
 import { AudioWaveform, Book, CurlyBraces, Droplet, Home, MessageCircle, Settings, TreePine, Worm, type LucideProps } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-import { NavMain } from '@/components/nav/nav-main';
-import { NavUser } from '@/components/nav/nav-user';
-import { TeamSwitcher } from '@/components/nav/team-switcher';
+import { NavMain } from '@/components/nav/NavMain';
+import { NavUser } from '@/components/nav/NavUser';
+import { WorkspaceSwitcher } from '@/components/nav/WorkspaceSwitcher';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '../ui/separator';
+import { UserConstant } from '@/constants/globalUser';
 
 // This is sample data.
 
@@ -18,107 +19,45 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	const { isMobile, state, toggleSidebar } = useSidebar();
-	const [usersConnected, setUsersConnected] = useState(0);
+	const [navData, setNavData] = useState<AppSidebarData>();
+
+	const userId = window.localStorage.getItem('userId');
 
 	useEffect(() => {
-		function handleUsersConnectedUpdate(e: CustomEvent<{ count: number }>) {
-			setUsersConnected(e.detail.count);
-		}
-		window.addEventListener('usersConnectedUpdate', handleUsersConnectedUpdate as EventListener);
-		return () => {
-			window.removeEventListener('usersConnectedUpdate', handleUsersConnectedUpdate as EventListener);
-		};
-	}, []);
+		let retryCount = 0;
+		// const retryCountRef = React.useRef(0);
+		const MAX_RETRIES = 3;
 
-	const data: AppSidebarData = {
-		user: {
-			username: 'plop',
-			id: '02dfjkd023',
-			avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
-			role: 'admin',
-			status: 'online',
-			accentColour: '#55d38e',
-			creationDate: new Date(2024, 1, 30),
-			description: 'i code stuff',
-		},
-		teams: [
-			{
-				name: 'Project 1',
-				logo: TreePine,
-				plan: '3 Members',
-			},
-			{
-				name: 'Project 2',
-				logo: Droplet,
-				plan: '2 Members',
-			},
-		],
-		navMain: [
-			{
-				title: 'Home',
-				url: '/dashboard',
-				icon: Home,
-			},
-			{
-				title: 'Chats',
-				url: '/dashboard/chats',
-				icon: MessageCircle,
-				isActive: true,
-				canCreate: true,
-				items: [
-					{
-						title: '#general',
-						url: '/dashboard/chats/general',
-					},
-					{
-						title: '#off-topic',
-						url: '/dashboard/chats/off-topic',
-					},
-				],
-			},
-			{
-				title: 'VCs',
-				url: '/dashboard/vcs',
-				icon: AudioWaveform,
-				isActive: true,
-				canCreate: true,
-				items: [
-					{
-						title: '#general',
-						url: '/dashboard/vcs/general',
-					},
-					{
-						title: '#off-topic',
-						url: '/dashboard/vcs/off-topic',
-					},
-				],
-			},
-			{
-				title: 'Boards',
-				url: '/dashboard/boards',
-				icon: Book,
-				isActive: true,
-				canCreate: true,
-				items: [
-					{
-						title: '#general',
-						url: '/dashboard/boards/general',
-						usersOnline: usersConnected,
-						userConnected: true,
-					},
-					{
-						title: '#off-topic',
-						url: '/dashboard/boards/off-topic',
-					},
-				],
-			},
-			{
-				title: 'Settings',
-				url: '/dashboard/settings',
-				icon: Settings,
-			},
-		],
-	};
+		const fetchData = async () => {
+			try {
+				const res = await fetch(`http://localhost:8000/user/${userId}`);
+				const data = await res.json();
+
+				if (data) {
+					setNavData(data);
+				} else {
+					handleRetry();
+				}
+			} catch (err) {
+				console.error(err);
+				handleRetry();
+			}
+		};
+
+		const handleRetry = () => {
+			retryCount++;
+			if (retryCount < MAX_RETRIES) {
+				console.log(`Retrying fetch (${retryCount}/${MAX_RETRIES})...`);
+				setTimeout(fetchData, 1000);
+			} else {
+				console.log('All retries failed, redirecting to logout');
+				fetch('http://localhost:8000/auth/logout');
+				window.location.href = '/auth/login';
+			}
+		};
+
+		fetchData();
+	}, []);
 
 	return (
 		<Sidebar collapsible='icon' {...props} className=''>
@@ -143,14 +82,10 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 					</div>
 				</div>
 				<Separator orientation='horizontal' className='relative -left-full min-w-[100vw] w-screen'></Separator>
-				<TeamSwitcher teams={data.teams} />
+				{navData && <WorkspaceSwitcher workspace={navData.workspaces} />}
 			</SidebarHeader>
-			<SidebarContent>
-				<NavMain items={data.navMain} />
-			</SidebarContent>
-			<SidebarFooter>
-				<NavUser user={data.user} />
-			</SidebarFooter>
+			<SidebarContent>{navData && <NavMain channels={navData.channels} />}</SidebarContent>
+			<SidebarFooter>{navData && <NavUser user={navData.user} />}</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
 	);

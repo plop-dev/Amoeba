@@ -6,6 +6,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { ConnectionPersist } from '@/components/ConnectionPersist';
+import { setUserId } from '@/stores/Auth';
 // import '@/server';
 
 const defaultSidebarOpen = Astro.cookies.get('sidebar:state')?.value === 'true';
@@ -16,6 +17,7 @@ interface Props {
 }
 
 const { title, containerClassName = '' } = Astro.props;
+const {userId} = Astro.locals
 const { APPNAME: appName } = import.meta.env;
 ---
 
@@ -64,3 +66,7 @@ const { APPNAME: appName } = import.meta.env;
 		</main>
 	</body>
 </html>
+
+<script define:vars={{userId}}>
+	window.localStorage.setItem('userId', userId);
+</script>

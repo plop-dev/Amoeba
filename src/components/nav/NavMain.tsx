@@ -1,4 +1,4 @@
-import { ChevronRight, Plus, type LucideIcon } from 'lucide-react';
+import { ChevronRight, Home, MessageCircle, Plus, type LucideIcon } from 'lucide-react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
@@ -32,7 +32,6 @@ import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import UsersOnlineBadge from '../UsersOnlineBadge';
 
 const formSchema = z.object({
 	channelName: z.string().min(2, { message: 'Channel name must be at least 2 characters.' }).max(50),
@@ -119,12 +118,40 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 	);
 }
 
-export function NavMain({ items }: { items: NavMainProps[] }) {
+export function NavMain({ channels }: { channels: Channel[] }) {
+	let categories: Category[] = [];
+
+	channels.forEach(channel => {
+		if (channel.type === 'chat') {
+			const chatChannels = channels.filter(channel => channel.type === 'chat');
+
+			categories.push({
+				title: 'Chats',
+				icon: MessageCircle,
+				url: '/dashboard/chats',
+				items: chatChannels.map(channel => ({
+					...channel,
+					url: `/dashboard/chats/${channel.name}`,
+				})),
+			});
+		} else if (channel.type === 'voice') {
+		} else if (channel.type === 'board') {
+		}
+	});
+
 	return (
 		<SidebarGroup className=''>
-			<SidebarGroupLabel>Platform</SidebarGroupLabel>
+			<SidebarGroupLabel>App</SidebarGroupLabel>
 			<SidebarMenu>
-				{items.map(item => {
+				<SidebarMenuItem key={'home'}>
+					<SidebarMenuButton asChild tooltip='home'>
+						<a href='/dashboard/home'>
+							<Home></Home>
+							<span>Home</span>
+						</a>
+					</SidebarMenuButton>
+				</SidebarMenuItem>
+				{categories.map(item => {
 					const hasSubItems = item.items && item.items.length > 0;
 					return hasSubItems ? (
 						<Collapsible key={item.title} asChild defaultOpen={item.isActive} className='group/collapsible'>
@@ -153,18 +180,11 @@ export function NavMain({ items }: { items: NavMainProps[] }) {
 								<CollapsibleContent>
 									<SidebarMenuSub>
 										{item.items?.map(subItem => (
-											<SidebarMenuSubItem
-												key={subItem.title}
-												className={cn('transition-colors', {
-													'border-primary border-2 box-border rounded-lg': subItem.userConnected,
-												})}>
+											<SidebarMenuSubItem key={subItem.name} className={cn('transition-colors')}>
 												<SidebarMenuSubButton asChild>
-													<a href={subItem.url}>
+													<a href={(subItem as Channel & { url: string }).url}>
 														<span className='flex items-center w-full'>
-															<p className='w-full'>{subItem.title}</p>
-															{typeof subItem.usersOnline === 'number' && subItem.usersOnline > 0 && (
-																<UsersOnlineBadge usersOnline={subItem.usersOnline}></UsersOnlineBadge>
-															)}
+															<p className='w-full'>#{subItem.name}</p>
 														</span>
 													</a>
 												</SidebarMenuSubButton>

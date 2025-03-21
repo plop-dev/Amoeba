@@ -36,10 +36,12 @@ import { UserConstant } from '@/constants/globalUser';
 
 export function NavUser({ user }: { user: User }) {
 	const { isMobile, state } = useSidebar();
-	const [isVoiceConnected, setIsVoiceConnected] = useState(true);
+	const [isVoiceConnected, setIsVoiceConnected] = useState(false);
 	const [micMuted, setMicMuted] = useState(false);
 	const [isDeafened, setDeafen] = useState(false);
 	const [isProfileOpen, setProfileOpen] = useState(false);
+
+	console.log(user);
 
 	return (
 		<SidebarMenu>
@@ -113,7 +115,7 @@ export function NavUser({ user }: { user: User }) {
 							onClick={() => setProfileOpen}
 							size='lg'
 							className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
-							<UserAvatar user={UserConstant}></UserAvatar>
+							<UserAvatar user={user}></UserAvatar>
 							<div className='grid flex-1 text-left text-sm leading-tight'>
 								<span className='truncate font-semibold'>{user.username}</span>
 								<span className='truncate text-xs text-muted-foreground'>{user.id}</span>
@@ -126,21 +128,7 @@ export function NavUser({ user }: { user: User }) {
 						side={isMobile ? 'bottom' : 'right'}
 						align='end'
 						sideOffset={4}>
-						<UserProfile
-							user={{
-								username: 'plop',
-								accentColour: '#55d38e',
-								avatarUrl: 'https://maximec.dev/_astro/plop.C6PhQEc1_1CKlOU.webp',
-								creationDate: new Date(2024, 1, 30),
-								description: 'i code stuff',
-								role: 'admin',
-								status: 'online',
-								id: '02dfjkd023',
-							}}
-							isOpen={isProfileOpen}
-							openChange={setProfileOpen}
-							contentOnly={true}
-							userControl={true}></UserProfile>
+						<UserProfile user={user} isOpen={isProfileOpen} openChange={setProfileOpen} contentOnly={true} userControl={true}></UserProfile>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>

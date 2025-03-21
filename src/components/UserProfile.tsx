@@ -10,7 +10,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -38,6 +38,11 @@ export function UserProfile({
 }) {
 	const { toast } = useToast();
 	const [status, setStatus] = useState(user.status);
+
+	useEffect(() => {
+		console.log(`Status changed to: ${status}`);
+		// add backend call to update user status
+	}, [status]);
 
 	const handleStatusChange = (newStatus: UserStatus) => {
 		setStatus(newStatus);
@@ -111,7 +116,7 @@ export function UserProfile({
 					</span>
 					<div className='flex items-center pt-2'>
 						<CalendarDays className='mr-2 h-4 w-4 opacity-70' />{' '}
-						<span className='text-xs text-muted-foreground'>Joined {formatDate(user.creationDate)}</span>
+						<span className='text-xs text-muted-foreground'>Joined {formatDate(new Date(user.creationDate))}</span>
 					</div>
 				</div>
 			</div>

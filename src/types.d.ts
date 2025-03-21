@@ -15,7 +15,7 @@ interface User {
 	creationDate: Date;
 	accentColour: string;
 	status: UserStatus;
-	workspaces: UserWorkspace[];
+	workspaces: Array<String>;
 }
 
 interface AvatarProps {
@@ -25,18 +25,11 @@ interface AvatarProps {
 }
 
 // Workspace Related Types
-interface UserWorkspace {
-	id: string;
-	name: string;
-	creationDate: Date;
-	role: UserRoles;
-	channels: Channel[];
-}
-
 interface Workspace {
 	id: string;
 	name: string;
 	creationDate: Date;
+	icon: string;
 	members: { userId: User['id']; role: UserRoles }[];
 }
 
@@ -45,7 +38,7 @@ type ChannelTypes = 'chat' | 'voice' | 'board';
 
 interface Channel {
 	id: string;
-	workspaces: Workspace['id'];
+	workspace: Workspace['id'];
 	name: string;
 	description: string;
 	type: ChannelTypes;
@@ -89,26 +82,17 @@ interface FilePreview {
 
 interface AppSidebarData {
 	user: User;
-	teams: {
-		name: string;
-		logo: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
-		plan: string;
-	}[];
-	navMain: NavMainProps[];
+	workspaces: Workspace[];
+	channels: Channel[];
 }
 
-interface NavMainProps {
+interface Category {
 	title: string;
 	url: string;
 	icon?: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
 	isActive?: boolean;
 	canCreate?: boolean;
-	items?: {
-		title: string;
-		url: string;
-		usersOnline?: number;
-		userConnected?: boolean;
-	}[];
+	items?: Channel[] & { url: string }[];
 }
 
 // Utility
