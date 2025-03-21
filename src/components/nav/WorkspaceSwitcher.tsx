@@ -15,6 +15,11 @@ export function WorkspaceSwitcher({ workspace: workspaces }: { workspace: Worksp
 	const { isMobile } = useSidebar();
 	const [activeWorkspace, setActiveWorkspace] = React.useState(workspaces[0]);
 
+	const parser = new DOMParser();
+	const svgElement = parser.parseFromString(activeWorkspace.icon, 'image/svg+xml').documentElement;
+	svgElement.setAttribute('class', 'size-4');
+	const icon = svgElement.outerHTML;
+
 	return (
 		<SidebarMenu className=''>
 			<SidebarMenuItem>
@@ -22,7 +27,7 @@ export function WorkspaceSwitcher({ workspace: workspaces }: { workspace: Worksp
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton size='lg' className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'>
 							<div className='flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground'>
-								{<div className='size-4' dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(activeWorkspace.icon) }} />}
+								{<div className='size-4' dangerouslySetInnerHTML={{ __html: icon }} />}
 							</div>
 							<div className='grid flex-1 text-left text-sm leading-tight'>
 								<span className='truncate font-semibold'>{activeWorkspace.name}</span>
@@ -37,14 +42,20 @@ export function WorkspaceSwitcher({ workspace: workspaces }: { workspace: Worksp
 						side={isMobile ? 'bottom' : 'right'}
 						sideOffset={4}>
 						<DropdownMenuLabel className='text-xs text-muted-foreground'>Teams</DropdownMenuLabel>
-						{workspaces.map((workspace, index) => (
-							<DropdownMenuItem key={workspace.name} onClick={() => setActiveWorkspace(workspace)} className='gap-2 p-2'>
-								<div className='flex size-6 items-center justify-center rounded-sm border'>
-									{<div className='size-4 shrink-0' dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(workspace.icon) }} />}
-								</div>
-								{workspace.name}
-							</DropdownMenuItem>
-						))}
+						{workspaces.map((workspace, index) => {
+							const parser = new DOMParser();
+							const svgElement = parser.parseFromString(workspace.icon, 'image/svg+xml').documentElement;
+							svgElement.setAttribute('class', 'size-4 shrink-0');
+
+							return (
+								<DropdownMenuItem key={workspace.name} onClick={() => setActiveWorkspace(workspace)} className='gap-2 p-2'>
+									<div className='flex size-6 items-center justify-center rounded-sm border'>
+										{<div dangerouslySetInnerHTML={{ __html: svgElement.outerHTML }} />}
+									</div>
+									{workspace.name}
+								</DropdownMenuItem>
+							);
+						})}
 						<DropdownMenuSeparator />
 						<DropdownMenuItem className='gap-2 p-2'>
 							<div className='flex size-6 items-center justify-center rounded-md border bg-background'>
