@@ -94,7 +94,7 @@ const { APPNAME } = import.meta.env;
 						</div>
 					</div>
 
-					<Button variant={'default'} size={'lg'}><a href='/dashboard/home'> Proceed to Dashboard </a></Button>
+					<Button variant={'default'} size={'lg'}><a href='#' id='proceed-to-dashboard'> Proceed to Dashboard </a></Button>
 				</div>
 			</div>
 		</div>
@@ -107,7 +107,7 @@ const { APPNAME } = import.meta.env;
 	import { keyCheckProgressStore, nextStep, previousStep } from '@/stores/KeyCheckProgress';
 	import { remToPixels } from '@/utils/remToPixels';
 	import { EventSource } from 'eventsource';
-	import { challenge, setChallenge, publicKey, setPublicKey, keyInput } from '@/stores/Auth';
+	import { challenge, setChallenge, publicKey, setPublicKey, keyInput, userId } from '@/stores/Auth';
 	import { arrayBufferToBase64 } from '@/utils/arrayToBase64';
 	import { pemToArrayBuffer } from '@/utils/pemToArrayBuffer';
 	import { convertPkcs1ToSpki } from '@/utils/rsaKeyConverter';
@@ -322,7 +322,55 @@ const { APPNAME } = import.meta.env;
 		handleLogin().then(async res => {
 			if (res) {
 				updateKeyCheckHeader('Key file verified successfully', false);
-				setTimeout(() => updateStep(2), 750);
+				const userRes = await fetch(`http://localhost:8000/user/${userId}`);
+
+				userRes
+					.json()
+					.then(async (data: User) => {
+						try {
+							const res = await fetch('http://localhost:8000/set-cookie', {
+								method: 'POST',
+								credentials: 'include',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({
+									data,
+									name: 'userData',
+								}),
+							});
+							const body = await res.json();
+							if (!body.success) {
+								toast({
+									variant: 'destructive',
+									title: 'Error setting user data',
+									description: 'An error occurred while setting user data',
+								});
+							}
+						} catch (err) {
+							console.error('Error setting user data:', err);
+							toast({
+								variant: 'destructive',
+								title: 'Error setting user data',
+								description: 'An error occurred while setting user data',
+							});
+						}
+
+						if (data.workspaces.length > 0) {
+							// redirect to first workspace
+							console.log('Redirecting to workspace:', `/${data.workspaces[0]}/dashboard`);
+							document.getElementById('proceed-to-dashboard')?.setAttribute('href', `/${data.workspaces[0]}/dashboard`);
+						} else {
+							// USER HAS NO WORKSPACES. REDIRECT WHERE??
+						}
+						setTimeout(() => updateStep(2), 750);
+					})
+					.catch((err: any) => {
+						console.error('Error fetching user data:', err);
+						toast({
+							variant: 'destructive',
+							title: 'Error fetching user data',
+							description: 'An error occurred while fetching user data',
+						});
+					});
 			} else {
 				updateStep(0);
 			}

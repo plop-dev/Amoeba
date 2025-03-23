@@ -28,7 +28,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 
 		const fetchData = async () => {
 			try {
-				const res = await fetch(`http://localhost:8000/user/${userId}`, { credentials: 'include' });
+				const res = await fetch(`http://localhost:8000/user/${userId}?navigation=true`, { credentials: 'include' });
 				const data = await res.json();
 
 				if (data) {

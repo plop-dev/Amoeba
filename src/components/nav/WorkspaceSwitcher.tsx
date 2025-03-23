@@ -48,11 +48,12 @@ export function WorkspaceSwitcher({ workspace: workspaces }: { workspace: Worksp
 							svgElement.setAttribute('class', 'size-4 shrink-0');
 
 							return (
-								<DropdownMenuItem key={workspace.name} onClick={() => setActiveWorkspace(workspace)} className='gap-2 p-2'>
+								<DropdownMenuItem key={workspace.id} onClick={() => setActiveWorkspace(workspace)} className='gap-2 p-2'>
 									<div className='flex size-6 items-center justify-center rounded-sm border'>
 										{<div dangerouslySetInnerHTML={{ __html: svgElement.outerHTML }} />}
 									</div>
 									{workspace.name}
+									<span className='text-xs text-muted-foreground'>{workspace.id}</span>
 								</DropdownMenuItem>
 							);
 						})}

@@ -1,3 +1,4 @@
 ---
-return Astro.redirect('/dashboard/home');
+const { workspaceId } = Astro.params;
+return Astro.redirect(`/${workspaceId}/dashboard/home`);
 ---
