@@ -18,6 +18,11 @@ interface User {
 	workspaces: Array<String>;
 }
 
+interface ActiveUser {
+	id: User['_id'];
+	status: User['status'];
+}
+
 interface AvatarProps {
 	user: User;
 	className?: string;

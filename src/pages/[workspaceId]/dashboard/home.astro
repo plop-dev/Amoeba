@@ -1,5 +1,4 @@
 ---
-export const prerender = false;
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import UserAvatar from '@/components/UserAvatar';
@@ -7,9 +6,10 @@ import { UserProfile } from '@/components/UserProfile';
 import UsersOnlineBadge from '@/components/UsersOnlineBadge';
 import {UserConstant, UserConstant2} from '@/constants/globalUser';
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { activeWorkspace } from '@/stores/Workspace';
 
 const usersOnline = 2;
-const workspaceTitle = 'Project 1';
+const workspaceTitle = activeWorkspace.get()?.name;
 const tags = Array.from({ length: 50 }).map((_, i, a) => `v1.2.0-beta.${a.length - i}`);
 ---
 
