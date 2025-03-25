@@ -115,7 +115,7 @@ export function NavUser({ user }: { user: User }) {
 							<UserAvatar user={user}></UserAvatar>
 							<div className='grid flex-1 text-left text-sm leading-tight'>
 								<span className='truncate font-semibold'>{user.username}</span>
-								<span className='truncate text-xs text-muted-foreground'>{user.id}</span>
+								<span className='truncate text-xs text-muted-foreground'>{user._id}</span>
 							</div>
 							<ChevronsUpDown className='ml-auto size-4' />
 						</SidebarMenuButton>

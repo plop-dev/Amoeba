@@ -9,7 +9,9 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, Sid
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '../ui/separator';
-import { UserConstant } from '@/constants/globalUser';
+import { useStore } from '@nanostores/react';
+import { activeUser as activeUserStore } from '@/stores/User';
+import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 	appName: string;
@@ -17,45 +19,56 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	const { isMobile, state, toggleSidebar } = useSidebar();
+	const [channels, setChannels] = useState<Channel[]>([]);
+	const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 	const [navData, setNavData] = useState<AppSidebarData>();
 
-	const userId = window.localStorage.getItem('userId');
+	const activeUser = useStore(activeUserStore);
+	const activeWorkspace = useStore(activeWorkspaceStore);
+
+	// load user workspaces
+	useEffect(() => {
+		if (activeUser)
+			fetch(`http://localhost:8000/workspaces/${activeUser._id}`, { credentials: 'include' })
+				.then(res => res.json())
+				.then(data => {
+					setWorkspaces(data);
+				})
+				.catch(err => {
+					console.error(err);
+				});
+		else console.error('No active user found');
+	}, [activeUser]);
+
+	// load channels from active workspace
+	useEffect(() => {
+		if (activeWorkspace && !Object.keys(activeWorkspace).includes('error'))
+			fetch(`http://localhost:8000/channels/${activeWorkspace._id}`, { credentials: 'include' })
+				.then(res => res.json())
+				.then(data => {
+					setChannels(data);
+				})
+				.catch(err => {
+					console.error(err);
+				});
+		else console.error('No active workspace found');
+	}, [activeWorkspace]);
+
+	if (!activeUser || !workspaces) {
+		document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+		fetch('http://localhost:8000/auth/logout', { credentials: 'include' }).then(() => {
+			window.location.href = '/auth/login';
+		});
+		return null;
+	}
 
 	useEffect(() => {
-		let retryCount = 0;
-		// const retryCountRef = React.useRef(0);
-		const MAX_RETRIES = 3;
-
-		const fetchData = async () => {
-			try {
-				const res = await fetch(`http://localhost:8000/user/${userId}?navigation=true`, { credentials: 'include' });
-				const data = await res.json();
-
-				if (data) {
-					setNavData(data);
-				} else {
-					handleRetry();
-				}
-			} catch (err) {
-				console.error(err);
-				handleRetry();
-			}
-		};
-
-		const handleRetry = () => {
-			retryCount++;
-			if (retryCount < MAX_RETRIES) {
-				console.log(`Retrying fetch (${retryCount}/${MAX_RETRIES})...`);
-				setTimeout(fetchData, 1000);
-			} else {
-				console.log('All retries failed, redirecting to logout');
-				fetch('http://localhost:8000/auth/logout', { credentials: 'include' });
-				window.location.href = '/auth/login';
-			}
-		};
-
-		fetchData();
-	}, []);
+		setNavData({
+			user: activeUser,
+			workspaces: workspaces,
+			channels: channels,
+		});
+	}, [activeUser, workspaces, channels]);
 
 	return (
 		<Sidebar collapsible='icon' {...props} className=''>
@@ -80,7 +93,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 					</div>
 				</div>
 				<Separator orientation='horizontal' className='relative -left-full min-w-[100vw] w-screen'></Separator>
-				{navData && <WorkspaceSwitcher workspace={navData.workspaces} />}
+				{navData && <WorkspaceSwitcher workspaces={navData.workspaces} />}
 			</SidebarHeader>
 			<SidebarContent>{navData && <NavMain channels={navData.channels} />}</SidebarContent>
 			<SidebarFooter>{navData && <NavUser user={navData.user} />}</SidebarFooter>

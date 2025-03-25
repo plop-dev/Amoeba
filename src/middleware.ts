@@ -4,7 +4,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	const session = context.request.headers.get('cookie')?.match(/session=([^;]*)/)?.[1];
 
 	if (context.url.pathname.includes('dashboard') || context.url.pathname.includes('auth')) {
-		if (session) {
+		if (session && session.trim() !== '') {
 			let data;
 			try {
 				const res = await fetch('http://localhost:8000/auth/middleware', {
@@ -24,16 +24,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
 			if (data.success) {
 				context.locals.userId = data.userId;
 
-				if (context.url.pathname.includes('auth')) {
-					// go to most recent workspace if available
+				// go to most recent workspace if available
+				// const user = context.cookies.get('userData')?.json();
 
-					const user = context.cookies.get('userData')?.json();
-
-					if (user?.workspaces && user?.workspaces.length > 0) {
-						console.log(`/${user.workspaces[0]}/dashboard`);
-						return context.redirect(`/${user.workspaces[0]}/dashboard`);
-					}
-				}
+				// if (user?.workspaces && user?.workspaces.length > 0) {
+				// 	return context.redirect(`/${user.workspaces[0]}/dashboard/home`);
+				// } else {
+				// 	// user has no workspaces
+				// 	return new Response('No workspaces found', { status: 404 });
+				// }
+				next();
 			} else {
 				return context.redirect('/auth/login');
 			}

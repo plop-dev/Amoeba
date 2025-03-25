@@ -31,6 +31,8 @@ import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
+import { useStore } from '@nanostores/react';
 
 const formSchema = z.object({
 	channelName: z.string().min(2, { message: 'Channel name must be at least 2 characters.' }).max(50),
@@ -118,47 +120,54 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 }
 
 export function NavMain({ channels }: { channels: Channel[] }) {
+	const activeWorkspace = useStore(activeWorkspaceStore);
+	const activeWorkspaceId = activeWorkspace?._id;
 	let categories: Category[] = [];
 
-	channels.forEach(channel => {
-		if (channel.type === 'chat') {
-			const chatChannels = channels.filter(channel => channel.type === 'chat');
+	if (channels.length > 0) {
+		channels.forEach(channel => {
+			let categoryTitle: string | undefined;
+			let icon: LucideIcon | undefined;
+			let categoryUrl: string | undefined;
+			let childUrl: string | undefined;
 
-			categories.push({
-				title: 'Chats',
-				icon: MessageCircle,
-				url: '/dashboard/chats',
-				items: chatChannels.map(channel => ({
-					...channel,
-					url: `/dashboard/chats/${channel.name}`,
-				})),
-			});
-		} else if (channel.type === 'board') {
-			const boardChannels = channels.filter(channel => channel.type === 'board');
+			if (channel.type === 'chat') {
+				categoryTitle = 'Chats';
+				icon = MessageCircle;
+				categoryUrl = `/${activeWorkspaceId}/dashboard/chats`;
+				childUrl = `/${activeWorkspaceId}/dashboard/chats/${channel.name}`;
+			} else if (channel.type === 'board') {
+				categoryTitle = 'Boards';
+				icon = Book;
+				categoryUrl = `/${activeWorkspaceId}/dashboard/boards`;
+				childUrl = `/${activeWorkspaceId}/dashboard/boards/${channel.name}`;
+			} else if (channel.type === 'voice') {
+				categoryTitle = 'Voices';
+				icon = AudioWaveform;
+				categoryUrl = `/${activeWorkspaceId}/dashboard/vcs`;
+				childUrl = `/${activeWorkspaceId}/dashboard/vcs/${channel.name}`;
+			}
 
-			categories.push({
-				title: 'Boards',
-				icon: Book,
-				url: '/dashboard/boards',
-				items: boardChannels.map(channel => ({
+			if (categoryTitle && icon && categoryUrl && childUrl) {
+				const child = {
 					...channel,
-					url: `/dashboard/boards/${channel.name}`,
-				})),
-			});
-		} else if (channel.type === 'voice') {
-			const voiceChannels = channels.filter(channel => channel.type === 'voice');
+					url: childUrl,
+				};
 
-			categories.push({
-				title: 'Voices',
-				icon: AudioWaveform,
-				url: '/dashboard/vcs',
-				items: voiceChannels.map(channel => ({
-					...channel,
-					url: `/dashboard/vcs/${channel.name}`,
-				})),
-			});
-		}
-	});
+				const existingCategory = categories.find(item => item.title === categoryTitle);
+				if (existingCategory) {
+					existingCategory.items?.push(child);
+				} else {
+					categories.push({
+						title: categoryTitle,
+						icon,
+						url: categoryUrl,
+						items: [child],
+					});
+				}
+			}
+		});
+	}
 
 	return (
 		<SidebarGroup className=''>
@@ -166,66 +175,74 @@ export function NavMain({ channels }: { channels: Channel[] }) {
 			<SidebarMenu>
 				<SidebarMenuItem key={'home'}>
 					<SidebarMenuButton asChild tooltip='home'>
-						<a href='/dashboard/home'>
+						<a href={`/${activeWorkspaceId}/dashboard`}>
 							<Home></Home>
 							<span>Home</span>
 						</a>
 					</SidebarMenuButton>
 				</SidebarMenuItem>
-				{categories.map(item => {
-					const hasSubItems = item.items && item.items.length > 0;
-					return hasSubItems ? (
-						<Collapsible key={item.title} asChild defaultOpen={item.isActive} className='group/collapsible'>
-							<SidebarMenuItem>
-								<CollapsibleTrigger asChild>
-									<SidebarMenuButton tooltip={item.title} className='relative'>
+				{categories.length > 0 ? (
+					categories.map(item => {
+						const hasSubItems = item.items && item.items.length > 0;
+						return hasSubItems ? (
+							<Collapsible key={item.title} asChild defaultOpen={item.isActive} className='group/collapsible'>
+								<SidebarMenuItem>
+									<CollapsibleTrigger asChild>
+										<SidebarMenuButton tooltip={item.title} className='relative'>
+											{item.icon && <item.icon />}
+											<span>{item.title}</span>
+											{item.canCreate && (
+												<NewChannelDialog category={item.title.split('').pop() === 's' ? item.title.slice(0, -1) : item.title}>
+													<span
+														className={cn(
+															buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+															'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
+														)}
+														onClick={e => {
+															e.stopPropagation();
+														}}>
+														<Plus />
+													</span>
+												</NewChannelDialog>
+											)}
+											<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+										</SidebarMenuButton>
+									</CollapsibleTrigger>
+									<CollapsibleContent>
+										<SidebarMenuSub>
+											{item.items?.map(subItem => (
+												<SidebarMenuSubItem key={subItem.name} className={cn('transition-colors')}>
+													<SidebarMenuSubButton asChild>
+														<a href={(subItem as Channel & { url: string }).url}>
+															<span className='flex items-center w-full'>
+																<p className='w-full'>#{subItem.name}</p>
+															</span>
+														</a>
+													</SidebarMenuSubButton>
+												</SidebarMenuSubItem>
+											))}
+										</SidebarMenuSub>
+									</CollapsibleContent>
+								</SidebarMenuItem>
+							</Collapsible>
+						) : (
+							<SidebarMenuItem key={item.title}>
+								<SidebarMenuButton asChild tooltip={item.title}>
+									<a href={item.url}>
 										{item.icon && <item.icon />}
 										<span>{item.title}</span>
-										{item.canCreate && (
-											<NewChannelDialog category={item.title.split('').pop() === 's' ? item.title.slice(0, -1) : item.title}>
-												<span
-													className={cn(
-														buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-														'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
-													)}
-													onClick={e => {
-														e.stopPropagation();
-													}}>
-													<Plus></Plus>
-												</span>
-											</NewChannelDialog>
-										)}
-										<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
-									</SidebarMenuButton>
-								</CollapsibleTrigger>
-								<CollapsibleContent>
-									<SidebarMenuSub>
-										{item.items?.map(subItem => (
-											<SidebarMenuSubItem key={subItem.name} className={cn('transition-colors')}>
-												<SidebarMenuSubButton asChild>
-													<a href={(subItem as Channel & { url: string }).url}>
-														<span className='flex items-center w-full'>
-															<p className='w-full'>#{subItem.name}</p>
-														</span>
-													</a>
-												</SidebarMenuSubButton>
-											</SidebarMenuSubItem>
-										))}
-									</SidebarMenuSub>
-								</CollapsibleContent>
+									</a>
+								</SidebarMenuButton>
 							</SidebarMenuItem>
-						</Collapsible>
-					) : (
-						<SidebarMenuItem key={item.title}>
-							<SidebarMenuButton asChild tooltip={item.title}>
-								<a href={item.url}>
-									{item.icon && <item.icon />}
-									<span>{item.title}</span>
-								</a>
-							</SidebarMenuButton>
-						</SidebarMenuItem>
-					);
-				})}
+						);
+					})
+				) : (
+					<SidebarMenuItem>
+						<SidebarMenuButton tooltip='No channels'>
+							<span>No channels in this workspace</span>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				)}
 			</SidebarMenu>
 		</SidebarGroup>
 	);

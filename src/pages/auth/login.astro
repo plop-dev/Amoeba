@@ -107,7 +107,7 @@ const { APPNAME } = import.meta.env;
 	import { keyCheckProgressStore, nextStep, previousStep } from '@/stores/KeyCheckProgress';
 	import { remToPixels } from '@/utils/remToPixels';
 	import { EventSource } from 'eventsource';
-	import { challenge, setChallenge, publicKey, setPublicKey, keyInput, userId } from '@/stores/Auth';
+	import { challenge, setChallenge, publicKey, setPublicKey, keyInput, userId, setUserId } from '@/stores/Auth';
 	import { arrayBufferToBase64 } from '@/utils/arrayToBase64';
 	import { pemToArrayBuffer } from '@/utils/pemToArrayBuffer';
 	import { convertPkcs1ToSpki } from '@/utils/rsaKeyConverter';
@@ -115,6 +115,7 @@ const { APPNAME } = import.meta.env;
 	import { toast } from '@/hooks/use-toast';
 	import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from '@/components/ui/toast';
 	import * as React from 'react';
+	import { setActiveUser } from '@/stores/User';
 
 	const wrapper = document.getElementById('login-wrapper');
 	const formKey = document.getElementById('login-key');
@@ -322,11 +323,13 @@ const { APPNAME } = import.meta.env;
 		handleLogin().then(async res => {
 			if (res) {
 				updateKeyCheckHeader('Key file verified successfully', false);
-				const userRes = await fetch(`http://localhost:8000/user/${userId}`);
+				setUserId(accountIdInput.value);
+				const userRes = await fetch(`http://localhost:8000/user/${userId.get()}`, { credentials: 'include' });
 
 				userRes
 					.json()
 					.then(async (data: User) => {
+						setActiveUser(data);
 						try {
 							const res = await fetch('http://localhost:8000/set-cookie', {
 								method: 'POST',
@@ -372,6 +375,7 @@ const { APPNAME } = import.meta.env;
 						});
 					});
 			} else {
+				updateKeyCheckHeader('Key file verification failed', false);
 				updateStep(0);
 			}
 		});

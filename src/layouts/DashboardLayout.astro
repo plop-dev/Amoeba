@@ -36,7 +36,7 @@ const { APPNAME: appName } = import.meta.env;
 	<body class='flex flex-row'>
 		<Toaster client:only='react' transition:persist />
 		<Sidebar appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} transition:persist />
-		<ConnectionPersist client:load  />
+		<ConnectionPersist client:load transition:persist  />
 
 		<main
 			class='relative flex min-h-svh flex-1 flex-col bg-background peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow'>
@@ -67,6 +67,15 @@ const { APPNAME: appName } = import.meta.env;
 	</body>
 </html>
 
-<script define:vars={{userId}}>
-	window.localStorage.setItem('userId', userId);
+<script>
+	import { activeWorkspace, setActiveWorkspace } from "@/stores/Workspace";
+
+	const activeWorkspaceId = window.location.pathname.split('/')[1]
+
+	const workspace = activeWorkspace.get();
+	if (!workspace || ('error' in workspace)) {
+		const res = await fetch(`http://localhost:8000/workspace/${activeWorkspaceId}`, {credentials: 'include'})
+		const data = await res.json()
+		setActiveWorkspace(data)
+	}
 </script>

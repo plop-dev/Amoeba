@@ -3,7 +3,7 @@ type UserStatus = 'online' | 'offline' | 'away' | 'busy';
 type UserRoles = 'admin' | 'user' | 'guest';
 
 interface User {
-	id: string;
+	_id: string;
 	auth: {
 		keyHash: string;
 		salt: string;
@@ -26,33 +26,33 @@ interface AvatarProps {
 
 // Workspace Related Types
 interface Workspace {
-	id: string;
+	_id: string;
 	name: string;
 	creationDate: Date;
 	icon: string;
-	members: { userId: User['id']; role: UserRoles }[];
+	members: { userId: User['_id']; role: UserRoles }[];
 }
 
 // Channel Related Types
 type ChannelTypes = 'chat' | 'voice' | 'board';
 
 interface Channel {
-	id: string;
-	workspace: Workspace['id'];
+	_id: string;
+	workspace: Workspace['_id'];
 	name: string;
 	description: string;
 	type: ChannelTypes;
 	creationDate: Date;
-	members: User['id'][];
+	members: User['_id'][];
 }
 
 // Message Related Types
 interface Message {
 	content: string;
 	author: User;
-	id: string;
-	channelId: Channel['id'];
-	workspaceId: Workspace['id'];
+	_id: string;
+	channelId: Channel['_id'];
+	workspaceId: Workspace['_id'];
 	sent: Date;
 	reactions: Map<string, User[]>;
 	replyTo?: string;
@@ -72,12 +72,12 @@ interface SSEMessage {
 
 // UI Component Types
 interface FilePreview {
-	id: string;
+	_id: string;
 	src: string;
 	name: string;
 	extension: string;
 	size: number;
-	onDelete: (id: string) => void;
+	onDelete: (_id: string) => void;
 }
 
 interface AppSidebarData {
@@ -100,7 +100,7 @@ interface Category {
 type KeyCheckProgressType = 'Sending' | 'Hashing' | 'Comparing' | 'Success';
 
 interface LoginStatusStep {
-	id: number;
+	_id: number;
 	title: string;
 	description: string;
 	icon: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;

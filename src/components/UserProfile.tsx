@@ -74,7 +74,7 @@ export function UserProfile({
 					<h4 className='text-sm font-semibold' style={{ color: user.accentColour }}>
 						@{user.username}
 						<br></br>
-						<span className='text-xs text-muted-foreground'>{user.id}</span>
+						<span className='text-xs text-muted-foreground'>{user._id}</span>
 					</h4>
 					<span className='text-sm h-6 flex gap-x-2 items-center'>
 						<DropdownMenu>
