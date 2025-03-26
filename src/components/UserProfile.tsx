@@ -19,6 +19,8 @@ import { UserConstant } from '@/constants/globalUser';
 import { Separator } from './ui/separator';
 import { statusClasses } from '@/utils/statusClass';
 import { useToast } from '@/hooks/use-toast';
+import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
+import { useStore } from '@nanostores/react';
 
 export function UserProfile({
 	user = UserConstant,
@@ -37,6 +39,7 @@ export function UserProfile({
 }) {
 	const { toast } = useToast();
 	const [status, setStatus] = useState(user.status);
+	const activeWorkspace = useStore(activeWorkspaceStore);
 
 	useEffect(() => {
 		console.log(`Status changed to: ${status}`);
@@ -127,7 +130,7 @@ export function UserProfile({
 			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1'>
 				{userControl ? (
 					<>
-						<a href='/dashboard/settings' className='flex flex-1'>
+						<a href={`/${activeWorkspace?._id}/dashboard/settings`} className='flex flex-1'>
 							<Button size='sm' className='flex-1'>
 								<Settings className='mr-2 h-4 w-4' />
 								Settings
