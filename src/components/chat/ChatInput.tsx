@@ -62,7 +62,7 @@ export function ChatInput({
 				setPreviews(prevPreviews => [
 					...prevPreviews,
 					{
-						id,
+						_id: id,
 						src: e.target?.result as string,
 						name: file.name,
 						extension: file.name.split('.').pop() as string,
@@ -80,7 +80,7 @@ export function ChatInput({
 
 	const handleDeleteFile = (id: string) => {
 		setFiles(prevFiles => prevFiles.filter(file => file.id !== id));
-		setPreviews(prevPreviews => prevPreviews.filter(preview => preview.id !== id));
+		setPreviews(prevPreviews => prevPreviews.filter(preview => preview._id !== id));
 	};
 
 	const handleClearReply = () => {
@@ -93,11 +93,12 @@ export function ChatInput({
 
 	const handleSend = () => {
 		const messageData: Message = {
-			id: '0',
+			_id: '0',
 			author: UserConstant,
 			channelId: '/irish-potatoes/chat/general',
 			content: 'hello everyone',
 			sent: new Date(),
+			workspaceId: 'placeholder',
 			reactions: new Map([
 				['ThumbsUp', [UserConstant, UserConstant2]],
 				['ThumbsDown', [UserConstant]],

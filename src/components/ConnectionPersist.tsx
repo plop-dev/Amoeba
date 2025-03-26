@@ -13,9 +13,9 @@ export function ConnectionPersist() {
 		if (!activeWorkspace?._id) return;
 		const projectEventSource = new EventSource(`http://localhost:8000/${activeWorkspace._id}/`, { withCredentials: true });
 
-		projectEventSource.onerror = ev => {
-			console.log(ev);
-		};
+		// projectEventSource.onerror = ev => {
+		// 	console.log(ev);
+		// };
 
 		projectEventSource.addEventListener('message', event => {
 			const data: SSEMessage = JSON.parse(event.data);

@@ -45,15 +45,15 @@ const { APPNAME: appName } = import.meta.env;
 				<Breadcrumb className='' transition:persist>
 					<BreadcrumbList>
 						<BreadcrumbItem className='hidden md:block'>
-							<BreadcrumbLink href={'/' + Astro.url.pathname.split('/')[1] + '/' + Astro.url.pathname.split('/')[2]}
-								>#{Astro.url.pathname.split('/')[2]}</BreadcrumbLink
+							<BreadcrumbLink href={'/' + Astro.url.pathname.split('/')[2] + '/' + Astro.url.pathname.split('/')[3]}
+								>#{Astro.url.pathname.split('/')[3]}</BreadcrumbLink
 							>
 						</BreadcrumbItem>
 						{
-							Astro.url.pathname.split('/')[3] && (
+							Astro.url.pathname.split('/')[4] && (
 								<BreadcrumbSeparator className='hidden md:block' />
 								<BreadcrumbItem>
-									<BreadcrumbPage>#{Astro.url.pathname.split('/')[3]}</BreadcrumbPage>
+									<BreadcrumbPage>#{Astro.url.pathname.split('/')[4]}</BreadcrumbPage>
 								</BreadcrumbItem>
 							)
 						}

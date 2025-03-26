@@ -2,6 +2,8 @@ import { ChatContainer } from '@/components/chat/ChatContainer';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { useState, useEffect, useReducer, useRef } from 'react';
 import { LoaderCircle } from 'lucide-react';
+import { useStore } from '@nanostores/react';
+import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 
 const messagesReducer = (state: Message[], action: any) => {
 	switch (action.type) {
@@ -20,6 +22,7 @@ export function ChatPage() {
 	const [loading, setLoading] = useState(true);
 	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
 	const [replyingTo, setReplyingTo] = useState<string | null>(null);
+	const activeWorkspace = useStore(activeWorkspaceStore);
 
 	const handleReplyClick = (msgId: string) => {
 		setReplyingTo(msgId);
@@ -32,6 +35,16 @@ export function ChatPage() {
 			messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 		}, 5);
 	};
+
+	// change channel when active workspace changes
+	useEffect(() => {
+		// send request to backend for redirect (need the id of a chat channel in the switched workspace)
+		fetch(`http://localhost:8000/${activeWorkspace?._id}/chat`, { credentials: 'include' })
+			.then(res => res.json())
+			.then((data: Channel) => {
+				console.log(data);
+			});
+	}, [activeWorkspace]);
 
 	useEffect(() => {
 		setIsLoadingVisible(true);

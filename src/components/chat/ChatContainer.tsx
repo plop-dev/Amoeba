@@ -13,10 +13,6 @@ export function ChatContainer({
 	replyingTo: string | null;
 	onReplyClick: (msgId: string) => void;
 }) {
-	// useEffect(() => {
-	// 	messageEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-	// }, [messages]);
-
 	useEffect(() => {
 		const chatContainer = document.querySelector('.chat-container');
 		const message = document.querySelector(`.message[data-message-id="${replyingTo}"]`);
@@ -31,23 +27,11 @@ export function ChatContainer({
 		}
 	}, [replyingTo]);
 
-	const messageData: Message = {
-		id: '0',
-		author: UserConstant,
-		channelId: '/irish-potatoes/chat/general',
-		content: 'hello everyone',
-		sent: new Date(),
-		reactions: new Map([
-			['ThumbsUp', [UserConstant, UserConstant2]],
-			['ThumbsDown', [UserConstant]],
-		]),
-	};
-
 	return (
 		<div className='chat-container overflow-auto'>
 			<div className='wrapper pr-4'>
 				{messages.map((message, i) => {
-					return <Message data={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message.id} />;
+					return <Message data={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message._id} />;
 				})}
 				<div ref={messageEndRef}></div>
 			</div>

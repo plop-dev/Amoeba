@@ -193,7 +193,7 @@ export function Message({
 		const userReactionsSet = new Set<string>();
 
 		data.reactions.forEach((users, emojiName) => {
-			if (users.some(user => user.id === currentUser.id)) {
+			if (users.some(user => user._id === currentUser._id)) {
 				userReactionsSet.add(emojiName);
 			}
 		});
@@ -207,11 +207,11 @@ export function Message({
 		setReactions(prevReactions => {
 			const newReactions = new Map(prevReactions);
 			const reactionUsers = newReactions.get(emojiName) || [];
-			const hasReacted = reactionUsers.some(user => user.id === currentUser.id);
+			const hasReacted = reactionUsers.some(user => user._id === currentUser._id);
 
 			if (hasReacted) {
 				// User is removing their reaction
-				const updatedUsers = reactionUsers.filter(user => user.id !== currentUser.id);
+				const updatedUsers = reactionUsers.filter(user => user._id !== currentUser._id);
 				if (updatedUsers.length === 0) {
 					newReactions.delete(emojiName);
 				} else {
@@ -254,7 +254,7 @@ export function Message({
 							'px-2 items-center': variant === 'inline',
 						})}
 						ref={messageRef}
-						data-message-id={data.id}
+						data-message-id={data._id}
 						data-message-type={variant}>
 						<div
 							className='avatar cursor-pointer'
@@ -305,7 +305,7 @@ export function Message({
 					onMouseLeave={() => messageRef.current?.classList.remove('bg-secondary/50')}>
 					<div className='flex gap-x-1'>
 						<ReactionPicker onEmojiClick={handleAddReaction} />
-						<OptionsButton variant='outline' messageId={data.id} onClick={() => onReplyClick?.(data.id)}>
+						<OptionsButton variant='outline' messageId={data._id} onClick={() => onReplyClick?.(data._id)}>
 							<Reply />
 						</OptionsButton>
 

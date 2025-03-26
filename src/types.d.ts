@@ -18,11 +18,6 @@ interface User {
 	workspaces: Array<String>;
 }
 
-interface ActiveUser {
-	id: User['_id'];
-	status: User['status'];
-}
-
 interface AvatarProps {
 	user: User;
 	className?: string;
@@ -53,9 +48,9 @@ interface Channel {
 
 // Message Related Types
 interface Message {
+	_id: string;
 	content: string;
 	author: User;
-	_id: string;
 	channelId: Channel['_id'];
 	workspaceId: Workspace['_id'];
 	sent: Date;
