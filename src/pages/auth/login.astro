@@ -277,16 +277,21 @@ const { APPNAME } = import.meta.env;
 		});
 	});
 
-	function updateKeyCheckHeader(message: string, loading: boolean = true) {
+	function updateKeyCheckHeader(message: string, loading: boolean = true, success: boolean = false) {
 		if (keyCheckHeader) keyCheckHeader.textContent = message;
 		if (!loading) {
 			keyCheckLoading?.classList.add('hidden');
-
+		} else {
+			keyCheckLoading?.classList.remove('hidden');
+		}
+		if (success) {
 			const tick = document.createElement('svg');
+			tick.id = 'key-check-tick';
 			tick.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
 			keyCheckLoading?.insertAdjacentElement('afterend', tick);
 		} else {
-			keyCheckLoading?.classList.remove('hidden');
+			const tick = document.getElementById('key-check-tick');
+			if (tick) tick.remove();
 		}
 	}
 
@@ -322,7 +327,7 @@ const { APPNAME } = import.meta.env;
 
 		handleLogin().then(async res => {
 			if (res) {
-				updateKeyCheckHeader('Key file verified successfully', false);
+				updateKeyCheckHeader('Key file verified successfully', false, true);
 				setUserId(accountIdInput.value);
 				const userRes = await fetch(`http://localhost:8000/user/${userId.get()}`, { credentials: 'include' });
 
