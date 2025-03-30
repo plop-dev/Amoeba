@@ -4,10 +4,13 @@ import { useStore } from '@nanostores/react';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import UsersOnlineBadge from '@/components/UsersOnlineBadge';
+import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 
 export function ActiveUsers({ workspaceTitle }: { workspaceTitle: string }) {
 	const activeUsers = useStore(activeUsersStore);
-	console.log(activeUsers);
+	const activeWorkspace = useStore(activeWorkspaceStore);
+
+	const activeUsersWorkspace = activeUsers.find(entry => entry.workspaceId === activeWorkspace?._id);
 
 	return (
 		<>
@@ -18,7 +21,7 @@ export function ActiveUsers({ workspaceTitle }: { workspaceTitle: string }) {
 
 			<ScrollArea className='users-online border-border border-2 rounded-lg w-min'>
 				<div className='flex flex-col gap-2 p-4 w-min'>
-					{activeUsers.map((user, index) => (
+					{activeUsersWorkspace?.users.map((user, index) => (
 						<div className='contents' key={index}>
 							<UserProfile user={user} contentOnly={true} />
 							<Separator></Separator>

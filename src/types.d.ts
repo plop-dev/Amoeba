@@ -61,6 +61,10 @@ interface Message {
 	files?: File[];
 }
 
+interface MessageToSend extends Message {
+	_id?: string;
+}
+
 interface SSEMessage {
 	message: Message | any;
 	event: {

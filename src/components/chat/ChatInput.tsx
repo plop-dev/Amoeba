@@ -1,24 +1,27 @@
 import { v4 as uuidv4 } from 'uuid';
-
 import { Input } from '@/components/ui/input';
 import { Upload, SendHorizonal, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRef, useState, useEffect } from 'react';
+import { useStore } from '@nanostores/react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { UploadedFile } from '@/components/chat/UploadedFile';
 import { cn } from '@/lib/utils';
-
 import '@/styles/animations.css';
 import { UserConstant, UserConstant2 } from '@/constants/globalUser';
+import { activeUser as activeUserStore } from '@/stores/User';
+import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 
 export function ChatInput({
 	replyingTo,
 	onClearReply,
 	handleSendMessage,
+	activeChannel,
 }: {
 	replyingTo?: string | null;
 	onClearReply?: () => void;
-	handleSendMessage: (message: Message) => void;
+	handleSendMessage: (message: MessageToSend) => void;
+	activeChannel?: Channel | null;
 }) {
 	const { toast } = useToast();
 	const [files, setFiles] = useState<{ id: string; file: File }[]>([]);
@@ -26,9 +29,14 @@ export function ChatInput({
 	const [closingReply, setClosingReply] = useState(false);
 	const [containerHeight, setContainerHeight] = useState('auto');
 
+	const activeUser = useStore(activeUserStore);
+	const activeWorkspace = useStore(activeWorkspaceStore);
+
 	// Refs for measuring height
 	const typingIndicatorRef = useRef<HTMLDivElement>(null);
 	const replyContainerRef = useRef<HTMLDivElement>(null);
+
+	const messageContentRef = useRef<HTMLInputElement>(null);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,20 +100,40 @@ export function ChatInput({
 	};
 
 	const handleSend = () => {
-		const messageData: Message = {
-			_id: '0',
-			author: UserConstant,
-			channelId: '/irish-potatoes/chat/general',
-			content: 'hello everyone',
-			sent: new Date(),
-			workspaceId: 'placeholder',
-			reactions: new Map([
-				['ThumbsUp', [UserConstant, UserConstant2]],
-				['ThumbsDown', [UserConstant]],
-			]),
-		};
+		if (activeUser) {
+			if (activeWorkspace && activeChannel && messageContentRef.current?.value.trim() !== '') {
+				const messageData: MessageToSend = {
+					author: activeUser,
+					channelId: activeChannel._id,
+					content: messageContentRef.current?.value || '',
+					sent: new Date(),
+					workspaceId: activeWorkspace._id,
+					reactions: new Map<string, User[]>(),
+					// reactions: new Map([
+					// 	['ThumbsUp', [UserConstant, UserConstant2]],
+					// 	['ThumbsDown', [UserConstant]],
+					// ]),
+				};
 
-		handleSendMessage(messageData);
+				handleSendMessage(messageData);
+
+				messageContentRef.current?.focus();
+				if (messageContentRef.current) {
+					messageContentRef.current.value = '';
+				}
+			} else {
+				console.error('Error: activeUser, activeWorkspace or activeChannel is not defined');
+				console.error('activeUser:', activeUser);
+				console.error('activeWorkspace:', activeWorkspace);
+				console.error('activeChannel:', activeChannel);
+			}
+		} else {
+			toast({
+				title: 'Error',
+				description: 'You must be logged in to send a message',
+				variant: 'destructive',
+			});
+		}
 	};
 
 	return (
@@ -159,7 +187,18 @@ export function ChatInput({
 						)}
 					</div>
 
-					<Input placeholder='Type message' type='text' className='py-6 z-50 relative bg-background' />
+					<Input
+						placeholder='Type message'
+						ref={messageContentRef}
+						type='text'
+						className='py-6 z-50 relative bg-background'
+						onKeyDown={e => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								handleSend();
+							}
+						}}
+					/>
 				</div>
 
 				<div className='flex items-end'>

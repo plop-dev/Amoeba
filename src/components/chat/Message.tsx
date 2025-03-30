@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import CustomAvatar from '@/components/UserAvatar';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Copy, Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -10,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/components/UserProfile';
 import { UserConstant } from '@/constants/globalUser';
 import UserAvatar from '@/components/UserAvatar';
+import { useStore } from '@nanostores/react';
+import { activeUser as activeUserStore } from '@/stores/User';
 
 function OptionsButton({
 	children,
@@ -167,21 +168,25 @@ function EmojiReaction({
 }
 
 export function Message({
-	data,
+	message,
 	onReplyClick,
 	isHighlighted,
 	variant = 'default',
 }: {
-	data: Message;
+	message: Message;
 	onReplyClick?: (msgId: string) => void;
 	isHighlighted?: boolean;
 	variant?: 'default' | 'inline';
 }) {
 	const { toast } = useToast();
-	const [reactions, setReactions] = useState<Map<string, User[]>>(data.reactions);
+	// Ensure reactions is a Map
+	const [reactions, setReactions] = useState<Map<string, User[]>>(
+		message.reactions instanceof Map ? message.reactions : new Map(Object.entries(message.reactions || {})),
+	);
 	const [userReactions, setUserReactions] = useState<Set<string>>(new Set());
 	const [isProfileOpen, setProfileOpen] = useState(false);
 	const messageRef = useRef<HTMLDivElement | null>(null);
+	const activeUser = useStore(activeUserStore);
 
 	const handleCopyMessage = () => {
 		navigator.clipboard.writeText(messageRef.current?.querySelector('.text')?.textContent ?? '');
@@ -189,29 +194,30 @@ export function Message({
 	};
 
 	useEffect(() => {
-		const currentUser = UserConstant; // current user
+		const currentUser = activeUser; // current user
 		const userReactionsSet = new Set<string>();
 
-		data.reactions.forEach((users, emojiName) => {
-			if (users.some(user => user._id === currentUser._id)) {
+		if (reactions.size === 0) return;
+		reactions.forEach((users, emojiName) => {
+			if (users.some(user => user._id === currentUser?._id)) {
 				userReactionsSet.add(emojiName);
 			}
 		});
 
 		setUserReactions(userReactionsSet);
-	}, [data.reactions]);
+	}, [reactions]);
 
 	const handleAddReaction = (emojiName: string) => {
-		const currentUser = UserConstant; // current user
+		const currentUser = activeUser; // current user
 
 		setReactions(prevReactions => {
 			const newReactions = new Map(prevReactions);
 			const reactionUsers = newReactions.get(emojiName) || [];
-			const hasReacted = reactionUsers.some(user => user._id === currentUser._id);
+			const hasReacted = reactionUsers.some(user => user._id === currentUser?._id);
 
 			if (hasReacted) {
 				// User is removing their reaction
-				const updatedUsers = reactionUsers.filter(user => user._id !== currentUser._id);
+				const updatedUsers = reactionUsers.filter(user => user._id !== currentUser?._id);
 				if (updatedUsers.length === 0) {
 					newReactions.delete(emojiName);
 				} else {
@@ -224,7 +230,9 @@ export function Message({
 				});
 			} else {
 				// User is adding a reaction
-				newReactions.set(emojiName, [...reactionUsers, currentUser]);
+				if (currentUser) {
+					newReactions.set(emojiName, [...reactionUsers, currentUser]);
+				}
 				setUserReactions(prev => {
 					const newUserReactions = new Set(prev);
 					newUserReactions.add(emojiName);
@@ -254,27 +262,27 @@ export function Message({
 							'px-2 items-center': variant === 'inline',
 						})}
 						ref={messageRef}
-						data-message-id={data._id}
+						data-message-id={message._id}
 						data-message-type={variant}>
 						<div
 							className='avatar cursor-pointer'
 							onClick={() => {
 								setProfileOpen(true);
 							}}>
-							<UserAvatar user={UserConstant} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
+							{activeUser && <UserAvatar user={activeUser} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />}
 						</div>
 
 						<div className='content flex flex-col w-full'>
 							<div className={cn('info flex', { hidden: variant === 'inline' })}>
 								<div className='username'>
 									<UserProfile user={UserConstant} isOpen={isProfileOpen} openChange={setProfileOpen}>
-										<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: data.author.accentColour }}>
-											@{data.author.username}
+										<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: message.author.accentColour }}>
+											@{message.author.username}
 										</Button>
 									</UserProfile>
 								</div>
 							</div>
-							<div className='text'>{data.content}</div>
+							<div className='text'>{message.content}</div>
 
 							<div className='reactions flex gap-x-2 mt-1'>
 								{Array.from(reactions).map(([emojiName, users], index) => (
@@ -291,8 +299,8 @@ export function Message({
 						</div>
 
 						<div className={cn('dates flex gap-x-8 flex-1 items-end flex-col', { hidden: variant === 'inline' })}>
-							<div className=''>{data.sent.toLocaleTimeString()}</div>
-							<div className='text-xs text-muted-foreground'>{data.sent.toLocaleDateString()}</div>
+							<div className=''>{new Date(message.sent).toLocaleTimeString()}</div>
+							<div className='text-xs text-muted-foreground'>{new Date(message.sent).toLocaleDateString()}</div>
 						</div>
 					</div>
 				</TooltipTrigger>
@@ -305,7 +313,7 @@ export function Message({
 					onMouseLeave={() => messageRef.current?.classList.remove('bg-secondary/50')}>
 					<div className='flex gap-x-1'>
 						<ReactionPicker onEmojiClick={handleAddReaction} />
-						<OptionsButton variant='outline' messageId={data._id} onClick={() => onReplyClick?.(data._id)}>
+						<OptionsButton variant='outline' messageId={message._id} onClick={() => onReplyClick?.(message._id)}>
 							<Reply />
 						</OptionsButton>
 

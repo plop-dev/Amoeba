@@ -31,7 +31,7 @@ export function ChatContainer({
 		<div className='chat-container overflow-auto'>
 			<div className='wrapper pr-4'>
 				{messages.map((message, i) => {
-					return <Message data={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message._id} />;
+					return <Message message={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message._id} />;
 				})}
 				<div ref={messageEndRef}></div>
 			</div>

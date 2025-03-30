@@ -1,7 +1,6 @@
 ---
 import { ActiveUsers } from '@/components/ActiveUsers';
 import DashboardLayout from '@/layouts/DashboardLayout.astro';
-import { activeUsers as activeUsersStore } from '@/stores/User';
 import { activeWorkspace } from '@/stores/Workspace';
 
 const workspaceTitle = activeWorkspace.get()?.name;
