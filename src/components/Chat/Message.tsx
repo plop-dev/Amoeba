@@ -269,7 +269,7 @@ export function Message({
 							onClick={() => {
 								setProfileOpen(true);
 							}}>
-							{activeUser && <UserAvatar user={activeUser} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />}
+							{message.author && <UserAvatar user={message.author} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />}
 						</div>
 
 						<div className='content flex flex-col w-full'>
