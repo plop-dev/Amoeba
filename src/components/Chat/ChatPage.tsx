@@ -8,6 +8,7 @@ import { activeUser as activeUserStore } from '@/stores/User';
 import { useMutation } from '@tanstack/react-query';
 import { v4 as uuidv4 } from 'uuid';
 import { ReactQueryProvider } from '@/components/ReactQueryProvider';
+import { useToast } from '@/hooks/use-toast';
 
 // Updated reducer to handle optimistic updates with temp IDs
 const messagesReducer = (state: Message[], action: any) => {
@@ -33,6 +34,7 @@ function ChatPageContent() {
 	const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeUser = useStore(activeUserStore);
+	const { toast } = useToast();
 
 	const handleReplyClick = (msgId: string) => {
 		setReplyingTo(msgId);
@@ -78,7 +80,15 @@ function ChatPageContent() {
 			try {
 				// Get the real message ID from the response
 				const realId = await response.text();
-				console.log('Message sent with ID:', realId);
+
+				if (realId.includes('error')) {
+					console.error('Error sending message:', realId);
+					toast({
+						title: 'Error',
+						description: 'Failed to send message. Please reload page.',
+						variant: 'destructive',
+					});
+				}
 
 				// Update the message with the real ID
 				dispatch({
@@ -94,7 +104,11 @@ function ChatPageContent() {
 		},
 		onError: error => {
 			console.error('Failed to send message:', error);
-			// You could add error handling UI here
+			toast({
+				title: 'Error',
+				description: 'Failed to send message. Please try again.',
+				variant: 'destructive',
+			});
 		},
 	});
 
