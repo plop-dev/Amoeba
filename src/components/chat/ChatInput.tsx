@@ -28,6 +28,7 @@ export function ChatInput({
 	const [previews, setPreviews] = useState<FilePreview[]>([]);
 	const [closingReply, setClosingReply] = useState(false);
 	const [containerHeight, setContainerHeight] = useState('auto');
+	const [messageContent, setMessageContent] = useState('');
 
 	const activeUser = useStore(activeUserStore);
 	const activeWorkspace = useStore(activeWorkspaceStore);
@@ -39,6 +40,45 @@ export function ChatInput({
 	const messageContentRef = useRef<HTMLInputElement>(null);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const editorRef = useRef<HTMLDivElement>(null);
+
+	const handleInputKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === 'Enter') {
+			if (!e.shiftKey) {
+				e.preventDefault();
+
+				if (messageContent.trim()) {
+					handleSend();
+					setMessageContent('');
+					if (editorRef.current) {
+						editorRef.current.innerHTML = '&#8203;';
+
+						// Place cursor at the beginning
+						const selection = window.getSelection();
+						const range = document.createRange();
+						if (selection && editorRef.current.firstChild) {
+							range.setStart(editorRef.current.firstChild, 0);
+							range.collapse(true);
+							selection.removeAllRanges();
+							selection.addRange(range);
+						}
+					}
+				}
+			}
+		}
+	};
+
+	const handleContentChange = () => {
+		if (editorRef.current) {
+			setMessageContent(editorRef.current.innerText.replace('&#8203;', '\n').trim());
+		}
+	};
+
+	useEffect(() => {
+		if (editorRef.current) editorRef.current.innerHTML = '&#8203;';
+		editorRef.current?.focus();
+	}, []);
 
 	// Handle container height transitions
 	useEffect(() => {
@@ -101,11 +141,11 @@ export function ChatInput({
 
 	const handleSend = () => {
 		if (activeUser) {
-			if (activeWorkspace && activeChannel && messageContentRef.current?.value.trim() !== '') {
+			if (activeWorkspace && activeChannel && messageContent.trim() !== '') {
 				const messageData: MessageToSend = {
 					author: activeUser,
 					channelId: activeChannel._id,
-					content: messageContentRef.current?.value || '',
+					content: messageContent,
 					sent: new Date(),
 					workspaceId: activeWorkspace._id,
 					reactions: new Map<string, User[]>(),
@@ -116,8 +156,8 @@ export function ChatInput({
 				};
 
 				handleSendMessage(messageData);
+				setMessageContent('');
 
-				messageContentRef.current?.focus();
 				if (messageContentRef.current) {
 					messageContentRef.current.value = '';
 				}
@@ -148,7 +188,6 @@ export function ChatInput({
 
 			<div className='input-container grid gap-x-4 grid-cols-[100fr_1fr_5fr] grid-rows-1 align-bottom'>
 				<div className=''>
-					{/* Animated container for typing indicator and reply */}
 					<div className='animated-container overflow-hidden transition-all duration-300' style={{ height: containerHeight }}>
 						{false && (
 							<div
@@ -187,17 +226,20 @@ export function ChatInput({
 						)}
 					</div>
 
-					<Input
-						placeholder='Type message'
-						ref={messageContentRef}
-						type='text'
-						className='py-6 z-50 relative bg-background'
-						onKeyDown={e => {
-							if (e.key === 'Enter') {
-								e.preventDefault();
-								handleSend();
-							}
-						}}
+					<div
+						ref={editorRef}
+						contentEditable
+						onKeyDown={handleInputKeyDown}
+						onInput={handleContentChange}
+						aria-placeholder={`Message ${activeChannel?.name}`}
+						className={cn(
+							`py-[14px] z-50 relative bg-background flex w-full rounded-md border border-input px-3 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
+							`break-words whitespace-break-spaces`,
+							{
+								'relative after:content-[attr(aria-placeholder)] after:text-muted-foreground after:absolute after:top-1/2 after:left-3 after:-translate-y-1/2':
+									editorRef.current?.innerText.length === 1,
+							},
+						)}
 					/>
 				</div>
 

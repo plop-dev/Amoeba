@@ -31,7 +31,19 @@ export function ChatContainer({
 		<div className='chat-container overflow-auto'>
 			<div className='wrapper pr-4'>
 				{messages.map((message, i) => {
-					return <Message message={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message._id} />;
+					const previousMessage = i > 0 ? messages[i - 1] : null;
+					let variant: 'default' | 'inline' = 'default';
+
+					if (
+						previousMessage?.author._id === message.author._id &&
+						previousMessage?.sent &&
+						message.sent &&
+						new Date(message.sent).getTime() - new Date(previousMessage.sent).getTime() < 2 * 60 * 1000
+					) {
+						variant = 'inline';
+					}
+
+					return <Message message={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message._id} variant={variant} />;
 				})}
 				<div ref={messageEndRef}></div>
 			</div>

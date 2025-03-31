@@ -16,7 +16,6 @@ function OptionsButton({
 	children,
 	variant,
 	emoji = false,
-	messageId,
 	onEmojiClick,
 	onClick,
 }: {
@@ -179,7 +178,6 @@ export function Message({
 	variant?: 'default' | 'inline';
 }) {
 	const { toast } = useToast();
-	// Ensure reactions is a Map
 	const [reactions, setReactions] = useState<Map<string, User[]>>(
 		message.reactions instanceof Map ? message.reactions : new Map(Object.entries(message.reactions || {})),
 	);
@@ -272,7 +270,7 @@ export function Message({
 							{message.author && <UserAvatar user={message.author} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />}
 						</div>
 
-						<div className='content flex flex-col w-full'>
+						<div className='content flex flex-col w-full overflow-hidden'>
 							<div className={cn('info flex', { hidden: variant === 'inline' })}>
 								<div className='username'>
 									<UserProfile user={UserConstant} isOpen={isProfileOpen} openChange={setProfileOpen}>
@@ -282,7 +280,7 @@ export function Message({
 									</UserProfile>
 								</div>
 							</div>
-							<div className='text'>{message.content}</div>
+							<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden'>{message.content}</div>
 
 							<div className='reactions flex gap-x-2 mt-1'>
 								{Array.from(reactions).map(([emojiName, users], index) => (
