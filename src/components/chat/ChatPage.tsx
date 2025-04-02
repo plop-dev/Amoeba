@@ -140,19 +140,14 @@ function ChatPageContent() {
 			entries => {
 				entries.forEach(async entry => {
 					if (entry.isIntersecting) {
-						console.log(`cursor: ${cursor} loading: ${loading}`);
 						if (cursor && !loading) {
-							console.log('Fetching older messages...');
-							// Store current scroll position
-							const scrollContainer = messageStartRef.current?.parentElement;
+							// store current scroll position
+							const scrollContainer = messageStartRef.current?.parentElement?.parentElement;
 							const scrollPosition = scrollContainer?.scrollHeight || 0;
 
-							// Fetch older messages
-							setLoading(true);
 							await fetchMessages(50, false);
-							setLoading(false);
 
-							// Restore scroll position after new content is added
+							// restore scroll position
 							setTimeout(() => {
 								const newScrollHeight = scrollContainer?.scrollHeight || 0;
 								const scrollDiff = newScrollHeight - scrollPosition;
