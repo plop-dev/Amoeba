@@ -8,7 +8,6 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { UploadedFile } from '@/components/chat/UploadedFile';
 import { cn } from '@/lib/utils';
 import '@/styles/animations.css';
-import { UserConstant, UserConstant2 } from '@/constants/globalUser';
 import { activeUser as activeUserStore } from '@/stores/User';
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 
@@ -188,7 +187,7 @@ export function ChatInput({
 
 			<div className='input-container grid gap-x-4 grid-cols-[100fr_1fr_5fr] grid-rows-1 align-bottom'>
 				<div className=''>
-					<div className='animated-container overflow-hidden transition-all duration-300' style={{ height: containerHeight }}>
+					<div className='animated-container overflow-hidden transition-all duration-100' style={{ height: containerHeight }}>
 						{false && (
 							<div
 								ref={typingIndicatorRef}
@@ -209,15 +208,15 @@ export function ChatInput({
 							<div
 								ref={replyContainerRef}
 								className={cn(
-									'replying-to h-10 w-full flex items-center gap-2 p-2 z-0 relative text-sm border-2 border-b-0 rounded-b-none rounded-lg transition-all duration-300 transform',
+									'replying-to h-10 w-full flex items-center gap-2 p-2 z-0 relative text-sm border-2 border-b-0 rounded-b-none rounded-lg transition-all duration-100 transform',
 									closingReply ? 'animate-slideOutDown' : 'animate-slideInUp',
 								)}>
 								<span className='flex justify-start'>
 									Replying to{' '}
 									{document
 										.querySelector(`.message[data-message-id="${replyingTo}"]`)
-										?.querySelector('.username')
-										?.textContent?.replace('@', '')}
+										?.getAttribute('data-message-username')
+										?.split(' ')[0] || 'Unknown'}
 								</span>
 								<div className='flex justify-end ml-auto'>
 									<X className='cursor-pointer opacity-80' onClick={handleClearReply} />

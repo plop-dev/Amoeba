@@ -249,56 +249,67 @@ export function Message({
 		<TooltipProvider>
 			<Tooltip delayDuration={50}>
 				<TooltipTrigger asChild>
-					<div
-						className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors animate-fade-down animate-duration-300', {
-							'bg-primary/20 hover:bg-primary/15': isHighlighted,
-							'hover:bg-secondary/50': !isHighlighted,
-							'my-1 p-2 items-start': variant === 'default',
-							'!pb-0 !mb-0':
-								messageRef.current?.nextElementSibling?.hasAttribute('data-message-type') &&
-								messageRef.current?.nextElementSibling?.getAttribute('data-message-type') === 'inline',
-							'px-2 items-center': variant === 'inline',
-						})}
-						ref={messageRef}
-						data-message-id={message._id}
-						data-message-type={variant}>
+					<div className=''>
+						{variant !== 'inline' && <Separator orientation='horizontal' className='mt-2'></Separator>}
 						<div
-							className='avatar cursor-pointer'
-							onClick={() => {
-								setProfileOpen(true);
-							}}>
-							{message.author && <UserAvatar user={message.author} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />}
-						</div>
+							className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors animate-fade-in animate-duration-300', {
+								'bg-primary/20 hover:bg-primary/15': isHighlighted,
+								'hover:bg-secondary/50': !isHighlighted,
+								'my-1 p-2 items-start': variant === 'default',
+								'!pb-0 !mb-0':
+									messageRef.current?.parentElement?.nextElementSibling?.children[0]?.hasAttribute('data-message-type') &&
+									messageRef.current?.parentElement?.nextElementSibling?.children[0]?.getAttribute('data-message-type') === 'inline',
+								'px-2 items-center': variant === 'inline',
+							})}
+							ref={messageRef}
+							data-message-id={message._id}
+							data-message-type={variant}
+							data-message-username={message.author.username}>
+							<div
+								className='avatar cursor-pointer'
+								onClick={() => {
+									setProfileOpen(true);
+								}}>
+								{message.author && <UserAvatar user={message.author} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />}
+							</div>
 
-						<div className='content flex flex-col w-full overflow-hidden'>
-							<div className={cn('info flex', { hidden: variant === 'inline' })}>
-								<div className='username'>
-									<UserProfile user={UserConstant} isOpen={isProfileOpen} openChange={setProfileOpen}>
-										<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: message.author.accentColour }}>
-											@{message.author.username}
-										</Button>
-									</UserProfile>
+							<div className='content flex flex-col w-full overflow-hidden'>
+								{variant !== 'inline' && (
+									<div className={cn('info flex')}>
+										<div className='username'>
+											<UserProfile user={UserConstant} isOpen={isProfileOpen} openChange={setProfileOpen}>
+												<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: message.author.accentColour }}>
+													@{message.author.username}
+												</Button>
+											</UserProfile>
+										</div>
+									</div>
+								)}
+								<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden'>{message.content}</div>
+
+								<div
+									className={cn('reactions flex', {
+										'gap-x-0 mt-1':
+											!messageRef.current?.parentElement?.nextElementSibling?.children[0]?.hasAttribute('data-message-type') &&
+											messageRef.current?.parentElement?.nextElementSibling?.children[0]?.getAttribute('data-message-type') !== 'inline',
+									})}>
+									{Array.from(reactions).map(([emojiName, users], index) => (
+										<EmojiReaction
+											key={index}
+											messageVariant={variant}
+											emojiName={emojiName}
+											users={users}
+											isActive={userReactions.has(emojiName)}
+											onToggle={() => handleAddReaction(emojiName)}
+										/>
+									))}
 								</div>
 							</div>
-							<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden'>{message.content}</div>
 
-							<div className='reactions flex gap-x-2 mt-1'>
-								{Array.from(reactions).map(([emojiName, users], index) => (
-									<EmojiReaction
-										key={index}
-										messageVariant={variant}
-										emojiName={emojiName}
-										users={users}
-										isActive={userReactions.has(emojiName)}
-										onToggle={() => handleAddReaction(emojiName)}
-									/>
-								))}
+							<div className={cn('dates flex gap-x-8 flex-1 items-end flex-col', { hidden: variant === 'inline' })}>
+								<div className=''>{new Date(message.sent).toLocaleTimeString()}</div>
+								<div className='text-xs text-muted-foreground'>{new Date(message.sent).toLocaleDateString()}</div>
 							</div>
-						</div>
-
-						<div className={cn('dates flex gap-x-8 flex-1 items-end flex-col', { hidden: variant === 'inline' })}>
-							<div className=''>{new Date(message.sent).toLocaleTimeString()}</div>
-							<div className='text-xs text-muted-foreground'>{new Date(message.sent).toLocaleDateString()}</div>
 						</div>
 					</div>
 				</TooltipTrigger>

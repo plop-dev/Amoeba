@@ -3,12 +3,14 @@ import { Message } from '@/components/chat/Message';
 import { UserConstant, UserConstant2 } from '@/constants/globalUser';
 
 export function ChatContainer({
-	messageEndRef: messageEndRef,
+	messageEndRef,
+	messageStartRef,
 	messages,
 	replyingTo,
 	onReplyClick,
 }: {
 	messageEndRef: React.RefObject<HTMLDivElement | null>;
+	messageStartRef: React.RefObject<HTMLDivElement | null>;
 	messages: Message[];
 	replyingTo: string | null;
 	onReplyClick: (msgId: string) => void;
@@ -30,6 +32,8 @@ export function ChatContainer({
 	return (
 		<div className='chat-container overflow-auto'>
 			<div className='wrapper pr-4'>
+				<div ref={messageStartRef}></div>
+
 				{messages.map((message, i) => {
 					const previousMessage = i > 0 ? messages[i - 1] : null;
 					let variant: 'default' | 'inline' = 'default';
@@ -38,7 +42,7 @@ export function ChatContainer({
 						previousMessage?.author._id === message.author._id &&
 						previousMessage?.sent &&
 						message.sent &&
-						new Date(message.sent).getTime() - new Date(previousMessage.sent).getTime() < 2 * 60 * 1000
+						new Date(message.sent).getTime() - new Date(previousMessage.sent).getTime() < 1 * 60 * 1000
 					) {
 						variant = 'inline';
 					}

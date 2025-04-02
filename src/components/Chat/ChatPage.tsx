@@ -9,11 +9,15 @@ import { useMutation } from '@tanstack/react-query';
 import { v4 as uuidv4 } from 'uuid';
 import { ReactQueryProvider } from '@/components/ReactQueryProvider';
 import { useToast } from '@/hooks/use-toast';
+import { activeChannel as activeChannelStore, setActiveChannel } from '@/stores/Channel';
 
 // Updated reducer to handle optimistic updates with temp IDs
 const messagesReducer = (state: Message[], action: any) => {
 	switch (action.type) {
 		case 'ADD_MESSAGE':
+			if (Array.isArray(action.payload)) {
+				return [...state, ...action.payload];
+			}
 			return [...state, action.payload];
 		case 'UPDATE_MESSAGE_ID':
 			return state.map(message => (message._id === action.payload.tempId ? { ...message, _id: action.payload.realId } : message));
@@ -28,16 +32,19 @@ const messagesReducer = (state: Message[], action: any) => {
 function ChatPageContent() {
 	const [messages, dispatch] = useReducer(messagesReducer, []);
 	const messageEndRef = useRef<HTMLDivElement | null>(null);
+	const messageStartRef = useRef<HTMLDivElement | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
 	const [replyingTo, setReplyingTo] = useState<string | null>(null);
-	const [activeChannel, setActiveChannel] = useState<Channel | null>(null);
+	const [cursor, setCursor] = useState<string | null>(null);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeUser = useStore(activeUserStore);
+	const activeChannel = useStore(activeChannelStore);
 	const { toast } = useToast();
 
 	const handleReplyClick = (msgId: string) => {
 		setReplyingTo(msgId);
+		messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	};
 
 	// Updated send message mutation with optimistic updates using temp ID prefix
@@ -51,7 +58,7 @@ function ChatPageContent() {
 				message,
 			};
 
-			return fetch(`http://localhost:8000/msg`, {
+			return fetch(`http://localhost:8000/api/msg`, {
 				method: 'POST',
 				credentials: 'include',
 				body: JSON.stringify(data),
@@ -120,15 +127,75 @@ function ChatPageContent() {
 		}, 5);
 	};
 
-	// change channel when active workspace changes
+	// Track when messageStartRef is in viewport
 	useEffect(() => {
-		// send request to backend for redirect (need the id of a chat channel in the switched workspace)
-		fetch(`http://localhost:8000/${activeWorkspace?._id}/chat`, { credentials: 'include' })
-			.then(res => res.json())
-			.then((data: Channel) => {
-				console.log(data);
+		if (!messageStartRef.current) return;
+
+		const observer = new IntersectionObserver(
+			entries => {
+				entries.forEach(async entry => {
+					if (entry.isIntersecting && cursor) {
+						await fetchMessages(50, false);
+					}
+				});
+			},
+			{ threshold: 1 },
+		);
+
+		observer.observe(messageStartRef.current);
+
+		return () => {
+			if (messageStartRef.current) {
+				observer.unobserve(messageStartRef.current);
+			}
+		};
+	}, [cursor, messageStartRef.current]); // Add cursor as dependency
+
+	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false): Promise<{ success: boolean }> => {
+		try {
+			const response = await fetch(
+				`http://localhost:8000/api/fetch/msgs/${activeChannel?._id}?` +
+					new URLSearchParams({
+						limit: limit.toString(),
+						...(initialLoad ? {} : { cursor: cursor || '' }),
+					}).toString(),
+				{ credentials: 'include', method: 'GET' },
+			);
+
+			const data: {
+				pagination: {
+					nextCursor: string;
+					hasMore: boolean;
+				};
+				messages: Message[];
+			} = await response.json();
+
+			if (data.pagination.hasMore) {
+				setCursor(data.pagination.nextCursor);
+			} else {
+				// No more messages to fetch
+				setCursor(null);
+			}
+
+			// Use a single dispatch to add all messages at once
+			if (Array.isArray(data.messages)) {
+				dispatch({ type: 'ADD_MESSAGE', payload: data.messages });
+			} else {
+				console.error('Received invalid messages format:', data.messages);
+			}
+
+			// Page loading is done
+			return { success: true };
+		} catch (error) {
+			console.error('Error fetching messages:', error);
+			toast({
+				title: 'Error',
+				description: 'Failed to fetch messages. Please reload page.',
+				variant: 'destructive',
 			});
-	}, [activeWorkspace]);
+			return { success: false };
+		}
+	};
 
 	// get channel details on load
 	useEffect(() => {
@@ -139,7 +206,6 @@ function ChatPageContent() {
 		fetch(`http://localhost:8000/channel/${channelType}/${channelName}`, { credentials: 'include' })
 			.then(res => res.json())
 			.then((data: Channel) => {
-				console.log(data);
 				setActiveChannel(data);
 			});
 	}, []);
@@ -147,7 +213,7 @@ function ChatPageContent() {
 	useEffect(() => {
 		const chatEventSource = new EventSource(`http://localhost:8000/${activeWorkspace?._id}/chat/${activeChannel?._id}`, { withCredentials: true });
 
-		chatEventSource.addEventListener('open', event => {
+		chatEventSource.addEventListener('open', async event => {
 			// tell user that connection is open
 		});
 
@@ -156,6 +222,10 @@ function ChatPageContent() {
 
 			if (data.message.author._id !== activeUser?._id) {
 				dispatch({ type: 'ADD_MESSAGE', payload: data.message });
+
+				setTimeout(() => {
+					messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+				}, 5);
 			}
 		});
 
@@ -168,11 +238,14 @@ function ChatPageContent() {
 	useEffect(() => {
 		setIsLoadingVisible(true);
 		// callback function to call when event triggers
-		const onPageLoad = () => {
+		const onPageLoad = async () => {
+			await fetchMessages(50, true);
+
 			console.log('page loaded');
 			setLoading(false);
 
 			setTimeout(() => {
+				messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 				setIsLoadingVisible(false);
 			}, 300);
 		};
@@ -198,8 +271,14 @@ function ChatPageContent() {
 	// }, []);
 
 	return (
-		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-4 max-w-full'>
-			<ChatContainer messageEndRef={messageEndRef} messages={messages} replyingTo={replyingTo} onReplyClick={handleReplyClick} />
+		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-6 max-w-full'>
+			<ChatContainer
+				messageStartRef={messageStartRef}
+				messageEndRef={messageEndRef}
+				messages={messages}
+				replyingTo={replyingTo}
+				onReplyClick={handleReplyClick}
+			/>
 			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} handleSendMessage={handleSendMessage} activeChannel={activeChannel} />
 
 			{isLoadingVisible && (
