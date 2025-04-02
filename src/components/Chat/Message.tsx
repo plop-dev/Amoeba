@@ -169,11 +169,13 @@ function EmojiReaction({
 export function Message({
 	message,
 	onReplyClick,
+	handleDeleteMessage,
 	isHighlighted,
 	variant = 'default',
 }: {
 	message: Message;
 	onReplyClick?: (msgId: string) => void;
+	handleDeleteMessage: (msgId: string) => void;
 	isHighlighted?: boolean;
 	variant?: 'default' | 'inline';
 }) {
@@ -332,7 +334,7 @@ export function Message({
 							<Copy></Copy>
 						</OptionsButton>
 
-						<OptionsButton variant='destructive'>
+						<OptionsButton variant='destructive' onClick={() => handleDeleteMessage(message._id)}>
 							<Trash2></Trash2>
 						</OptionsButton>
 					</div>

@@ -8,12 +8,14 @@ export function ChatContainer({
 	messages,
 	replyingTo,
 	onReplyClick,
+	handleDeleteMessage,
 }: {
 	messageEndRef: React.RefObject<HTMLDivElement | null>;
 	messageStartRef: React.RefObject<HTMLDivElement | null>;
 	messages: Message[];
 	replyingTo: string | null;
 	onReplyClick: (msgId: string) => void;
+	handleDeleteMessage: (msgId: string) => void;
 }) {
 	useEffect(() => {
 		const chatContainer = document.querySelector('.chat-container');
@@ -47,7 +49,16 @@ export function ChatContainer({
 						variant = 'inline';
 					}
 
-					return <Message message={message} key={i} onReplyClick={onReplyClick} isHighlighted={replyingTo === message._id} variant={variant} />;
+					return (
+						<Message
+							message={message}
+							key={i}
+							onReplyClick={onReplyClick}
+							handleDeleteMessage={handleDeleteMessage}
+							isHighlighted={replyingTo === message._id}
+							variant={variant}
+						/>
+					);
 				})}
 				<div ref={messageEndRef}></div>
 			</div>

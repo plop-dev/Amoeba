@@ -26,6 +26,8 @@ const messagesReducer = (state: Message[], action: any) => {
 			return [action.payload, ...state];
 		case 'UPDATE_MESSAGE_ID':
 			return state.map(message => (message._id === action.payload.tempId ? { ...message, _id: action.payload.realId } : message));
+		case 'DELETE_MESSAGE':
+			return state.filter(message => message._id !== action.payload);
 		case 'RESET':
 			return [];
 		default:
@@ -50,6 +52,23 @@ function ChatPageContent() {
 	const handleReplyClick = (msgId: string) => {
 		setReplyingTo(msgId);
 		messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+	};
+
+	const handleDeleteMessage = async (msgId: string) => {
+		try {
+			await fetch(`http://localhost:8000/api/msg/${msgId}`, {
+				method: 'DELETE',
+				credentials: 'include',
+			});
+		} catch (error) {
+			console.error('Error deleting message:', error);
+			toast({
+				title: 'Error',
+				description: 'Failed to delete message. Please try again.',
+				variant: 'destructive',
+			});
+		}
+		dispatch({ type: 'DELETE_MESSAGE', payload: msgId });
 	};
 
 	// Updated send message mutation with optimistic updates using temp ID prefix
@@ -301,6 +320,7 @@ function ChatPageContent() {
 				messages={messages}
 				replyingTo={replyingTo}
 				onReplyClick={handleReplyClick}
+				handleDeleteMessage={handleDeleteMessage}
 			/>
 			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} handleSendMessage={handleSendMessage} activeChannel={activeChannel} />
 
