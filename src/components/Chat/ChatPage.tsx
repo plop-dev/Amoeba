@@ -11,7 +11,7 @@ import { ReactQueryProvider } from '@/components/ReactQueryProvider';
 import { useToast } from '@/hooks/use-toast';
 import { activeChannel as activeChannelStore, setActiveChannel } from '@/stores/Channel';
 
-// Updated reducer to handle optimistic updates with temp IDs
+// Updated reducer to handle optimistic updates with temp IDs and prepend older messages
 const messagesReducer = (state: Message[], action: any) => {
 	switch (action.type) {
 		case 'ADD_MESSAGE':
@@ -19,6 +19,11 @@ const messagesReducer = (state: Message[], action: any) => {
 				return [...state, ...action.payload];
 			}
 			return [...state, action.payload];
+		case 'ADD_MESSAGE_TOP':
+			if (Array.isArray(action.payload)) {
+				return [...action.payload, ...state];
+			}
+			return [action.payload, ...state];
 		case 'UPDATE_MESSAGE_ID':
 			return state.map(message => (message._id === action.payload.tempId ? { ...message, _id: action.payload.realId } : message));
 		case 'RESET':
@@ -77,7 +82,7 @@ function ChatPageContent() {
 				_id: tempId,
 			};
 
-			// Add the optimistic message to the UI
+			// Add the optimistic message to the UI (append to end)
 			dispatch({ type: 'ADD_MESSAGE', payload: optimisticMessage });
 
 			// Return context for potential rollback
@@ -127,29 +132,57 @@ function ChatPageContent() {
 		}, 5);
 	};
 
-	// Track when messageStartRef is in viewport
+	// Track when messageStartRef is in viewport (top of messages)
 	useEffect(() => {
 		if (!messageStartRef.current) return;
 
 		const observer = new IntersectionObserver(
 			entries => {
 				entries.forEach(async entry => {
-					if (entry.isIntersecting && cursor) {
-						await fetchMessages(50, false);
+					if (entry.isIntersecting) {
+						console.log(`cursor: ${cursor} loading: ${loading}`);
+						if (cursor && !loading) {
+							console.log('Fetching older messages...');
+							// Store current scroll position
+							const scrollContainer = messageStartRef.current?.parentElement;
+							const scrollPosition = scrollContainer?.scrollHeight || 0;
+
+							// Fetch older messages
+							setLoading(true);
+							await fetchMessages(50, false);
+							setLoading(false);
+
+							// Restore scroll position after new content is added
+							setTimeout(() => {
+								const newScrollHeight = scrollContainer?.scrollHeight || 0;
+								const scrollDiff = newScrollHeight - scrollPosition;
+								scrollContainer?.scrollTo({
+									top: scrollDiff,
+									behavior: 'auto',
+								});
+							}, 10);
+						}
 					}
 				});
 			},
-			{ threshold: 1 },
+			{ threshold: 0.1 },
 		);
 
-		observer.observe(messageStartRef.current);
+		const timeoutId = setTimeout(() => {
+			if (messageStartRef.current) {
+				observer.observe(messageStartRef.current);
+			}
+		}, 500);
 
+		// Cleanup observer on unmount
 		return () => {
+			clearTimeout(timeoutId);
+
 			if (messageStartRef.current) {
 				observer.unobserve(messageStartRef.current);
 			}
 		};
-	}, [cursor, messageStartRef.current]); // Add cursor as dependency
+	}, [cursor, loading]);
 
 	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false): Promise<{ success: boolean }> => {
 		try {
@@ -173,18 +206,23 @@ function ChatPageContent() {
 			if (data.pagination.hasMore) {
 				setCursor(data.pagination.nextCursor);
 			} else {
-				// No more messages to fetch
 				setCursor(null);
+				console.log('No more messages to load. cursor:', cursor);
 			}
 
 			// Use a single dispatch to add all messages at once
 			if (Array.isArray(data.messages)) {
-				dispatch({ type: 'ADD_MESSAGE', payload: data.messages });
+				// For initial load or adding new messages, add them differently than old messages
+				if (initialLoad) {
+					dispatch({ type: 'ADD_MESSAGE', payload: data.messages.reverse() });
+				} else {
+					// Prepend older messages at the top
+					dispatch({ type: 'ADD_MESSAGE_TOP', payload: data.messages.reverse() });
+				}
 			} else {
 				console.error('Received invalid messages format:', data.messages);
 			}
 
-			// Page loading is done
 			return { success: true };
 		} catch (error) {
 			console.error('Error fetching messages:', error);
@@ -221,7 +259,7 @@ function ChatPageContent() {
 			const data: SSEMessage = JSON.parse(event.data);
 
 			if (data.message.author._id !== activeUser?._id) {
-				dispatch({ type: 'ADD_MESSAGE', payload: data.message });
+				dispatch({ type: 'APPEND_NEW_MESSAGE', payload: data.message });
 
 				setTimeout(() => {
 					messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -239,15 +277,15 @@ function ChatPageContent() {
 		setIsLoadingVisible(true);
 		// callback function to call when event triggers
 		const onPageLoad = async () => {
-			await fetchMessages(50, true);
+			await fetchMessages(50, true).then(() => {
+				setTimeout(() => {
+					messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+				}, 100);
 
-			console.log('page loaded');
-			setLoading(false);
-
-			setTimeout(() => {
-				messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 				setIsLoadingVisible(false);
-			}, 300);
+				setLoading(false);
+				console.log('page loaded');
+			});
 		};
 
 		// Check if the page has already loaded
@@ -259,16 +297,6 @@ function ChatPageContent() {
 			return () => window.removeEventListener('load', onPageLoad);
 		}
 	}, []);
-
-	// // Listen for messages dispatched from ConnectionPersist
-	// useEffect(() => {
-	// 	const handler = (e: Event) => {
-	// 		const customEvent = e as CustomEvent;
-	// 		dispatch({ type: 'ADD_MESSAGE', payload: customEvent.detail });
-	// 	};
-	// 	window.addEventListener('newMessage', handler);
-	// 	return () => window.removeEventListener('newMessage', handler);
-	// }, []);
 
 	return (
 		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-6 max-w-full'>
