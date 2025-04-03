@@ -179,7 +179,7 @@ function ChatPageContent() {
 					}
 				});
 			},
-			{ threshold: 0.1 },
+			{ threshold: 0.5 },
 		);
 
 		const timeoutId = setTimeout(() => {

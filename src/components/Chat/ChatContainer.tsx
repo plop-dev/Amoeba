@@ -33,8 +33,8 @@ export function ChatContainer({
 
 	return (
 		<div className='chat-container overflow-auto'>
-			<div className='wrapper pr-4'>
-				<div ref={messageStartRef}></div>
+			<div className='wrapper pr-4 relative'>
+				<div ref={messageStartRef} className='absolute left-0 top-0 w-full h-screen overflow-hidden'></div>
 
 				{messages.map((message, i) => {
 					const previousMessage = i > 0 ? messages[i - 1] : null;
