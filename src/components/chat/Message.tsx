@@ -115,9 +115,7 @@ function EmojiReaction({
 	// Use a single state to track the index of the user profile currently open
 	const [openUser, setOpenUser] = useState<number | null>(null);
 
-	const handleToggle = () => {
-		onToggle?.();
-	};
+	console.log(`users`, users);
 
 	return (
 		<div
@@ -130,7 +128,7 @@ function EmojiReaction({
 					<TooltipTrigger asChild>
 						<Button
 							variant='ghost'
-							onClick={handleToggle}
+							onClick={onToggle}
 							className={cn('flex gap-x-1 items-center px-2 h-7', {
 								'bg-primary/10': isActive,
 							})}
@@ -180,7 +178,7 @@ export function Message({
 	variant?: 'default' | 'inline';
 }) {
 	const { toast } = useToast();
-	const [reactions, setReactions] = useState<Map<string, User[]>>(
+	const [reactions, setReactions] = useState<Message['reactions']>(
 		message.reactions instanceof Map ? message.reactions : new Map(Object.entries(message.reactions || {})),
 	);
 	const [replyToMessage, setReplyToMessage] = useState<Element | null>(null);
@@ -204,7 +202,7 @@ export function Message({
 				console.log('No users for emoji:', emojiName);
 				return;
 			}
-			if (users.some(user => user._id === currentUser?._id)) {
+			if (users.some(user => user === currentUser?._id)) {
 				userReactionsSet.add(emojiName);
 			}
 		});
@@ -248,11 +246,11 @@ export function Message({
 		setReactions(prevReactions => {
 			const newReactions = new Map(prevReactions);
 			const reactionUsers = newReactions.get(emojiName) || [];
-			const hasReacted = reactionUsers.some(user => user._id === currentUser?._id);
+			const hasReacted = reactionUsers.some(user => user === currentUser?._id);
 
 			if (hasReacted) {
 				// User is removing their reaction
-				const updatedUsers = reactionUsers.filter(user => user._id !== currentUser?._id);
+				const updatedUsers = reactionUsers.filter(user => user !== currentUser?._id);
 				if (updatedUsers.length === 0) {
 					newReactions.delete(emojiName);
 				} else {
@@ -266,7 +264,7 @@ export function Message({
 			} else {
 				// User is adding a reaction
 				if (currentUser) {
-					newReactions.set(emojiName, [...reactionUsers, currentUser]);
+					newReactions.set(emojiName, [...reactionUsers, currentUser._id]);
 				}
 				setUserReactions(prev => {
 					const newUserReactions = new Set(prev);

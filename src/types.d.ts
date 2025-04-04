@@ -57,7 +57,7 @@ interface Message {
 	channelId: Channel['_id'];
 	workspaceId: Workspace['_id'];
 	sent: Date;
-	reactions: Map<string, User[]>;
+	reactions: Map<string, User['_id'][]>;
 	replyTo?: string;
 	pinned?: boolean;
 	channelId: string;
