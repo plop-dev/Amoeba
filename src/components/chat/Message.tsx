@@ -275,7 +275,7 @@ export function Message({
 					<div className=''>
 						{variant !== 'inline' && <Separator orientation='horizontal' className='mt-2'></Separator>}
 						{message.replyTo && (
-							<div className='reply-to-header cursor-pointer w-max flex items-center h-4 pl-6 gap-x-1 group' onClick={scrollToReplyTo}>
+							<div className='reply-to-header cursor-pointer w-max flex items-center h-4 pl-6 gap-x-1 group mt-1' onClick={scrollToReplyTo}>
 								<span className='reply-spine'></span>
 								{replyToMessage ? (
 									<>
