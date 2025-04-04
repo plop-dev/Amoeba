@@ -115,8 +115,6 @@ function EmojiReaction({
 	// Use a single state to track the index of the user profile currently open
 	const [openUser, setOpenUser] = useState<number | null>(null);
 
-	console.log(`users`, users);
-
 	return (
 		<div
 			className={cn('emoji-reaction flex gap-x-2 rounded-lg border border-border items-center transition-colors duration-150', {
@@ -227,7 +225,6 @@ export function Message({
 				replyToMessage.classList.remove('bg-primary/30');
 			}, 500);
 		}
-		console.log(replyToMessage);
 	};
 
 	const handleAddReaction = async (emojiName: string) => {
@@ -235,7 +232,7 @@ export function Message({
 			.then(res => res.json())
 			.then(data => {
 				if (data.success) {
-					console.log('Reaction added successfully');
+					// well nothing
 				} else {
 					toast({ title: 'Failed to add reaction', description: data.error, variant: 'destructive' });
 				}
@@ -342,12 +339,7 @@ export function Message({
 								)}
 								<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden msg-content'>{message.content}</div>
 
-								<div
-									className={cn('reactions flex', {
-										'gap-x-0 mt-1':
-											!messageRef.current?.parentElement?.nextElementSibling?.children[0]?.hasAttribute('data-message-type') &&
-											messageRef.current?.parentElement?.nextElementSibling?.children[0]?.getAttribute('data-message-type') !== 'inline',
-									})}>
+								<div className={cn('reactions flex my-1 gap-x-1')}>
 									{Array.from(reactions).map(([emojiName, users], index) => (
 										<EmojiReaction
 											key={index}

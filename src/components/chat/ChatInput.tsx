@@ -147,7 +147,7 @@ export function ChatInput({
 					content: messageContent,
 					sent: new Date(),
 					workspaceId: activeWorkspace._id,
-					reactions: new Map<string, User[]>(),
+					reactions: new Map<string, User['_id'][]>(),
 					replyTo: replyingTo || undefined,
 					// reactions: new Map([
 					// 	['ThumbsUp', [UserConstant, UserConstant2]],
