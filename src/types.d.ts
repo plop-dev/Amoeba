@@ -19,7 +19,8 @@ interface User {
 }
 
 interface AvatarProps {
-	user: User;
+	user?: User;
+	userId?: string;
 	className?: string;
 	size?: number;
 }
@@ -47,6 +48,8 @@ interface Channel {
 }
 
 // Message Related Types
+type Reactions = 'SmilePlus' | 'ThumbsUp' | 'ThumbsDown' | 'Smile' | 'PartyPopper' | 'Laugh' | 'Ban';
+
 interface Message {
 	_id: string;
 	content: string;

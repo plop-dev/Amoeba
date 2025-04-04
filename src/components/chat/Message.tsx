@@ -29,7 +29,7 @@ function OptionsButton({
 	const handleClick = () => {
 		if (React.isValidElement(children) && emoji) {
 			const { type } = children;
-			let emojiName = '';
+			let emojiName: Reactions = 'Ban';
 
 			switch (type) {
 				case SmilePlus:
@@ -107,7 +107,7 @@ function EmojiReaction({
 	onToggle,
 }: {
 	emojiName: string;
-	users: User[];
+	users: User[] | User['_id'][];
 	messageVariant: 'default' | 'inline';
 	isActive?: boolean;
 	onToggle?: () => void;
@@ -148,13 +148,13 @@ function EmojiReaction({
 							{users.map((user, i) => (
 								<UserProfile
 									key={i}
-									user={user}
+									userId={user as User['_id']}
 									isOpen={openUser === i}
 									openChange={(open: boolean) => {
 										setOpenUser(open ? i : openUser === i ? null : openUser);
 									}}>
 									<div className='cursor-pointer' onClick={() => setOpenUser(i)}>
-										<UserAvatar user={user} />
+										<UserAvatar userId={user as User['_id']} />
 									</div>
 								</UserProfile>
 							))}
@@ -200,6 +200,10 @@ export function Message({
 
 		if (reactions.size === 0) return;
 		reactions.forEach((users, emojiName) => {
+			if (users.length === 0) {
+				console.log('No users for emoji:', emojiName);
+				return;
+			}
 			if (users.some(user => user._id === currentUser?._id)) {
 				userReactionsSet.add(emojiName);
 			}
@@ -228,7 +232,17 @@ export function Message({
 		console.log(replyToMessage);
 	};
 
-	const handleAddReaction = (emojiName: string) => {
+	const handleAddReaction = async (emojiName: string) => {
+		await fetch(`http://localhost:8000/msg/${message._id}/reaction/${emojiName}`, { method: 'POST', credentials: 'include' })
+			.then(res => res.json())
+			.then(data => {
+				if (data.success) {
+					console.log('Reaction added successfully');
+				} else {
+					toast({ title: 'Failed to add reaction', description: data.error, variant: 'destructive' });
+				}
+			});
+
 		const currentUser = activeUser; // current user
 
 		setReactions(prevReactions => {

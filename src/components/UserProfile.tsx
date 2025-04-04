@@ -23,14 +23,16 @@ import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 
 export function UserProfile({
-	user = UserConstant,
+	user,
+	userId,
 	children,
 	contentOnly = false,
 	userControl = false,
 	isOpen = false,
 	openChange = () => {},
 }: {
-	user: User;
+	user?: User;
+	userId?: string;
 	children?: React.ReactNode;
 	contentOnly?: boolean;
 	userControl?: boolean;
@@ -38,8 +40,23 @@ export function UserProfile({
 	openChange?: (isOpen: boolean) => void;
 }) {
 	const { toast } = useToast();
-	const [status, setStatus] = useState(user.status);
+	const [userData, setUserData] = useState(user || UserConstant);
+	const [status, setStatus] = useState(user?.status || 'offline');
 	const activeWorkspace = useStore(activeWorkspaceStore);
+
+	useEffect(() => {
+		if (userId && !user) {
+			// fetch user data since only the user id is provided
+			fetch(`http://localhost:8000/user/${userId}`, {
+				method: 'GET',
+				credentials: 'include',
+			})
+				.then(res => res.json())
+				.then((data: User) => {
+					setUserData(data);
+				});
+		}
+	});
 
 	useEffect(() => {
 		console.log(`Status changed to: ${status}`);
@@ -71,13 +88,13 @@ export function UserProfile({
 		<>
 			<div className='grid grid-cols-[5fr,9fr] grid-rows-1 space-x-4'>
 				<div className='m-auto'>
-					<UserAvatar user={user} size={16}></UserAvatar>
+					<UserAvatar user={userData} size={16}></UserAvatar>
 				</div>
 				<div className='space-y-1'>
-					<h4 className='text-sm font-semibold' style={{ color: user.accentColour }}>
-						@{user.username}
+					<h4 className='text-sm font-semibold' style={{ color: userData.accentColour }}>
+						@{userData.username}
 						<br></br>
-						<span className='text-xs text-muted-foreground'>{user._id}</span>
+						<span className='text-xs text-muted-foreground'>{userData._id}</span>
 					</h4>
 					<span className='text-sm h-6 flex gap-x-2 items-center'>
 						<DropdownMenu>
@@ -120,12 +137,12 @@ export function UserProfile({
 					</span>
 					<div className='flex items-center pt-2'>
 						<CalendarDays className='mr-2 h-4 w-4 opacity-70' />{' '}
-						<span className='text-xs text-muted-foreground'>Joined {formatDate(new Date(user.creationDate))}</span>
+						<span className='text-xs text-muted-foreground'>Joined {formatDate(new Date(userData.creationDate))}</span>
 					</div>
 				</div>
 			</div>
 			<div className='mt-4'>
-				<p className='text-sm'>{user.description}</p>
+				<p className='text-sm'>{userData.description}</p>
 			</div>
 			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1'>
 				{userControl ? (

@@ -28,6 +28,8 @@ const messagesReducer = (state: Message[], action: any) => {
 			return state.map(message => (message._id === action.payload.tempId ? { ...message, _id: action.payload.realId } : message));
 		case 'DELETE_MESSAGE':
 			return state.filter(message => message._id !== action.payload);
+		case 'UPDATE_MESSAGE_REACTIONS':
+			return state.map(message => (message._id === action.payload.messageId ? { ...message, reactions: action.payload.reactions } : message));
 		case 'RESET':
 			return [];
 		default:
@@ -56,7 +58,7 @@ function ChatPageContent() {
 
 	const handleDeleteMessage = async (msgId: string) => {
 		try {
-			await fetch(`http://localhost:8000/api/msg/${msgId}`, {
+			await fetch(`http://localhost:8000/msg/${msgId}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});
@@ -82,7 +84,7 @@ function ChatPageContent() {
 				message,
 			};
 
-			return fetch(`http://localhost:8000/api/msg`, {
+			return fetch(`http://localhost:8000/msg`, {
 				method: 'POST',
 				credentials: 'include',
 				body: JSON.stringify(data),
@@ -201,7 +203,7 @@ function ChatPageContent() {
 	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false): Promise<{ success: boolean }> => {
 		try {
 			const response = await fetch(
-				`http://localhost:8000/api/fetch/msgs/${activeChannel?._id}?` +
+				`http://localhost:8000/msgs/${activeChannel?._id}?` +
 					new URLSearchParams({
 						limit: limit.toString(),
 						...(initialLoad ? {} : { cursor: cursor || '' }),
@@ -263,7 +265,7 @@ function ChatPageContent() {
 	}, []);
 
 	useEffect(() => {
-		const chatEventSource = new EventSource(`http://localhost:8000/${activeWorkspace?._id}/chat/${activeChannel?._id}`, { withCredentials: true });
+		const chatEventSource = new EventSource(`http://localhost:8000/sse/${activeWorkspace?._id}/chat/${activeChannel?._id}`, { withCredentials: true });
 
 		chatEventSource.addEventListener('open', async event => {
 			// tell user that connection is open
@@ -272,12 +274,28 @@ function ChatPageContent() {
 		chatEventSource.addEventListener('message', event => {
 			const data: SSEMessage = JSON.parse(event.data);
 
-			if (data.message.author._id !== activeUser?._id) {
-				dispatch({ type: 'APPEND_NEW_MESSAGE', payload: data.message });
+			if (data.event.variant === 'reaction') {
+				// Update the message's reaction state
+				const message: Message & { __v: string } = data.message;
 
-				setTimeout(() => {
-					messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-				}, 5);
+				// Convert reactions object to Map if it's not already
+				const updatedReactions = message.reactions instanceof Map ? message.reactions : new Map(Object.entries(message.reactions || {}));
+
+				dispatch({
+					type: 'UPDATE_MESSAGE_REACTIONS',
+					payload: {
+						messageId: message._id,
+						reactions: updatedReactions,
+					},
+				});
+			} else {
+				if (data.message.author._id !== activeUser?._id) {
+					dispatch({ type: 'ADD_MESSAGE', payload: data.message });
+
+					setTimeout(() => {
+						messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+					}, 5);
+				}
 			}
 		});
 

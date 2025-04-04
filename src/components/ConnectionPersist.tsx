@@ -12,7 +12,7 @@ export function ConnectionPersist() {
 
 	useEffect(() => {
 		if (!activeWorkspace?._id) return;
-		const projectEventSource = new EventSource(`http://localhost:8000/${activeWorkspace._id}/`, { withCredentials: true });
+		const projectEventSource = new EventSource(`http://localhost:8000/sse/${activeWorkspace._id}/`, { withCredentials: true });
 
 		// projectEventSource.onerror = ev => {
 		// 	console.log(ev);
@@ -81,7 +81,7 @@ export function ConnectionPersist() {
 				},
 			};
 
-			await fetch(`http://localhost:8000/${activeWorkspace._id}/`, {
+			await fetch(`http://localhost:8000/workspace/${activeWorkspace._id}/`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
