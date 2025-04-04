@@ -148,6 +148,7 @@ export function ChatInput({
 					sent: new Date(),
 					workspaceId: activeWorkspace._id,
 					reactions: new Map<string, User[]>(),
+					replyTo: replyingTo || undefined,
 					// reactions: new Map([
 					// 	['ThumbsUp', [UserConstant, UserConstant2]],
 					// 	['ThumbsDown', [UserConstant]],
@@ -235,7 +236,7 @@ export function ChatInput({
 							`py-[14px] z-50 relative bg-background flex w-full rounded-md border border-input px-3 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
 							`break-words whitespace-break-spaces`,
 							{
-								'relative after:content-[attr(aria-placeholder)] after:text-muted-foreground after:absolute after:top-1/2 after:left-3 after:-translate-y-1/2':
+								'relative after:content-[attr(aria-placeholder)] after:text-muted-foreground after:absolute after:top-1/2 after:left-3 after:-translate-y-1/2 cursor-text':
 									editorRef.current?.innerText.length === 1,
 							},
 						)}

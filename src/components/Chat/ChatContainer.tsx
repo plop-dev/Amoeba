@@ -44,7 +44,8 @@ export function ChatContainer({
 						previousMessage?.author._id === message.author._id &&
 						previousMessage?.sent &&
 						message.sent &&
-						new Date(message.sent).getTime() - new Date(previousMessage.sent).getTime() < 1 * 60 * 1000
+						new Date(message.sent).getTime() - new Date(previousMessage.sent).getTime() < 1 * 60 * 1000 &&
+						!message.replyTo
 					) {
 						variant = 'inline';
 					}

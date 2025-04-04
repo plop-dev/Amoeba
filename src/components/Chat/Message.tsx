@@ -183,6 +183,7 @@ export function Message({
 	const [reactions, setReactions] = useState<Map<string, User[]>>(
 		message.reactions instanceof Map ? message.reactions : new Map(Object.entries(message.reactions || {})),
 	);
+	const [replyToMessage, setReplyToMessage] = useState<Element | null>(null);
 	const [userReactions, setUserReactions] = useState<Set<string>>(new Set());
 	const [isProfileOpen, setProfileOpen] = useState(false);
 	const messageRef = useRef<HTMLDivElement | null>(null);
@@ -206,6 +207,26 @@ export function Message({
 
 		setUserReactions(userReactionsSet);
 	}, [reactions]);
+
+	useEffect(() => {
+		if (message.replyTo) {
+			const replyMessage = document.querySelector(`.message[data-message-id="${message.replyTo}"]`);
+			if (replyMessage) {
+				setReplyToMessage(replyMessage);
+			}
+		}
+	}, [message.replyTo]);
+
+	const scrollToReplyTo = () => {
+		replyToMessage?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		if (replyToMessage) {
+			replyToMessage.classList.add('bg-primary/30', 'duration-500');
+			setTimeout(() => {
+				replyToMessage.classList.remove('bg-primary/30');
+			}, 500);
+		}
+		console.log(replyToMessage);
+	};
 
 	const handleAddReaction = (emojiName: string) => {
 		const currentUser = activeUser; // current user
@@ -253,6 +274,26 @@ export function Message({
 				<TooltipTrigger asChild>
 					<div className=''>
 						{variant !== 'inline' && <Separator orientation='horizontal' className='mt-2'></Separator>}
+						{message.replyTo && (
+							<div className='reply-to-header cursor-pointer w-max flex items-center h-4 pl-6 gap-x-1 group' onClick={scrollToReplyTo}>
+								<span className='reply-spine'></span>
+								{replyToMessage ? (
+									<>
+										<div className='text-xs text-muted-foreground font-bold group-hover:text-foreground transition flex'>
+											{replyToMessage?.getAttribute('data-message-username')}
+											<span>:</span>
+										</div>
+										<div className='text-xs text-muted-foreground group-hover:text-foreground transition'>
+											{replyToMessage?.querySelector('.msg-content')?.textContent?.substring(0, 40)}
+										</div>
+									</>
+								) : (
+									<div className='text-xs text-muted-foreground font-bold group-hover:text-foreground transition flex'>
+										MESSAGE NOT LOADED
+									</div>
+								)}
+							</div>
+						)}
 						<div
 							className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors animate-fade-in animate-duration-300', {
 								'bg-primary/20 hover:bg-primary/15': isHighlighted,
@@ -287,7 +328,7 @@ export function Message({
 										</div>
 									</div>
 								)}
-								<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden'>{message.content}</div>
+								<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden msg-content'>{message.content}</div>
 
 								<div
 									className={cn('reactions flex', {
