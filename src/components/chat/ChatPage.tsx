@@ -42,6 +42,7 @@ function ChatPageContent() {
 	const [messages, dispatch] = useReducer(messagesReducer, []);
 	const messageEndRef = useRef<HTMLDivElement | null>(null);
 	const messageStartRef = useRef<HTMLDivElement | null>(null);
+	const editorRef = useRef<HTMLDivElement>(null);
 	const [loading, setLoading] = useState(true);
 	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
 	const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -53,6 +54,7 @@ function ChatPageContent() {
 
 	const handleReplyClick = (msgId: string) => {
 		setReplyingTo(msgId);
+		editorRef.current?.focus();
 		messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	};
 
@@ -331,7 +333,7 @@ function ChatPageContent() {
 	}, []);
 
 	return (
-		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-6 max-w-full'>
+		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-4 max-w-full'>
 			<ChatContainer
 				messageStartRef={messageStartRef}
 				messageEndRef={messageEndRef}
@@ -340,7 +342,14 @@ function ChatPageContent() {
 				onReplyClick={handleReplyClick}
 				handleDeleteMessage={handleDeleteMessage}
 			/>
-			<ChatInput replyingTo={replyingTo} onClearReply={() => setReplyingTo(null)} handleSendMessage={handleSendMessage} activeChannel={activeChannel} />
+			<ChatInput
+				replyingTo={replyingTo}
+				setReplyingTo={setReplyingTo}
+				editorRef={editorRef}
+				onClearReply={() => setReplyingTo(null)}
+				handleSendMessage={handleSendMessage}
+				activeChannel={activeChannel}
+			/>
 
 			{isLoadingVisible && (
 				<div

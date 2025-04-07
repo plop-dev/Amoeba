@@ -13,14 +13,18 @@ import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 
 export function ChatInput({
 	replyingTo,
+	setReplyingTo,
 	onClearReply,
 	handleSendMessage,
 	activeChannel,
+	editorRef,
 }: {
 	replyingTo?: string | null;
+	setReplyingTo: React.Dispatch<React.SetStateAction<string | null>>;
 	onClearReply?: () => void;
 	handleSendMessage: (message: MessageToSend) => void;
 	activeChannel?: Channel | null;
+	editorRef: React.RefObject<HTMLDivElement>;
 }) {
 	const { toast } = useToast();
 	const [files, setFiles] = useState<{ id: string; file: File }[]>([]);
@@ -39,8 +43,6 @@ export function ChatInput({
 	const messageContentRef = useRef<HTMLInputElement>(null);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
-
-	const editorRef = useRef<HTMLDivElement>(null);
 
 	const handleInputKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
 		if (e.key === 'Enter') {
@@ -157,6 +159,10 @@ export function ChatInput({
 
 				handleSendMessage(messageData);
 				setMessageContent('');
+				messageContentRef.current?.focus();
+
+				setReplyingTo(null);
+				setClosingReply(false);
 
 				if (messageContentRef.current) {
 					messageContentRef.current.value = '';
