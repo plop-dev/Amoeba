@@ -1,9 +1,8 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { EventSource } from 'eventsource';
 import { activeUsers as activeUsersStore, activeUser as activeUserStore, addActiveUser, removeActiveUser } from '@/stores/User';
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
-import { v4 as uuidv4 } from 'uuid';
 
 export function ConnectionPersist() {
 	const activeUser = useStore(activeUserStore);
@@ -14,38 +13,11 @@ export function ConnectionPersist() {
 		if (!activeWorkspace?._id) return;
 		const projectEventSource = new EventSource(`http://localhost:8000/sse/${activeWorkspace._id}/`, { withCredentials: true });
 
-		// projectEventSource.onerror = ev => {
-		// 	console.log(ev);
-		// };
-
 		projectEventSource.addEventListener('message', event => {
 			const data: SSEMessage = JSON.parse(event.data);
 
 			if (data.event.author === 'server') {
-				// if (data.event.type === 'welcome') {
-				// 	console.log(`received welcome message: ${data.message.content}`);
-				// 	// Create new welcome message and dispatch a global event so ChatPage can add it
-				// 	const welcomeMsg: Message = {
-				// 		_id: `welcome-${uuidv4()}`,
-				// 		content: data.message,
-				// 		author: {
-				// 			_id: 'server',
-				// 			auth: { keyHash: '', salt: '', iterations: 0 },
-				// 			username: 'Server',
-				// 			description: '',
-				// 			avatarUrl: '',
-				// 			creationDate: new Date(),
-				// 			accentColour: '#000000',
-				// 			status: 'online',
-				// 			workspaces: [],
-				// 		},
-				// 		channelId: 'default', // update if needed
-				// 		workspaceId: activeWorkspace._id,
-				// 		sent: new Date(),
-				// 		reactions: new Map(),
-				// 	};
-				// 	window.dispatchEvent(new CustomEvent('newMessage', { detail: welcomeMsg }));
-				// }
+				//? idk
 			} else if (data.event.author === 'client') {
 				if (data.event.type === 'status') {
 					const userId = data.message._id;

@@ -22,6 +22,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	const [channels, setChannels] = useState<Channel[]>([]);
 	const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 	const [navData, setNavData] = useState<AppSidebarData>();
+	const [DBCategories, setDBCategories] = useState<DBCategory[]>([]);
 
 	const activeUser = useStore(activeUserStore);
 	const activeWorkspace = useStore(activeWorkspaceStore);
@@ -42,16 +43,32 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 
 	// load channels from active workspace
 	useEffect(() => {
-		if (activeWorkspace && !Object.keys(activeWorkspace).includes('error'))
+		if (activeWorkspace && !Object.keys(activeWorkspace).includes('error')) {
 			fetch(`http://localhost:8000/channels/${activeWorkspace._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
+					console.log('Channels:', data);
 					setChannels(data);
 				})
 				.catch(err => {
 					console.error(err);
 				});
-		else console.error('No active workspace found');
+		} else console.error('No active workspace found');
+	}, [activeWorkspace]);
+
+	// load categories from db (keep in mind DBCategories is a 'stripped' down version of Channel type)
+	useEffect(() => {
+		if (activeWorkspace && !Object.keys(activeWorkspace).includes('error')) {
+			fetch(`http://localhost:8000/categories/${activeWorkspace._id}`, { credentials: 'include' })
+				.then(res => res.json())
+				.then(data => {
+					console.log('Categories:', data);
+					setDBCategories(data);
+				})
+				.catch(err => {
+					console.error(err);
+				});
+		} else console.error('No categories found');
 	}, [activeWorkspace]);
 
 	if (!activeUser || !workspaces) {
@@ -67,6 +84,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 			user: activeUser,
 			workspaces: workspaces,
 			channels: channels,
+			DBCategories: DBCategories,
 		});
 	}, [activeUser, workspaces, channels]);
 
@@ -95,7 +113,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 				<Separator orientation='horizontal' className='relative -left-full min-w-[100vw] w-screen'></Separator>
 				{navData && <WorkspaceSwitcher workspaces={navData.workspaces} />}
 			</SidebarHeader>
-			<SidebarContent>{navData && <NavMain channels={navData.channels} />}</SidebarContent>
+			<SidebarContent>{navData && <NavMain channels={navData.channels} DBCategories={navData.DBCategories} />}</SidebarContent>
 			<SidebarFooter>{navData && <NavUser user={navData.user} />}</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>

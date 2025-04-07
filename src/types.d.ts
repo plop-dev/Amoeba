@@ -45,6 +45,7 @@ interface Channel {
 	type: ChannelTypes;
 	creationDate: Date;
 	members: User['_id'][];
+	categoryId?: string;
 }
 
 // Message Related Types
@@ -91,15 +92,26 @@ interface AppSidebarData {
 	user: User;
 	workspaces: Workspace[];
 	channels: Channel[];
+	DBCategories: DBCategory[];
 }
 
 interface Category {
+	_id: string;
 	title: string;
 	url: string;
 	icon?: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
 	isActive?: boolean;
 	canCreate?: boolean;
 	items?: Channel[] & { url: string }[];
+}
+
+interface DBCategory {
+	_id: string;
+	workspaceId: string;
+	name: string;
+	description: string;
+	order: number;
+	icon: string;
 }
 
 // Utility
