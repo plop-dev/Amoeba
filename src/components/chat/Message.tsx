@@ -339,7 +339,7 @@ export function Message({
 								)}
 								<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden msg-content'>{message.content}</div>
 
-								<div className={cn('reactions flex my-1 gap-x-1')}>
+								<div className={cn('reactions flex gap-x-1', reactions.size > 0 ? 'my-1' : '')}>
 									{Array.from(reactions).map(([emojiName, users], index) => (
 										<EmojiReaction
 											key={index}
