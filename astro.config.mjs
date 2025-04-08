@@ -33,6 +33,10 @@ export default defineConfig({
 				'@': path.resolve(process.cwd(), 'src'),
 			},
 		},
+		optimizeDeps: {
+			force: true,
+			exclude: ['lucide-react/dynamicIconImports'],
+		},
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
 	},
 });

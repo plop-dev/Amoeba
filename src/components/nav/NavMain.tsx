@@ -1,4 +1,4 @@
-import { AudioWaveform, Book, ChevronRight, Copy, Home, List, MessageCircle, Pencil, Plus, type LucideIcon } from 'lucide-react';
+import { AudioWaveform, Book, ChevronRight, Copy, Home, List, MessageCircle, Pencil, Plus, type LucideIcon, type LucideProps } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
 	SidebarGroup,
@@ -33,6 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
+import { IconPicker } from '../ui/icon-picker';
 
 function NewChannelDialog(props: { children: React.ReactNode; category: string }) {
 	const { toast } = useToast();
@@ -171,6 +172,19 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: string
 										<FormLabel>Category Name</FormLabel>
 										<FormControl>
 											<Input placeholder='Chats' {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='categoryIcon'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Category Icon</FormLabel>
+										<FormControl>
+											<IconPicker></IconPicker>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
