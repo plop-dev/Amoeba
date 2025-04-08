@@ -25,6 +25,7 @@ export default defineConfig({
 		// webAnalytics: {
 		// 	enabled: true
 		// }
+		includeFiles: ['./node_modules/tailwind-merge/**'],
 	}),
 	output: 'server',
 	vite: {
@@ -37,6 +38,9 @@ export default defineConfig({
 			force: true,
 			exclude: ['lucide-react/dynamicIconImports', 'lucide-react/dynamic'],
 			// include: ['lucide-react/dynamic'],
+		},
+		ssr: {
+			noExternal: ['tailwind-merge'],
 		},
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
 	},
