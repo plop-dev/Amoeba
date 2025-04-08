@@ -38,9 +38,12 @@ export default defineConfig({
 			exclude: ['lucide-react/dynamicIconImports', 'lucide-react/dynamic'],
 			// include: ['lucide-react/dynamic'],
 		},
-		ssr: {
-			noExternal: ['tailwind-merge'],
+		vite: {
+			ssr: {
+				noExternal: ['tailwind-merge', 'lucide-react'],
+			},
 		},
+
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
 	},
 });
