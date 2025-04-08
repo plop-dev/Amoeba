@@ -25,6 +25,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	const [DBCategories, setDBCategories] = useState<DBCategory[]>([]);
 
 	const activeUser = useStore(activeUserStore);
+
 	const activeWorkspace = useStore(activeWorkspaceStore);
 
 	// load user workspaces
@@ -80,13 +81,14 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	}
 
 	useEffect(() => {
+		console.log('update nav data');
 		setNavData({
 			user: activeUser,
 			workspaces: workspaces,
 			channels: channels,
 			DBCategories: DBCategories,
 		});
-	}, [activeUser, workspaces, channels]);
+	}, [activeUser, workspaces, channels, DBCategories]);
 
 	return (
 		<Sidebar collapsible='icon' {...props} className=''>

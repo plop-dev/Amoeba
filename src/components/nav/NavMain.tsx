@@ -1,4 +1,4 @@
-import { AudioWaveform, Book, ChevronRight, Home, List, MessageCircle, Plus, type LucideIcon } from 'lucide-react';
+import { AudioWaveform, Book, ChevronRight, Copy, Home, List, MessageCircle, Pencil, Plus, type LucideIcon } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
 	SidebarGroup,
@@ -34,13 +34,15 @@ import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
 
-const formSchema = z.object({
-	channelName: z.string().min(2, { message: 'Channel name must be at least 2 characters.' }).max(50),
-	channelType: z.enum(['chat', 'voice', 'board']),
-});
-
 function NewChannelDialog(props: { children: React.ReactNode; category: string }) {
 	const { toast } = useToast();
+	const formSchema = z.object({
+		channelName: z
+			.string()
+			.min(2, { message: 'Channel name must be at least 2 characters.' })
+			.max(20, { message: 'Channel name must be at most 20 characters.' }),
+		channelType: z.enum(['chat', 'voice', 'board']),
+	});
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -55,6 +57,7 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 		toast({
 			title: `${values.channelType} Channel Created`,
 			description: `Channel ${values.channelName} created successfully.`,
+			variant: 'success',
 		});
 	}
 
@@ -70,7 +73,7 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 						<AlertDialogHeader>
 							<AlertDialogTitle>New Channel in {props.category}</AlertDialogTitle>
 							<AlertDialogDescription className='flex flex-col gap-y-3'>
-								<span>This will create a new {props.category} channel. Fill in all fields below.</span>
+								<span>This will create a new channel in {props.category}. Fill in all fields below.</span>
 							</AlertDialogDescription>
 							<FormField
 								control={form.control}
@@ -111,6 +114,72 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 						<AlertDialogFooter>
 							<AlertDialogCancel>Cancel</AlertDialogCancel>
 							<AlertDialogAction type='submit'>Create</AlertDialogAction>
+						</AlertDialogFooter>
+					</form>
+				</Form>
+			</AlertDialogContent>
+		</AlertDialog>
+	);
+}
+
+function EditCategoryDialog(props: { children: React.ReactNode; category: string }) {
+	const { toast } = useToast();
+	const formSchema = z.object({
+		categoryName: z
+			.string()
+			.min(2, { message: 'Category name must be at least 2 characters.' })
+			.max(20, { message: 'Category name must be at most 20 characters.' }),
+		categoryIcon: z.string().optional(),
+	});
+
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			categoryName: 'Chats',
+			categoryIcon: '',
+		},
+	});
+
+	function onSubmit(values: z.infer<typeof formSchema>) {
+		console.log(values);
+		toast({
+			title: `${values.categoryName} category updated`,
+			description: `Category ${values.categoryName} updated successfully.`,
+			variant: 'success',
+		});
+	}
+
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+			<AlertDialogContent
+				onClick={e => {
+					e.stopPropagation();
+				}}>
+				<Form {...form}>
+					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+						<AlertDialogHeader>
+							<AlertDialogTitle>Edit {props.category} Category</AlertDialogTitle>
+							<AlertDialogDescription className='flex flex-col gap-y-3'>
+								<span>Edit the name and icon of this category.</span>
+							</AlertDialogDescription>
+							<FormField
+								control={form.control}
+								name='categoryName'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Category Name</FormLabel>
+										<FormControl>
+											<Input placeholder='Chats' {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel>Cancel</AlertDialogCancel>
+							<AlertDialogAction type='submit'>Submit</AlertDialogAction>
 						</AlertDialogFooter>
 					</form>
 				</Form>
@@ -167,7 +236,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 				}
 			}
 		}
-	}, [channels, DBCategories]);
+	}, [channels, DBCategories, activeWorkspace]);
 
 	return (
 		<SidebarGroup className=''>
@@ -188,23 +257,39 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 							<Collapsible key={item._id} asChild defaultOpen={item.isActive} className='group/collapsible'>
 								<SidebarMenuItem>
 									<CollapsibleTrigger asChild>
-										<SidebarMenuButton tooltip={item.title} className='relative'>
+										<SidebarMenuButton tooltip={item.title} className='relative group/category'>
 											{item.icon && <item.icon />}
 											<span>{item.title}</span>
-											{item.canCreate && (
-												<NewChannelDialog category={item.title.split('').pop() === 's' ? item.title.slice(0, -1) : item.title}>
+
+											<div className='hidden group-hover/category:block'>
+												<EditCategoryDialog category={item.title}>
 													<span
 														className={cn(
 															buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-															'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
+															'size-4 ml-auto p-3 absolute top-1/2 right-16 z-50 -translate-y-1/2',
 														)}
 														onClick={e => {
 															e.stopPropagation();
 														}}>
-														<Plus />
+														<Pencil />
 													</span>
-												</NewChannelDialog>
-											)}
+												</EditCategoryDialog>
+
+												{item.canCreate && (
+													<NewChannelDialog category={item.title}>
+														<span
+															className={cn(
+																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+																'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
+															)}
+															onClick={e => {
+																e.stopPropagation();
+															}}>
+															<Plus />
+														</span>
+													</NewChannelDialog>
+												)}
+											</div>
 											<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
 										</SidebarMenuButton>
 									</CollapsibleTrigger>
