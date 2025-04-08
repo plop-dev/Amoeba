@@ -390,7 +390,38 @@ const IconPicker = React.forwardRef<React.ComponentRef<typeof PopoverTrigger>, I
 				<PopoverContent className='w-64 p-2'>
 					{searchable && <Input placeholder={searchPlaceholder} onChange={handleSearchChange} className='mb-2' />}
 					{categorized && search.trim() === '' && <div className='flex flex-row gap-1 mt-2 overflow-x-auto pb-2'>{categoryButtons}</div>}
-					<div ref={parentRef} className='max-h-60 overflow-auto' style={{ scrollbarWidth: 'thin' }}>
+					<div
+						ref={parentRef}
+						className='max-h-60 overflow-auto'
+						style={{
+							scrollbarWidth: 'thin',
+						}}
+						onWheel={e => {
+							e.preventDefault();
+
+							if (parentRef.current) {
+								const now = Date.now();
+								const lastWheelEvent = parentRef.current.dataset.lastWheelEvent ? parseInt(parentRef.current.dataset.lastWheelEvent) : now;
+								const timeDelta = now - lastWheelEvent;
+
+								let accelerationFactor = 1;
+								if (timeDelta < 100) {
+									accelerationFactor = Math.min(3, 1 + (100 - timeDelta) / 50);
+								}
+
+								parentRef.current.dataset.lastWheelEvent = now.toString();
+
+								const baseScrollAmount = Math.abs(e.deltaY) > 100 ? e.deltaY * 0.8 : e.deltaY * 0.4;
+								const scrollAmount = baseScrollAmount * accelerationFactor;
+
+								requestAnimationFrame(() => {
+									parentRef.current?.scrollBy({
+										top: scrollAmount,
+										behavior: 'smooth',
+									});
+								});
+							}
+						}}>
 						{isLoading ? <IconsColumnSkeleton /> : renderVirtualContent()}
 					</div>
 				</PopoverContent>
