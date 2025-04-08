@@ -38,9 +38,13 @@ export default defineConfig({
 			exclude: ['lucide-react/dynamicIconImports', 'lucide-react/dynamic'],
 			// include: ['lucide-react/dynamic'],
 		},
-		ssr: {
-			noExternal: true,
-		},
+		...(process.env.ENV === 'dev'
+			? {
+					ssr: {
+						noExternal: true,
+					},
+			  }
+			: {}),
 
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
 	},
