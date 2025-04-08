@@ -25,7 +25,6 @@ export default defineConfig({
 		// webAnalytics: {
 		// 	enabled: true
 		// }
-		includeFiles: ['./node_modules/tailwind-merge/**'],
 	}),
 	output: 'server',
 	vite: {
