@@ -40,7 +40,7 @@ export default defineConfig({
 		},
 		vite: {
 			ssr: {
-				noExternal: ['tailwind-merge', 'lucide-react'],
+				noExternal: true,
 			},
 		},
 
