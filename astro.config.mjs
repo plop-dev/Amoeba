@@ -38,10 +38,8 @@ export default defineConfig({
 			exclude: ['lucide-react/dynamicIconImports', 'lucide-react/dynamic'],
 			// include: ['lucide-react/dynamic'],
 		},
-		vite: {
-			ssr: {
-				noExternal: true,
-			},
+		ssr: {
+			noExternal: true,
 		},
 
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
