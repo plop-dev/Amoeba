@@ -35,7 +35,8 @@ export default defineConfig({
 		},
 		optimizeDeps: {
 			force: true,
-			exclude: ['lucide-react/dynamicIconImports'],
+			exclude: ['lucide-react/dynamicIconImports', 'lucide-react/dynamic'],
+			// include: ['lucide-react/dynamic'],
 		},
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
 	},

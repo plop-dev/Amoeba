@@ -33,7 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
-import { IconPicker } from '../ui/icon-picker';
+import { IconPicker, type IconName } from '../ui/icon-picker';
 
 function NewChannelDialog(props: { children: React.ReactNode; category: string }) {
 	const { toast } = useToast();
@@ -130,14 +130,14 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: string
 			.string()
 			.min(2, { message: 'Category name must be at least 2 characters.' })
 			.max(20, { message: 'Category name must be at most 20 characters.' }),
-		categoryIcon: z.string().optional(),
+		categoryIcon: z.custom<IconName>().optional(),
 	});
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			categoryName: 'Chats',
-			categoryIcon: '',
+			categoryIcon: 'list',
 		},
 	});
 
@@ -181,10 +181,10 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: string
 								control={form.control}
 								name='categoryIcon'
 								render={({ field }) => (
-									<FormItem>
+									<FormItem className='flex flex-col gap-y-2'>
 										<FormLabel>Category Icon</FormLabel>
 										<FormControl>
-											<IconPicker></IconPicker>
+											<IconPicker {...field} defaultValue='list'></IconPicker>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
