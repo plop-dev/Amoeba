@@ -182,6 +182,7 @@ export function Message({
 	const [replyToMessage, setReplyToMessage] = useState<Element | null>(null);
 	const [userReactions, setUserReactions] = useState<Set<string>>(new Set());
 	const [isProfileOpen, setProfileOpen] = useState(false);
+	const [isNextInline, setIsNextInline] = useState(false);
 	const messageRef = useRef<HTMLDivElement | null>(null);
 	const activeUser = useStore(activeUserStore);
 
@@ -277,6 +278,20 @@ export function Message({
 		messageRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	};
 
+	//* Check if the next message is inline
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const nextElem = messageRef.current?.parentElement?.nextElementSibling?.children[0];
+			if (nextElem) {
+				const inline = nextElem.hasAttribute('data-message-type') && nextElem.getAttribute('data-message-type') === 'inline';
+				setIsNextInline(inline);
+				clearInterval(interval);
+			}
+		}, 10);
+
+		return () => clearInterval(interval);
+	}, []);
+
 	return (
 		<TooltipProvider>
 			<Tooltip delayDuration={50}>
@@ -308,9 +323,7 @@ export function Message({
 								'bg-primary/20 hover:bg-primary/15': isHighlighted,
 								'hover:bg-secondary/50': !isHighlighted,
 								'my-1 p-2 items-start': variant === 'default',
-								'!pb-0 !mb-0':
-									messageRef.current?.parentElement?.nextElementSibling?.children[0]?.hasAttribute('data-message-type') &&
-									messageRef.current?.parentElement?.nextElementSibling?.children[0]?.getAttribute('data-message-type') === 'inline',
+								'!pb-0 !mb-0': isNextInline,
 								'px-2 items-center': variant === 'inline',
 							})}
 							ref={messageRef}
