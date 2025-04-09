@@ -30,19 +30,28 @@ import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
+import { activeWorkspace as activeWorkspaceStore, setActiveWorkspace } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
-import { IconPicker, type IconName } from '../ui/icon-picker';
+import { IconPicker, type IconName } from '@/components/ui/icon-picker';
 import { activeChannel as activeChannelStore } from '@/stores/Channel';
+import { convertToPascalCase } from '@/utils/convertToPascalCase';
+import { Textarea } from '../ui/textarea';
+import { activeUser } from '@/stores/User';
 
-function NewChannelDialog(props: { children: React.ReactNode; category: string }) {
+function NewChannelDialog(props: { children: React.ReactNode; category: Category }) {
 	const { toast } = useToast();
+
 	const formSchema = z.object({
 		channelName: z
 			.string()
 			.min(2, { message: 'Channel name must be at least 2 characters.' })
 			.max(20, { message: 'Channel name must be at most 20 characters.' }),
+		channelDescription: z
+			.string()
+			.min(2, { message: 'Channel description must be at least 2 characters.' })
+			.max(300, { message: 'Channel description must be at most 300 characters.' })
+			.optional(),
 		channelType: z.enum(['chat', 'voice', 'board']),
 	});
 
@@ -54,13 +63,26 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 		},
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values);
-		toast({
-			title: `${values.channelType} Channel Created`,
-			description: `Channel ${values.channelName} created successfully.`,
-			variant: 'success',
-		});
+	async function onSubmit(values: z.infer<typeof formSchema>) {
+		const updatedValues = { ...values, categoryId: props.category._id, members: [activeUser.get()?._id], workspaceId: activeWorkspaceStore.get()?._id };
+
+		// send to server
+		await fetch(`http://localhost:8000/channel/new`, {
+			method: 'POST',
+			body: JSON.stringify(updatedValues),
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+		})
+			.then(res => res.json())
+			.then(res => {
+				if (res.success) {
+					toast({
+						title: `${values.channelName} category updated`,
+						description: `Channel ${values.channelName} updated successfully.`,
+						variant: 'success',
+					});
+				}
+			});
 	}
 
 	return (
@@ -73,9 +95,9 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
 						<AlertDialogHeader>
-							<AlertDialogTitle>New Channel in {props.category}</AlertDialogTitle>
+							<AlertDialogTitle>New Channel in {props.category.title}</AlertDialogTitle>
 							<AlertDialogDescription className='flex flex-col gap-y-3'>
-								<span>This will create a new channel in {props.category}. Fill in all fields below.</span>
+								<span>This will create a new channel in {props.category.title}. Fill in all fields below.</span>
 							</AlertDialogDescription>
 							<FormField
 								control={form.control}
@@ -85,6 +107,19 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 										<FormLabel>Channel Name</FormLabel>
 										<FormControl>
 											<Input placeholder='general' {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='channelDescription'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Channel Description</FormLabel>
+										<FormControl>
+											<Textarea placeholder='Enter channel description...' {...field}></Textarea>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -124,10 +159,9 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 	);
 }
 
-function EditCategoryDialog(props: { children: React.ReactNode; category: string }) {
+function EditCategoryDialog(props: { children: React.ReactNode; category: Category }) {
 	const { toast } = useToast();
 	const [categoryIcon, setCategoryIcon] = useState<IconName>('list');
-
 	const formSchema = z.object({
 		// Keep having zod validate the field even though we control it with state
 		categoryName: z
@@ -140,20 +174,33 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: string
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			categoryName: 'Chats',
-			categoryIcon: 'list',
+			categoryName: props.category.title,
+			categoryIcon: props.category.icon?.name as IconName,
 		},
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
+	async function onSubmit(values: z.infer<typeof formSchema>) {
 		// merge the state value for categoryName into form values
-		const updatedValues = { ...values, categoryIcon };
+		const updatedValues = { ...values, categoryIcon: convertToPascalCase(categoryIcon) };
 		console.log(updatedValues);
-		toast({
-			title: `${updatedValues.categoryName} category updated`,
-			description: `Category ${updatedValues.categoryName} updated successfully.`,
-			variant: 'success',
-		});
+
+		// send to server
+		await fetch(`http://localhost:8000/category/update/${props.category._id}`, {
+			method: 'POST',
+			body: JSON.stringify(updatedValues),
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+		})
+			.then(res => res.json())
+			.then(res => {
+				if (res.success) {
+					toast({
+						title: `${updatedValues.categoryName} category updated`,
+						description: `Category ${updatedValues.categoryName} updated successfully.`,
+						variant: 'success',
+					});
+				}
+			});
 	}
 
 	return (
@@ -166,7 +213,7 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: string
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
 						<AlertDialogHeader>
-							<AlertDialogTitle>Edit {props.category} Category</AlertDialogTitle>
+							<AlertDialogTitle>Edit {props.category.title} Category</AlertDialogTitle>
 							<AlertDialogDescription className='flex flex-col gap-y-3'>
 								<span>Edit the name and icon of this category.</span>
 							</AlertDialogDescription>
@@ -193,7 +240,7 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: string
 											<IconPicker
 												className='w-max'
 												{...field}
-												defaultValue='list'
+												defaultValue={props.category.icon?.name as IconName}
 												onValueChange={(value: IconName) => {
 													field.onChange(value);
 													setCategoryIcon(value);
@@ -290,7 +337,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 											<span>{item.title}</span>
 
 											<div className='hidden group-hover/category:block'>
-												<EditCategoryDialog category={item.title}>
+												<EditCategoryDialog category={item}>
 													<span
 														className={cn(
 															buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
@@ -304,7 +351,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 												</EditCategoryDialog>
 
 												{item.canCreate && (
-													<NewChannelDialog category={item.title}>
+													<NewChannelDialog category={item}>
 														<span
 															className={cn(
 																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
