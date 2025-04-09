@@ -97,9 +97,9 @@ interface AppSidebarData {
 
 interface Category {
 	_id: string;
-	title: string;
+	name: string;
 	url: string;
-	icon?: React.ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>>;
+	icon?: string;
 	isActive?: boolean;
 	canCreate?: boolean;
 	items?: Channel[] & { url: string }[];

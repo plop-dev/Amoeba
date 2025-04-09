@@ -33,13 +33,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { activeWorkspace as activeWorkspaceStore, setActiveWorkspace } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
-import { IconPicker, type IconName } from '@/components/ui/icon-picker';
+import { Icon, IconPicker, type IconName } from '@/components/ui/icon-picker';
 import { activeChannel as activeChannelStore } from '@/stores/Channel';
-import { convertToPascalCase } from '@/utils/convertToPascalCase';
 import { Textarea } from '../ui/textarea';
 import { activeUser } from '@/stores/User';
 
-function NewChannelDialog(props: { children: React.ReactNode; category: Category }) {
+function NewChannelDialog(props: { children: React.ReactNode; category: Category; onChannelCreated?: (channel: Channel) => void }) {
 	const { toast } = useToast();
 
 	const formSchema = z.object({
@@ -81,6 +80,7 @@ function NewChannelDialog(props: { children: React.ReactNode; category: Category
 						description: `Channel ${values.channelName} updated successfully.`,
 						variant: 'success',
 					});
+					props.onChannelCreated?.(res.data);
 				}
 			});
 	}
@@ -95,9 +95,9 @@ function NewChannelDialog(props: { children: React.ReactNode; category: Category
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
 						<AlertDialogHeader>
-							<AlertDialogTitle>New Channel in {props.category.title}</AlertDialogTitle>
+							<AlertDialogTitle>New Channel in {props.category.name}</AlertDialogTitle>
 							<AlertDialogDescription className='flex flex-col gap-y-3'>
-								<span>This will create a new channel in {props.category.title}. Fill in all fields below.</span>
+								<span>This will create a new channel in {props.category.name}. Fill in all fields below.</span>
 							</AlertDialogDescription>
 							<FormField
 								control={form.control}
@@ -159,7 +159,7 @@ function NewChannelDialog(props: { children: React.ReactNode; category: Category
 	);
 }
 
-function EditCategoryDialog(props: { children: React.ReactNode; category: Category }) {
+function EditCategoryDialog(props: { children: React.ReactNode; category: Category; onCategoryUpdated?: (category: Category) => void }) {
 	const { toast } = useToast();
 	const [categoryIcon, setCategoryIcon] = useState<IconName>('list');
 	const formSchema = z.object({
@@ -174,14 +174,14 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			categoryName: props.category.title,
-			categoryIcon: props.category.icon?.name as IconName,
+			categoryName: props.category.name,
+			categoryIcon: props.category.icon as IconName,
 		},
 	});
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		// merge the state value for categoryName into form values
-		const updatedValues = { ...values, categoryIcon: convertToPascalCase(categoryIcon) };
+		const updatedValues = { ...values, categoryIcon };
 		console.log(updatedValues);
 
 		// send to server
@@ -199,6 +199,7 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 						description: `Category ${updatedValues.categoryName} updated successfully.`,
 						variant: 'success',
 					});
+					props.onCategoryUpdated?.(res.data);
 				}
 			});
 	}
@@ -213,7 +214,7 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
 						<AlertDialogHeader>
-							<AlertDialogTitle>Edit {props.category.title} Category</AlertDialogTitle>
+							<AlertDialogTitle>Edit {props.category.name} Category</AlertDialogTitle>
 							<AlertDialogDescription className='flex flex-col gap-y-3'>
 								<span>Edit the name and icon of this category.</span>
 							</AlertDialogDescription>
@@ -240,7 +241,7 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 											<IconPicker
 												className='w-max'
 												{...field}
-												defaultValue={props.category.icon?.name as IconName}
+												defaultValue={props.category.icon as IconName}
 												onValueChange={(value: IconName) => {
 													field.onChange(value);
 													setCategoryIcon(value);
@@ -297,8 +298,8 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 									...prev,
 									{
 										_id: DBCategory._id,
-										title: DBCategory.name,
-										icon: List,
+										name: DBCategory.name,
+										icon: DBCategory.icon,
 										url: `/${activeWorkspaceId}/channels/${channel._id}`,
 										items: [{ ...channel, url: `/${activeWorkspaceId}/dashboard/${channel.type}s/${channel._id}` }],
 										canCreate: true,
@@ -312,6 +313,45 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 			}
 		}
 	}, [channels, DBCategories, activeWorkspace]);
+
+	function handleChannelCreated(newChannel: Channel) {
+		setCategories(prev => {
+			const categoryIndex = prev.findIndex(c => c._id === newChannel.categoryId);
+			if (categoryIndex !== -1) {
+				return [
+					...prev.slice(0, categoryIndex),
+					{
+						...prev[categoryIndex],
+						items: [
+							...(prev[categoryIndex].items ?? []),
+							{ ...newChannel, url: `/${activeWorkspaceId}/dashboard/${newChannel.type}s/${newChannel._id}` },
+						],
+					},
+					...prev.slice(categoryIndex + 1),
+				];
+			}
+			return prev;
+		});
+	}
+
+	function handleCategoryUpdated(updatedCategory: Category) {
+		console.log('category updated', updatedCategory);
+		setCategories(prev => {
+			const categoryIndex = prev.findIndex(c => c._id === updatedCategory._id);
+			if (categoryIndex !== -1) {
+				return [
+					...prev.slice(0, categoryIndex),
+					{
+						...prev[categoryIndex],
+						name: updatedCategory.name,
+						icon: updatedCategory.icon,
+					},
+					...prev.slice(categoryIndex + 1),
+				];
+			}
+			return prev;
+		});
+	}
 
 	return (
 		<SidebarGroup className=''>
@@ -332,12 +372,13 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 							<Collapsible key={item._id} asChild defaultOpen={item.isActive} className='group/collapsible'>
 								<SidebarMenuItem>
 									<CollapsibleTrigger asChild>
-										<SidebarMenuButton tooltip={item.title} className='relative group/category'>
-											{item.icon && <item.icon />}
-											<span>{item.title}</span>
+										<SidebarMenuButton tooltip={item.name} className='relative group/category'>
+											{/* {item.icon && <item.icon />} */}
+											<Icon name={item.icon as IconName}></Icon>
+											<span>{item.name}</span>
 
 											<div className='hidden group-hover/category:block'>
-												<EditCategoryDialog category={item}>
+												<EditCategoryDialog category={item} onCategoryUpdated={handleCategoryUpdated}>
 													<span
 														className={cn(
 															buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
@@ -351,7 +392,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 												</EditCategoryDialog>
 
 												{item.canCreate && (
-													<NewChannelDialog category={item}>
+													<NewChannelDialog category={item} onChannelCreated={handleChannelCreated}>
 														<span
 															className={cn(
 																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
@@ -401,10 +442,10 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 							</Collapsible>
 						) : (
 							<SidebarMenuItem key={item._id} className={cn({ 'border-2 border-primary rounded-lg': activeChannel?._id === item._id })}>
-								<SidebarMenuButton asChild tooltip={item.title}>
+								<SidebarMenuButton asChild tooltip={item.name}>
 									<a href={item.url}>
 										{item.icon && <item.icon />}
-										<span>{item.title}</span>
+										<span>{item.name}</span>
 									</a>
 								</SidebarMenuButton>
 							</SidebarMenuItem>
