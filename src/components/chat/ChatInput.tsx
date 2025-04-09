@@ -24,7 +24,7 @@ export function ChatInput({
 	onClearReply?: () => void;
 	handleSendMessage: (message: MessageToSend) => void;
 	activeChannel?: Channel | null;
-	editorRef: React.RefObject<HTMLDivElement>;
+	editorRef: React.RefObject<HTMLDivElement | null>;
 }) {
 	const { toast } = useToast();
 	const [files, setFiles] = useState<{ id: string; file: File }[]>([]);
