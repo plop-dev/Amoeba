@@ -481,10 +481,28 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 				isActive: true,
 			},
 		]);
+
+		setEmptyCategories(prev => prev.filter(category => category._id !== newCategory._id));
 	}
 
 	function handleCategoryUpdated(updatedCategory: Category) {
 		setCategories(prev => {
+			const categoryIndex = prev.findIndex(c => c._id === updatedCategory._id);
+			if (categoryIndex !== -1) {
+				return [
+					...prev.slice(0, categoryIndex),
+					{
+						...prev[categoryIndex],
+						name: updatedCategory.name,
+						icon: updatedCategory.icon,
+					},
+					...prev.slice(categoryIndex + 1),
+				];
+			}
+			return prev;
+		});
+
+		setEmptyCategories(prev => {
 			const categoryIndex = prev.findIndex(c => c._id === updatedCategory._id);
 			if (categoryIndex !== -1) {
 				return [
@@ -505,8 +523,8 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 		<SidebarGroup className=''>
 			<SidebarGroupLabel className='flex justify-between items-center'>
 				App
-				<CategoryDialog mode='create' onCategoryCreated={handleCategoryCreated} className='ml-auto'>
-					<span className={cn(buttonVariants({ variant: 'ghostBackground', size: 'icon' }), 'size-4 p-3')}>
+				<CategoryDialog mode='create' onCategoryCreated={handleCategoryCreated} className='ml-auto cursor-pointer'>
+					<span className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-4 p-3')}>
 						<Plus />
 					</span>
 				</CategoryDialog>
