@@ -155,6 +155,7 @@ function ChatPageContent() {
 		}, 5);
 	};
 
+	//* LAZY LOAD MESSAGES
 	// Track when messageStartRef is in viewport (top of messages)
 	useEffect(() => {
 		if (!messageStartRef.current) return;
@@ -253,6 +254,7 @@ function ChatPageContent() {
 		}
 	};
 
+	//* UPDATE ACTIVE CHANNEL
 	// get channel details on load
 	useEffect(() => {
 		const pathSegments = window.location.pathname.split('/');
@@ -266,7 +268,10 @@ function ChatPageContent() {
 			});
 	}, []);
 
+	//* LOAD SSE CONNECTION FOR REALTIME UPDATES
 	useEffect(() => {
+		// clear messages
+		dispatch({ type: 'RESET' });
 		const chatEventSource = new EventSource(`http://localhost:8000/sse/${activeWorkspace?._id}/chat/${activeChannel?._id}`, { withCredentials: true });
 
 		chatEventSource.addEventListener('open', async event => {
@@ -311,6 +316,9 @@ function ChatPageContent() {
 		setIsLoadingVisible(true);
 		// callback function to call when event triggers
 		const onPageLoad = async () => {
+			// clear messages
+			dispatch({ type: 'RESET' });
+
 			await fetchMessages(50, true).then(() => {
 				setTimeout(() => {
 					messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

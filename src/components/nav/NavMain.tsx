@@ -34,6 +34,7 @@ import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
 import { IconPicker, type IconName } from '../ui/icon-picker';
+import { activeChannel as activeChannelStore } from '@/stores/Channel';
 
 function NewChannelDialog(props: { children: React.ReactNode; category: string }) {
 	const { toast } = useToast();
@@ -125,7 +126,10 @@ function NewChannelDialog(props: { children: React.ReactNode; category: string }
 
 function EditCategoryDialog(props: { children: React.ReactNode; category: string }) {
 	const { toast } = useToast();
+	const [categoryIcon, setCategoryIcon] = useState<IconName>('list');
+
 	const formSchema = z.object({
+		// Keep having zod validate the field even though we control it with state
 		categoryName: z
 			.string()
 			.min(2, { message: 'Category name must be at least 2 characters.' })
@@ -142,10 +146,12 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: string
 	});
 
 	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values);
+		// merge the state value for categoryName into form values
+		const updatedValues = { ...values, categoryIcon };
+		console.log(updatedValues);
 		toast({
-			title: `${values.categoryName} category updated`,
-			description: `Category ${values.categoryName} updated successfully.`,
+			title: `${updatedValues.categoryName} category updated`,
+			description: `Category ${updatedValues.categoryName} updated successfully.`,
 			variant: 'success',
 		});
 	}
@@ -184,7 +190,14 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: string
 									<FormItem className='flex flex-col gap-y-2'>
 										<FormLabel>Category Icon</FormLabel>
 										<FormControl>
-											<IconPicker {...field} defaultValue='list'></IconPicker>
+											<IconPicker
+												className='w-max'
+												{...field}
+												defaultValue='list'
+												onValueChange={(value: IconName) => {
+													field.onChange(value);
+													setCategoryIcon(value);
+												}}></IconPicker>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -206,6 +219,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 	const [categories, setCategories] = useState<Category[]>([]);
 
 	const activeWorkspace = useStore(activeWorkspaceStore);
+	const activeChannel = useStore(activeChannelStore);
 	const activeWorkspaceId = activeWorkspace?._id;
 
 	// make add appropriate channels to categories
@@ -241,7 +255,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 										url: `/${activeWorkspaceId}/channels/${channel._id}`,
 										items: [{ ...channel, url: `/${activeWorkspaceId}/dashboard/${channel.type}s/${channel._id}` }],
 										canCreate: true,
-										isActive: channel._id === activeWorkspaceId,
+										isActive: true,
 									},
 								];
 							}
@@ -308,9 +322,23 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 										</SidebarMenuButton>
 									</CollapsibleTrigger>
 									<CollapsibleContent>
-										<SidebarMenuSub>
-											{item.items?.map(subItem => (
-												<SidebarMenuSubItem key={subItem.name} className={cn('transition-colors')}>
+										<SidebarMenuSub className='!border-l-0'>
+											{item.items?.map((subItem, pos) => (
+												<SidebarMenuSubItem
+													key={subItem.name}
+													className={cn(
+														'transition-colors *:translate-x-0',
+														`before:absolute before:h-[var(--before-height)] before:w-[2px] before:left-0 before:bg-border before:top-[var(--before-top)]`,
+														{
+															'border-2 border-primary rounded-lg before:bg-primary': activeChannel?._id === subItem._id,
+														},
+													)}
+													style={
+														{
+															'--before-height': `${100 / (item.items?.length || 1)}%`,
+															'--before-top': `${(pos / (item.items?.length || 1)) * 100}%`,
+														} as React.CSSProperties
+													}>
 													<SidebarMenuSubButton asChild>
 														<a href={(subItem as Channel & { url: string }).url}>
 															<span className='flex items-center w-full'>
@@ -325,7 +353,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 								</SidebarMenuItem>
 							</Collapsible>
 						) : (
-							<SidebarMenuItem key={item.title}>
+							<SidebarMenuItem key={item._id} className={cn({ 'border-2 border-primary rounded-lg': activeChannel?._id === item._id })}>
 								<SidebarMenuButton asChild tooltip={item.title}>
 									<a href={item.url}>
 										{item.icon && <item.icon />}
