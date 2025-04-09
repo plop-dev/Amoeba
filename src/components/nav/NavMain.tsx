@@ -57,7 +57,7 @@ function NewChannelDialog(props: { children: React.ReactNode; category: Category
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			channelName: 'general',
+			channelName: 'New Text Channel',
 			channelType: 'chat',
 		},
 	});
