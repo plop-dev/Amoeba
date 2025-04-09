@@ -38,8 +38,18 @@ import { activeChannel as activeChannelStore } from '@/stores/Channel';
 import { Textarea } from '../ui/textarea';
 import { activeUser } from '@/stores/User';
 
-function NewChannelDialog(props: { children: React.ReactNode; category: Category; onChannelCreated?: (channel: Channel) => void }) {
+function ChannelDialog(props: {
+	children: React.ReactNode;
+	category: Category;
+	mode: 'create' | 'edit';
+	channel?: Channel;
+	className?: string;
+	onChannelCreated?: (channel: Channel) => void;
+	onChannelUpdated?: (channel: Channel) => void;
+}) {
 	const { toast } = useToast();
+	const { mode, category, channel } = props;
+	const isEditMode = mode === 'edit';
 
 	const formSchema = z.object({
 		channelName: z
@@ -57,37 +67,72 @@ function NewChannelDialog(props: { children: React.ReactNode; category: Category
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			channelName: 'New Text Channel',
-			channelType: 'chat',
+			channelName: isEditMode ? channel?.name || '' : 'New Text Channel',
+			channelDescription: isEditMode ? channel?.description || '' : '',
+			channelType: isEditMode ? channel?.type || 'chat' : 'chat',
 		},
 	});
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		const updatedValues = { ...values, categoryId: props.category._id, members: [activeUser.get()?._id], workspaceId: activeWorkspaceStore.get()?._id };
+		if (isEditMode && channel) {
+			// Update existing channel
+			await fetch(`http://localhost:8000/channel/update/${channel._id}`, {
+				method: 'POST',
+				body: JSON.stringify(values),
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+			})
+				.then(res => res.json())
+				.then(res => {
+					if (res.success) {
+						toast({
+							title: `${values.channelName} channel updated`,
+							description: `Channel ${values.channelName} updated successfully.`,
+							variant: 'success',
+						});
+						props.onChannelUpdated?.(res.data);
+					}
+				});
+		} else {
+			// Create new channel
+			const updatedValues = {
+				...values,
+				categoryId: category._id,
+				members: [activeUser.get()?._id],
+				workspaceId: activeWorkspaceStore.get()?._id,
+			};
 
-		// send to server
-		await fetch(`http://localhost:8000/channel/new`, {
-			method: 'POST',
-			body: JSON.stringify(updatedValues),
-			headers: { 'Content-Type': 'application/json' },
-			credentials: 'include',
-		})
-			.then(res => res.json())
-			.then(res => {
-				if (res.success) {
-					toast({
-						title: `${values.channelName} category updated`,
-						description: `Channel ${values.channelName} updated successfully.`,
-						variant: 'success',
-					});
-					props.onChannelCreated?.(res.data);
-				}
-			});
+			await fetch(`http://localhost:8000/channel/new`, {
+				method: 'POST',
+				body: JSON.stringify(updatedValues),
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+			})
+				.then(res => res.json())
+				.then(res => {
+					if (res.success) {
+						toast({
+							title: `${values.channelName} channel created`,
+							description: `Channel ${values.channelName} created successfully.`,
+							variant: 'success',
+						});
+						props.onChannelCreated?.(res.data);
+					}
+				});
+		}
 	}
+
+	const title = isEditMode ? `Edit ${channel?.name} Channel` : `New Channel in ${category.name}`;
+
+	const description = isEditMode ? 'Edit the details of this channel.' : `This will create a new channel in ${category.name}. Fill in all fields below.`;
+
+	const actionText = isEditMode ? 'Update' : 'Create';
 
 	return (
 		<AlertDialog>
-			<AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+			<AlertDialogTrigger asChild className={props.className}>
+				{props.children}
+			</AlertDialogTrigger>
 			<AlertDialogContent
 				onClick={e => {
 					e.stopPropagation();
@@ -95,9 +140,9 @@ function NewChannelDialog(props: { children: React.ReactNode; category: Category
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
 						<AlertDialogHeader>
-							<AlertDialogTitle>New Channel in {props.category.name}</AlertDialogTitle>
+							<AlertDialogTitle>{title}</AlertDialogTitle>
 							<AlertDialogDescription className='flex flex-col gap-y-3'>
-								<span>This will create a new channel in {props.category.name}. Fill in all fields below.</span>
+								<span>{description}</span>
 							</AlertDialogDescription>
 							<FormField
 								control={form.control}
@@ -125,32 +170,34 @@ function NewChannelDialog(props: { children: React.ReactNode; category: Category
 									</FormItem>
 								)}
 							/>
-							<FormField
-								control={form.control}
-								name='channelType'
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Channel Type</FormLabel>
-										<Select onValueChange={field.onChange} defaultValue={field.value}>
-											<FormControl>
-												<SelectTrigger>
-													<SelectValue placeholder='Select a channel type' />
-												</SelectTrigger>
-											</FormControl>
-											<SelectContent>
-												<SelectItem value='chat'>Chat</SelectItem>
-												<SelectItem value='voice'>Voice</SelectItem>
-												<SelectItem value='board'>Board</SelectItem>
-											</SelectContent>
-										</Select>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+							{!isEditMode && (
+								<FormField
+									control={form.control}
+									name='channelType'
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Channel Type</FormLabel>
+											<Select onValueChange={field.onChange} defaultValue={field.value}>
+												<FormControl>
+													<SelectTrigger>
+														<SelectValue placeholder='Select a channel type' />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													<SelectItem value='chat'>Chat</SelectItem>
+													<SelectItem value='voice'>Voice</SelectItem>
+													<SelectItem value='board'>Board</SelectItem>
+												</SelectContent>
+											</Select>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							)}
 						</AlertDialogHeader>
 						<AlertDialogFooter>
 							<AlertDialogCancel>Cancel</AlertDialogCancel>
-							<AlertDialogAction type='submit'>Create</AlertDialogAction>
+							<AlertDialogAction type='submit'>{actionText}</AlertDialogAction>
 						</AlertDialogFooter>
 					</form>
 				</Form>
@@ -159,11 +206,20 @@ function NewChannelDialog(props: { children: React.ReactNode; category: Category
 	);
 }
 
-function EditCategoryDialog(props: { children: React.ReactNode; category: Category; onCategoryUpdated?: (category: Category) => void }) {
+function CategoryDialog(props: {
+	children: React.ReactNode;
+	className?: string;
+	mode: 'create' | 'edit';
+	category?: Category;
+	onCategoryCreated?: (category: Category) => void;
+	onCategoryUpdated?: (category: Category) => void;
+}) {
 	const { toast } = useToast();
-	const [categoryIcon, setCategoryIcon] = useState<IconName>('list');
+	const { mode, category } = props;
+	const isEditMode = mode === 'edit';
+	const [categoryIcon, setCategoryIcon] = useState<IconName>(isEditMode ? (category?.icon as IconName) || 'list' : 'list');
+
 	const formSchema = z.object({
-		// Keep having zod validate the field even though we control it with state
 		categoryName: z
 			.string()
 			.min(2, { message: 'Category name must be at least 2 characters.' })
@@ -174,39 +230,70 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			categoryName: props.category.name,
-			categoryIcon: props.category.icon as IconName,
+			categoryName: isEditMode ? category?.name || '' : 'New Category',
+			categoryIcon: isEditMode ? (category?.icon as IconName) || 'list' : 'list',
 		},
 	});
 
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		// merge the state value for categoryName into form values
+		// merge the state value for categoryIcon into form values
 		const updatedValues = { ...values, categoryIcon };
-		console.log(updatedValues);
 
-		// send to server
-		await fetch(`http://localhost:8000/category/update/${props.category._id}`, {
-			method: 'POST',
-			body: JSON.stringify(updatedValues),
-			headers: { 'Content-Type': 'application/json' },
-			credentials: 'include',
-		})
-			.then(res => res.json())
-			.then(res => {
-				if (res.success) {
-					toast({
-						title: `${updatedValues.categoryName} category updated`,
-						description: `Category ${updatedValues.categoryName} updated successfully.`,
-						variant: 'success',
-					});
-					props.onCategoryUpdated?.(res.data);
-				}
-			});
+		if (isEditMode && category) {
+			// Update existing category
+			await fetch(`http://localhost:8000/category/update/${category._id}`, {
+				method: 'POST',
+				body: JSON.stringify(updatedValues),
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+			})
+				.then(res => res.json())
+				.then(res => {
+					if (res.success) {
+						toast({
+							title: `${updatedValues.categoryName} category updated`,
+							description: `Category ${updatedValues.categoryName} updated successfully.`,
+							variant: 'success',
+						});
+						props.onCategoryUpdated?.(res.data);
+					}
+				});
+		} else {
+			// Create new category
+			const newCategoryData = {
+				...updatedValues,
+				workspaceId: activeWorkspaceStore.get()?._id,
+			};
+
+			await fetch(`http://localhost:8000/category/new`, {
+				method: 'POST',
+				body: JSON.stringify(newCategoryData),
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+			})
+				.then(res => res.json())
+				.then(res => {
+					if (res.success) {
+						toast({
+							title: `${updatedValues.categoryName} category created`,
+							description: `Category ${updatedValues.categoryName} created successfully.`,
+							variant: 'success',
+						});
+						props.onCategoryCreated?.(res.data);
+					}
+				});
+		}
 	}
+
+	const title = isEditMode ? `Edit ${category?.name} Category` : 'Create New Category';
+	const description = isEditMode ? 'Edit the name and icon of this category.' : 'Create a new category for organizing channels.';
+	const actionText = isEditMode ? 'Update' : 'Create';
 
 	return (
 		<AlertDialog>
-			<AlertDialogTrigger asChild>{props.children}</AlertDialogTrigger>
+			<AlertDialogTrigger asChild className={props.className}>
+				{props.children}
+			</AlertDialogTrigger>
 			<AlertDialogContent
 				onClick={e => {
 					e.stopPropagation();
@@ -214,9 +301,9 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
 						<AlertDialogHeader>
-							<AlertDialogTitle>Edit {props.category.name} Category</AlertDialogTitle>
+							<AlertDialogTitle>{title}</AlertDialogTitle>
 							<AlertDialogDescription className='flex flex-col gap-y-3'>
-								<span>Edit the name and icon of this category.</span>
+								<span>{description}</span>
 							</AlertDialogDescription>
 							<FormField
 								control={form.control}
@@ -241,7 +328,7 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 											<IconPicker
 												className='w-max'
 												{...field}
-												defaultValue={props.category.icon as IconName}
+												defaultValue={categoryIcon}
 												onValueChange={(value: IconName) => {
 													field.onChange(value);
 													setCategoryIcon(value);
@@ -254,7 +341,7 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 						</AlertDialogHeader>
 						<AlertDialogFooter>
 							<AlertDialogCancel>Cancel</AlertDialogCancel>
-							<AlertDialogAction type='submit'>Submit</AlertDialogAction>
+							<AlertDialogAction type='submit'>{actionText}</AlertDialogAction>
 						</AlertDialogFooter>
 					</form>
 				</Form>
@@ -265,53 +352,79 @@ function EditCategoryDialog(props: { children: React.ReactNode; category: Catego
 
 export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCategories: DBCategory[] }) {
 	const [categories, setCategories] = useState<Category[]>([]);
+	const [emptyCategories, setEmptyCategories] = useState<Category[]>([]);
 
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeChannel = useStore(activeChannelStore);
 	const activeWorkspaceId = activeWorkspace?._id;
 
-	// make add appropriate channels to categories
+	// add appropriate channels to categories
 	useEffect(() => {
-		if (channels.length > 0) {
-			for (const DBCategory of DBCategories) {
-				for (const channel of channels) {
-					if (channel.categoryId === DBCategory._id) {
-						// check if channel already exists in this category
-						if (categories.find(c => c.items?.find(i => i._id === channel._id))) continue;
+		DBCategories.forEach((DBCategory, i) => {
+			let notInCategoryCount = 0;
+			channels.forEach((channel, i) => {
+				// check channel has this categoryId
+				if (channel.categoryId === DBCategory._id) {
+					// check if channel already exists in this category
+					//? REMOVE CHANNEL FROM CHANNELS FOR QUICKER ITERATIONS?
+					if (categories.find(c => c.items?.find(i => i._id === channel._id))) return;
 
-						setCategories(prev => {
-							const categoryIndex = prev.findIndex(c => c._id === DBCategory._id);
-							if (categoryIndex !== -1) {
-								return [
-									...prev.slice(0, categoryIndex),
-									{
-										...prev[categoryIndex],
-										items: [
-											...(prev[categoryIndex].items ?? []),
-											{ ...channel, url: `/${activeWorkspaceId}/dashboard/${channel.type}s/${channel._id}` },
-										],
-									},
-									...prev.slice(categoryIndex + 1),
-								];
-							} else {
-								return [
-									...prev,
-									{
-										_id: DBCategory._id,
-										name: DBCategory.name,
-										icon: DBCategory.icon,
-										url: `/${activeWorkspaceId}/channels/${channel._id}`,
-										items: [{ ...channel, url: `/${activeWorkspaceId}/dashboard/${channel.type}s/${channel._id}` }],
-										canCreate: true,
-										isActive: true,
-									},
-								];
-							}
+					setCategories(prev => {
+						const categoryIndex = prev.findIndex(c => c._id === DBCategory._id);
+
+						// check if category already exists
+						if (categoryIndex !== -1) {
+							return [
+								...prev.slice(0, categoryIndex),
+								{
+									...prev[categoryIndex],
+									items: [
+										...(prev[categoryIndex].items ?? []).map(item => ({ ...item, url: item.url })),
+										{ ...channel, url: `/${activeWorkspaceId}/dashboard/${channel.type}s/${channel._id}` as string },
+									],
+								},
+								...prev.slice(categoryIndex + 1),
+							];
+						} else {
+							return [
+								...prev,
+								{
+									_id: DBCategory._id,
+									name: DBCategory.name,
+									icon: DBCategory.icon,
+									url: `/${activeWorkspaceId}/channels/${channel._id}`,
+									items: [{ ...channel, url: `/${activeWorkspaceId}/dashboard/${channel.type}s/${channel._id}` as string }],
+									canCreate: true,
+									isActive: true,
+								},
+							];
+						}
+					});
+				} else {
+					notInCategoryCount++;
+
+					if (notInCategoryCount === channels.length) {
+						// the category is empty
+						setEmptyCategories(prev => {
+							const updatedCategories = [
+								...prev,
+								{
+									_id: DBCategory._id,
+									name: DBCategory.name,
+									icon: DBCategory.icon,
+									url: `/${activeWorkspaceId}/categories/${DBCategory._id}`,
+									items: [],
+									canCreate: true,
+									isActive: true,
+								},
+							];
+							console.log(`Category ${DBCategory.name} is empty. updated emptyCategories:`, updatedCategories);
+							return updatedCategories;
 						});
 					}
 				}
-			}
-		}
+			});
+		});
 	}, [channels, DBCategories, activeWorkspace]);
 
 	function handleChannelCreated(newChannel: Channel) {
@@ -323,8 +436,8 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 					{
 						...prev[categoryIndex],
 						items: [
-							...(prev[categoryIndex].items ?? []),
-							{ ...newChannel, url: `/${activeWorkspaceId}/dashboard/${newChannel.type}s/${newChannel._id}` },
+							...(prev[categoryIndex].items ?? []).map(item => ({ ...item, url: item.url })),
+							{ ...newChannel, url: `/${activeWorkspaceId}/dashboard/${newChannel.type}s/${newChannel._id}` as string },
 						],
 					},
 					...prev.slice(categoryIndex + 1),
@@ -334,8 +447,43 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 		});
 	}
 
+	function handleChannelUpdated(updatedChannel: Channel) {
+		setCategories(prev => {
+			const categoryIndex = prev.findIndex(c => c._id === updatedChannel.categoryId);
+			if (categoryIndex !== -1) {
+				const categoryItems = prev[categoryIndex].items || [];
+				const channelIndex = categoryItems.findIndex(i => i._id === updatedChannel._id);
+
+				if (channelIndex !== -1) {
+					const updatedItems = [
+						...categoryItems.slice(0, channelIndex),
+						{ ...updatedChannel, url: `/${activeWorkspaceId}/dashboard/${updatedChannel.type}s/${updatedChannel._id}` as string },
+						...categoryItems.slice(channelIndex + 1),
+					];
+
+					return [...prev.slice(0, categoryIndex), { ...prev[categoryIndex], items: updatedItems }, ...prev.slice(categoryIndex + 1)];
+				}
+			}
+			return prev;
+		});
+	}
+
+	function handleCategoryCreated(newCategory: Category) {
+		setCategories(prev => [
+			...prev,
+			{
+				_id: newCategory._id,
+				name: newCategory.name,
+				icon: newCategory.icon,
+				url: `/${activeWorkspaceId}/categories/${newCategory._id}`,
+				items: [],
+				canCreate: true,
+				isActive: true,
+			},
+		]);
+	}
+
 	function handleCategoryUpdated(updatedCategory: Category) {
-		console.log('category updated', updatedCategory);
 		setCategories(prev => {
 			const categoryIndex = prev.findIndex(c => c._id === updatedCategory._id);
 			if (categoryIndex !== -1) {
@@ -355,11 +503,18 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 
 	return (
 		<SidebarGroup className=''>
-			<SidebarGroupLabel>App</SidebarGroupLabel>
+			<SidebarGroupLabel className='flex justify-between items-center'>
+				App
+				<CategoryDialog mode='create' onCategoryCreated={handleCategoryCreated} className='ml-auto'>
+					<span className={cn(buttonVariants({ variant: 'ghostBackground', size: 'icon' }), 'size-4 p-3')}>
+						<Plus />
+					</span>
+				</CategoryDialog>
+			</SidebarGroupLabel>
 			<SidebarMenu>
 				<SidebarMenuItem key={'home'}>
 					<SidebarMenuButton asChild tooltip='home'>
-						<a href={`/${activeWorkspaceId}/dashboard`}>
+						<a href={`/${activeWorkspaceId}/dashboard/home`}>
 							<Home></Home>
 							<span>Home</span>
 						</a>
@@ -373,12 +528,11 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 								<SidebarMenuItem>
 									<CollapsibleTrigger asChild>
 										<SidebarMenuButton tooltip={item.name} className='relative group/category'>
-											{/* {item.icon && <item.icon />} */}
 											<Icon name={item.icon as IconName}></Icon>
 											<span>{item.name}</span>
 
 											<div className='hidden group-hover/category:block'>
-												<EditCategoryDialog category={item} onCategoryUpdated={handleCategoryUpdated}>
+												<CategoryDialog mode='edit' category={item} onCategoryUpdated={handleCategoryUpdated}>
 													<span
 														className={cn(
 															buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
@@ -389,10 +543,10 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 														}}>
 														<Pencil />
 													</span>
-												</EditCategoryDialog>
+												</CategoryDialog>
 
 												{item.canCreate && (
-													<NewChannelDialog category={item} onChannelCreated={handleChannelCreated}>
+													<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
 														<span
 															className={cn(
 																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
@@ -403,7 +557,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 															}}>
 															<Plus />
 														</span>
-													</NewChannelDialog>
+													</ChannelDialog>
 												)}
 											</div>
 											<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
@@ -413,9 +567,9 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 										<SidebarMenuSub className='!border-l-0'>
 											{item.items?.map((subItem, pos) => (
 												<SidebarMenuSubItem
-													key={subItem.name}
+													key={subItem._id}
 													className={cn(
-														'transition-colors *:translate-x-0',
+														'transition-colors *:translate-x-0 group/channelItem',
 														`before:absolute before:h-[var(--before-height)] before:w-[2px] before:left-0 before:bg-border before:top-[var(--before-top)]`,
 														{
 															'border-2 border-primary rounded-lg before:bg-primary': activeChannel?._id === subItem._id,
@@ -427,13 +581,32 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 															'--before-top': `${(pos / (item.items?.length || 1)) * 100}%`,
 														} as React.CSSProperties
 													}>
-													<SidebarMenuSubButton asChild>
-														<a href={(subItem as Channel & { url: string }).url}>
+													<div className='relative cursor-pointer'>
+														<SidebarMenuSubButton
+															href={(subItem as Channel & { url: string }).url}
+															className='group-hover/channelItem:bg-sidebar-accent group-hover/channelItem:text-sidebar-accent-foreground'>
 															<span className='flex items-center w-full'>
 																<p className='w-full'>#{subItem.name}</p>
 															</span>
-														</a>
-													</SidebarMenuSubButton>
+														</SidebarMenuSubButton>
+														<ChannelDialog
+															category={item}
+															mode='edit'
+															channel={subItem as Channel}
+															onChannelUpdated={handleChannelUpdated}
+															className='hidden group-hover/channelItem:flex absolute top-1/2 -translate-y-1/2 right-0.5'>
+															<span
+																className={cn(
+																	buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+																	'size-4 ml-auto p-3 absolute top-1/2 right-0.5 z-50 -translate-y-1/2',
+																)}
+																onClick={e => {
+																	e.stopPropagation();
+																}}>
+																<Pencil />
+															</span>
+														</ChannelDialog>
+													</div>
 												</SidebarMenuSubItem>
 											))}
 										</SidebarMenuSub>
@@ -456,6 +629,66 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 						<span className='text-muted-foreground'>No channels in this workspace</span>
 					</SidebarMenuItem>
 				)}
+				{emptyCategories.length > 0 &&
+					emptyCategories.map(item => {
+						return (
+							<Collapsible key={item._id} asChild defaultOpen={item.isActive} className='group/collapsible'>
+								<SidebarMenuItem>
+									<CollapsibleTrigger asChild>
+										<SidebarMenuButton tooltip={item.name} className='relative group/category'>
+											<Icon name={item.icon as IconName}></Icon>
+											<span>{item.name}</span>
+
+											<div className='hidden group-hover/category:block'>
+												<CategoryDialog mode='edit' category={item} onCategoryUpdated={handleCategoryUpdated}>
+													<span
+														className={cn(
+															buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+															'size-4 ml-auto p-3 absolute top-1/2 right-16 z-50 -translate-y-1/2',
+														)}
+														onClick={e => {
+															e.stopPropagation();
+														}}>
+														<Pencil />
+													</span>
+												</CategoryDialog>
+
+												{item.canCreate && (
+													<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
+														<span
+															className={cn(
+																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+																'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
+															)}
+															onClick={e => {
+																e.stopPropagation();
+															}}>
+															<Plus />
+														</span>
+													</ChannelDialog>
+												)}
+											</div>
+											<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+										</SidebarMenuButton>
+									</CollapsibleTrigger>
+									<CollapsibleContent>
+										<SidebarMenuSub className='!border-l-0'>
+											<SidebarMenuSubItem
+												key={item._id}
+												className='transition-colors *:translate-x-0 group/channelItem flex flex-col items-start justify-center gap-y-2'>
+												<p className='text-sm text-muted-foreground'>No channels</p>
+												<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
+													<Button variant={'outline'} size={'sm'}>
+														Create
+													</Button>
+												</ChannelDialog>
+											</SidebarMenuSubItem>
+										</SidebarMenuSub>
+									</CollapsibleContent>
+								</SidebarMenuItem>
+							</Collapsible>
+						);
+					})}
 			</SidebarMenu>
 		</SidebarGroup>
 	);

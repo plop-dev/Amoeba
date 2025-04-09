@@ -46,6 +46,7 @@ interface Channel {
 	creationDate: Date;
 	members: User['_id'][];
 	categoryId?: string;
+	url: string;
 }
 
 // Message Related Types
