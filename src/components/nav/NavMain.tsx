@@ -1,4 +1,19 @@
-import { AudioWaveform, Book, ChevronRight, Copy, Home, List, MessageCircle, Pencil, Plus, type LucideIcon, type LucideProps } from 'lucide-react';
+import {
+	AudioWaveform,
+	Book,
+	ChevronRight,
+	Copy,
+	Home,
+	List,
+	MessageCircle,
+	Pencil,
+	Plus,
+	Settings2,
+	Sidebar,
+	Users,
+	type LucideIcon,
+	type LucideProps,
+} from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
 	SidebarGroup,
@@ -519,195 +534,222 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 		});
 	}
 
+	// reset categories on workspace change
+	useEffect(() => {
+		setCategories([]);
+		setEmptyCategories([]);
+	}, [activeWorkspace]);
+
 	return (
-		<SidebarGroup className=''>
-			<SidebarGroupLabel className='flex justify-between items-center'>
-				App
-				<CategoryDialog mode='create' onCategoryCreated={handleCategoryCreated} className='ml-auto cursor-pointer'>
-					<span className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-4 p-3')}>
-						<Plus />
-					</span>
-				</CategoryDialog>
-			</SidebarGroupLabel>
-			<SidebarMenu>
-				<SidebarMenuItem key={'home'}>
-					<SidebarMenuButton asChild tooltip='home'>
-						<a href={`/${activeWorkspaceId}/dashboard/home`}>
-							<Home></Home>
-							<span>Home</span>
-						</a>
-					</SidebarMenuButton>
-				</SidebarMenuItem>
-				{categories.length > 0 ? (
-					categories.map(item => {
-						const hasSubItems = item.items && item.items.length > 0;
-						return hasSubItems ? (
-							<Collapsible key={item._id} asChild defaultOpen={item.isActive} className='group/collapsible'>
-								<SidebarMenuItem>
-									<CollapsibleTrigger asChild>
-										<SidebarMenuButton tooltip={item.name} className='relative group/category'>
-											<Icon name={item.icon as IconName}></Icon>
-											<span>{item.name}</span>
+		<>
+			<SidebarGroup>
+				<SidebarGroupLabel className='flex justify-between items-center'>Workspace</SidebarGroupLabel>
+				<SidebarMenu>
+					<SidebarMenuItem key={'__members__'}>
+						<SidebarMenuButton>
+							<Users></Users> Members
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+					<SidebarMenuItem key={'__settings__'}>
+						<SidebarMenuButton>
+							<Settings2></Settings2> Settings
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarGroup>
 
-											<div className='hidden group-hover/category:block'>
-												<CategoryDialog mode='edit' category={item} onCategoryUpdated={handleCategoryUpdated}>
-													<span
-														className={cn(
-															buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-															'size-4 ml-auto p-3 absolute top-1/2 right-16 z-50 -translate-y-1/2',
-														)}
-														onClick={e => {
-															e.stopPropagation();
-														}}>
-														<Pencil />
-													</span>
-												</CategoryDialog>
+			<SidebarGroup>
+				<SidebarGroupLabel className='flex justify-between items-center'>
+					App
+					<CategoryDialog mode='create' onCategoryCreated={handleCategoryCreated} className='ml-auto cursor-pointer'>
+						<span className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-4 p-3')}>
+							<Plus />
+						</span>
+					</CategoryDialog>
+				</SidebarGroupLabel>
+				<SidebarMenu>
+					<SidebarMenuItem key={'__home__'}>
+						<SidebarMenuButton
+							asChild
+							tooltip='home'
+							className={cn({ 'border-2 border-primary rounded-lg': window.location.pathname.includes('home') })}>
+							<a href={`/${activeWorkspaceId}/dashboard/home`}>
+								<Home></Home>
+								<span>Home</span>
+							</a>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+					{categories.length > 0 ? (
+						categories.map(item => {
+							const hasSubItems = item.items && item.items.length > 0;
+							return hasSubItems ? (
+								<Collapsible key={item._id} asChild defaultOpen={item.isActive} className='group/collapsible'>
+									<SidebarMenuItem>
+										<CollapsibleTrigger asChild>
+											<SidebarMenuButton tooltip={item.name} className='relative group/category'>
+												<Icon name={item.icon as IconName}></Icon>
+												<span>{item.name}</span>
 
-												{item.canCreate && (
-													<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
+												<div className='hidden group-hover/category:block'>
+													<CategoryDialog mode='edit' category={item} onCategoryUpdated={handleCategoryUpdated}>
 														<span
 															className={cn(
 																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-																'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
+																'size-4 ml-auto p-3 absolute top-1/2 right-16 z-50 -translate-y-1/2',
 															)}
 															onClick={e => {
 																e.stopPropagation();
 															}}>
-															<Plus />
+															<Pencil />
 														</span>
-													</ChannelDialog>
-												)}
-											</div>
-											<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
-										</SidebarMenuButton>
-									</CollapsibleTrigger>
-									<CollapsibleContent>
-										<SidebarMenuSub className='!border-l-0'>
-											{item.items?.map((subItem, pos) => (
-												<SidebarMenuSubItem
-													key={subItem._id}
-													className={cn(
-														'transition-colors *:translate-x-0 group/channelItem',
-														`before:absolute before:h-[var(--before-height)] before:w-[2px] before:left-0 before:bg-border before:top-[var(--before-top)]`,
-														{
-															'border-2 border-primary rounded-lg before:bg-primary': activeChannel?._id === subItem._id,
-														},
-													)}
-													style={
-														{
-															'--before-height': `${100 / (item.items?.length || 1)}%`,
-															'--before-top': `${(pos / (item.items?.length || 1)) * 100}%`,
-														} as React.CSSProperties
-													}>
-													<div className='relative cursor-pointer'>
-														<SidebarMenuSubButton
-															href={(subItem as Channel & { url: string }).url}
-															className='group-hover/channelItem:bg-sidebar-accent group-hover/channelItem:text-sidebar-accent-foreground'>
-															<span className='flex items-center w-full'>
-																<p className='w-full'>#{subItem.name}</p>
-															</span>
-														</SidebarMenuSubButton>
-														<ChannelDialog
-															category={item}
-															mode='edit'
-															channel={subItem as Channel}
-															onChannelUpdated={handleChannelUpdated}
-															className='hidden group-hover/channelItem:flex absolute top-1/2 -translate-y-1/2 right-0.5'>
+													</CategoryDialog>
+
+													{item.canCreate && (
+														<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
 															<span
 																className={cn(
 																	buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-																	'size-4 ml-auto p-3 absolute top-1/2 right-0.5 z-50 -translate-y-1/2',
+																	'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
 																)}
 																onClick={e => {
 																	e.stopPropagation();
 																}}>
-																<Pencil />
+																<Plus />
 															</span>
 														</ChannelDialog>
-													</div>
-												</SidebarMenuSubItem>
-											))}
-										</SidebarMenuSub>
-									</CollapsibleContent>
-								</SidebarMenuItem>
-							</Collapsible>
-						) : (
-							<SidebarMenuItem key={item._id} className={cn({ 'border-2 border-primary rounded-lg': activeChannel?._id === item._id })}>
-								<SidebarMenuButton asChild tooltip={item.name}>
-									<a href={item.url}>
-										{item.icon && <item.icon />}
-										<span>{item.name}</span>
-									</a>
-								</SidebarMenuButton>
-							</SidebarMenuItem>
-						);
-					})
-				) : (
-					<SidebarMenuItem className='mx-2'>
-						<span className='text-muted-foreground'>No channels in this workspace</span>
-					</SidebarMenuItem>
-				)}
-				{emptyCategories.length > 0 &&
-					emptyCategories.map(item => {
-						return (
-							<Collapsible key={item._id} asChild defaultOpen={item.isActive} className='group/collapsible'>
-								<SidebarMenuItem>
-									<CollapsibleTrigger asChild>
-										<SidebarMenuButton tooltip={item.name} className='relative group/category'>
-											<Icon name={item.icon as IconName}></Icon>
-											<span>{item.name}</span>
-
-											<div className='hidden group-hover/category:block'>
-												<CategoryDialog mode='edit' category={item} onCategoryUpdated={handleCategoryUpdated}>
-													<span
+													)}
+												</div>
+												<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+											</SidebarMenuButton>
+										</CollapsibleTrigger>
+										<CollapsibleContent>
+											<SidebarMenuSub className='!border-l-0'>
+												{item.items?.map((subItem, pos) => (
+													<SidebarMenuSubItem
+														key={subItem._id}
 														className={cn(
-															buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-															'size-4 ml-auto p-3 absolute top-1/2 right-16 z-50 -translate-y-1/2',
+															'transition-colors *:translate-x-0 group/channelItem',
+															`before:absolute before:h-[var(--before-height)] before:w-[2px] before:left-0 before:bg-border before:top-[var(--before-top)]`,
+															{
+																'border-2 border-primary rounded-lg before:bg-primary': activeChannel?._id === subItem._id,
+															},
 														)}
-														onClick={e => {
-															e.stopPropagation();
-														}}>
-														<Pencil />
-													</span>
-												</CategoryDialog>
+														style={
+															{
+																'--before-height': `${100 / (item.items?.length || 1)}%`,
+																'--before-top': `${(pos / (item.items?.length || 1)) * 100}%`,
+															} as React.CSSProperties
+														}>
+														<div className='relative cursor-pointer'>
+															<SidebarMenuSubButton
+																href={(subItem as Channel & { url: string }).url}
+																className='group-hover/channelItem:bg-sidebar-accent group-hover/channelItem:text-sidebar-accent-foreground'>
+																<span className='flex items-center w-full'>
+																	<p className='w-full'>#{subItem.name}</p>
+																</span>
+															</SidebarMenuSubButton>
+															<ChannelDialog
+																category={item}
+																mode='edit'
+																channel={subItem as Channel}
+																onChannelUpdated={handleChannelUpdated}
+																className='hidden group-hover/channelItem:flex absolute top-1/2 -translate-y-1/2 right-0.5'>
+																<span
+																	className={cn(
+																		buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+																		'size-4 ml-auto p-3 absolute top-1/2 right-0.5 z-50 -translate-y-1/2',
+																	)}
+																	onClick={e => {
+																		e.stopPropagation();
+																	}}>
+																	<Pencil />
+																</span>
+															</ChannelDialog>
+														</div>
+													</SidebarMenuSubItem>
+												))}
+											</SidebarMenuSub>
+										</CollapsibleContent>
+									</SidebarMenuItem>
+								</Collapsible>
+							) : (
+								<SidebarMenuItem key={item._id} className={cn({ 'border-2 border-primary rounded-lg': activeChannel?._id === item._id })}>
+									<SidebarMenuButton asChild tooltip={item.name}>
+										<a href={item.url}>
+											{item.icon && <item.icon />}
+											<span>{item.name}</span>
+										</a>
+									</SidebarMenuButton>
+								</SidebarMenuItem>
+							);
+						})
+					) : (
+						<SidebarMenuItem className='mx-2'>
+							<span className='text-muted-foreground'>No channels in this workspace</span>
+						</SidebarMenuItem>
+					)}
+					{emptyCategories.length > 0 &&
+						emptyCategories.map(item => {
+							return (
+								<Collapsible key={item._id} asChild defaultOpen={item.isActive} className='group/collapsible'>
+									<SidebarMenuItem>
+										<CollapsibleTrigger asChild>
+											<SidebarMenuButton tooltip={item.name} className='relative group/category'>
+												<Icon name={item.icon as IconName}></Icon>
+												<span>{item.name}</span>
 
-												{item.canCreate && (
-													<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
+												<div className='hidden group-hover/category:block'>
+													<CategoryDialog mode='edit' category={item} onCategoryUpdated={handleCategoryUpdated}>
 														<span
 															className={cn(
 																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-																'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
+																'size-4 ml-auto p-3 absolute top-1/2 right-16 z-50 -translate-y-1/2',
 															)}
 															onClick={e => {
 																e.stopPropagation();
 															}}>
-															<Plus />
+															<Pencil />
 														</span>
+													</CategoryDialog>
+
+													{item.canCreate && (
+														<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
+															<span
+																className={cn(
+																	buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+																	'size-4 ml-auto p-3 absolute top-1/2 right-8 z-50 -translate-y-1/2',
+																)}
+																onClick={e => {
+																	e.stopPropagation();
+																}}>
+																<Plus />
+															</span>
+														</ChannelDialog>
+													)}
+												</div>
+												<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
+											</SidebarMenuButton>
+										</CollapsibleTrigger>
+										<CollapsibleContent>
+											<SidebarMenuSub className='!border-l-0'>
+												<SidebarMenuSubItem
+													key={item._id}
+													className='transition-colors *:translate-x-0 group/channelItem flex flex-col items-start justify-center gap-y-2'>
+													<p className='text-sm text-muted-foreground'>No channels</p>
+													<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
+														<Button variant={'outline'} size={'sm'}>
+															Create
+														</Button>
 													</ChannelDialog>
-												)}
-											</div>
-											<ChevronRight className='ml-auto size-8 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90' />
-										</SidebarMenuButton>
-									</CollapsibleTrigger>
-									<CollapsibleContent>
-										<SidebarMenuSub className='!border-l-0'>
-											<SidebarMenuSubItem
-												key={item._id}
-												className='transition-colors *:translate-x-0 group/channelItem flex flex-col items-start justify-center gap-y-2'>
-												<p className='text-sm text-muted-foreground'>No channels</p>
-												<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
-													<Button variant={'outline'} size={'sm'}>
-														Create
-													</Button>
-												</ChannelDialog>
-											</SidebarMenuSubItem>
-										</SidebarMenuSub>
-									</CollapsibleContent>
-								</SidebarMenuItem>
-							</Collapsible>
-						);
-					})}
-			</SidebarMenu>
-		</SidebarGroup>
+												</SidebarMenuSubItem>
+											</SidebarMenuSub>
+										</CollapsibleContent>
+									</SidebarMenuItem>
+								</Collapsible>
+							);
+						})}
+				</SidebarMenu>
+			</SidebarGroup>
+		</>
 	);
 }

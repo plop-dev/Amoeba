@@ -68,6 +68,7 @@ const { APPNAME: appName } = import.meta.env;
 </html>
 
 <script>
+	import { setActiveChannel } from "@/stores/Channel";
 	import { activeWorkspace, setActiveWorkspace } from "@/stores/Workspace";
 
 	const activeWorkspaceId = window.location.pathname.split('/')[1]
@@ -78,4 +79,18 @@ const { APPNAME: appName } = import.meta.env;
 		const data = await res.json()
 		setActiveWorkspace(data)
 	}
+
+	const pathSegments = window.location.pathname.split('/');
+	const channelName = pathSegments[pathSegments.length - 1];
+	const channelType = pathSegments[pathSegments.length - 2];
+
+	if (window.location.pathname.includes('home') || window.location.pathname.includes('settings')) {
+		setActiveChannel(null);
+	}
+
+	fetch(`http://localhost:8000/channel/${channelType}/${channelName}`, { credentials: 'include' })
+		.then(res => res.json())
+		.then((data: Channel) => {
+			setActiveChannel(data);
+		});
 </script>

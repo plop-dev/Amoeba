@@ -5,6 +5,6 @@ export const activeChannel = persistentAtom<Channel | null>('activeChannel', nul
 	decode: JSON.parse,
 });
 
-export function setActiveChannel(channel: Channel) {
+export function setActiveChannel(channel: Channel | null) {
 	activeChannel.set(channel);
 }

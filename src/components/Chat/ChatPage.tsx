@@ -256,17 +256,17 @@ function ChatPageContent() {
 
 	//* UPDATE ACTIVE CHANNEL
 	// get channel details on load
-	useEffect(() => {
-		const pathSegments = window.location.pathname.split('/');
-		const channelName = pathSegments[pathSegments.length - 1];
-		const channelType = pathSegments[pathSegments.length - 2];
+	// useEffect(() => {
+	// 	const pathSegments = window.location.pathname.split('/');
+	// 	const channelName = pathSegments[pathSegments.length - 1];
+	// 	const channelType = pathSegments[pathSegments.length - 2];
 
-		fetch(`http://localhost:8000/channel/${channelType}/${channelName}`, { credentials: 'include' })
-			.then(res => res.json())
-			.then((data: Channel) => {
-				setActiveChannel(data);
-			});
-	}, []);
+	// 	fetch(`http://localhost:8000/channel/${channelType}/${channelName}`, { credentials: 'include' })
+	// 		.then(res => res.json())
+	// 		.then((data: Channel) => {
+	// 			setActiveChannel(data);
+	// 		});
+	// }, []);
 
 	//* LOAD SSE CONNECTION FOR REALTIME UPDATES
 	useEffect(() => {
