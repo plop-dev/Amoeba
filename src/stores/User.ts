@@ -14,6 +14,15 @@ export const activeUsers = persistentAtom<{ workspaceId: Workspace['_id']; users
 	decode: JSON.parse,
 });
 
+export function resetActiveUsers(workspaceId: Workspace['_id']) {
+	const list = activeUsers.get();
+	const workspaceIndex = list.findIndex(entry => entry.workspaceId === workspaceId);
+	if (workspaceIndex !== -1) {
+		list.splice(workspaceIndex, 1);
+	}
+	activeUsers.set(list);
+}
+
 export function addActiveUser(workspaceId: Workspace['_id'], user: User) {
 	const list = activeUsers.get();
 	const workspaceEntry = list.find(entry => entry.workspaceId === workspaceId);

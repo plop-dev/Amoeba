@@ -254,24 +254,14 @@ function ChatPageContent() {
 		}
 	};
 
-	//* UPDATE ACTIVE CHANNEL
-	// get channel details on load
-	// useEffect(() => {
-	// 	const pathSegments = window.location.pathname.split('/');
-	// 	const channelName = pathSegments[pathSegments.length - 1];
-	// 	const channelType = pathSegments[pathSegments.length - 2];
-
-	// 	fetch(`http://localhost:8000/channel/${channelType}/${channelName}`, { credentials: 'include' })
-	// 		.then(res => res.json())
-	// 		.then((data: Channel) => {
-	// 			setActiveChannel(data);
-	// 		});
-	// }, []);
-
 	//* LOAD SSE CONNECTION FOR REALTIME UPDATES
 	useEffect(() => {
 		// clear messages
 		dispatch({ type: 'RESET' });
+
+		// null active channel probably means user is on 'home'
+		if (!activeChannel || !activeWorkspace) return;
+
 		const chatEventSource = new EventSource(`http://localhost:8000/sse/${activeWorkspace?._id}/chat/${activeChannel?._id}`, { withCredentials: true });
 
 		chatEventSource.addEventListener('open', async event => {

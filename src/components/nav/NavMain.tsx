@@ -433,7 +433,6 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 									isActive: true,
 								},
 							];
-							console.log(`Category ${DBCategory.name} is empty. updated emptyCategories:`, updatedCategories);
 							return updatedCategories;
 						});
 					}

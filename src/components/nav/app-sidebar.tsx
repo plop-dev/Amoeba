@@ -48,7 +48,6 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 			fetch(`http://localhost:8000/channels/${activeWorkspace._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
-					console.log('Channels:', data);
 					setChannels(data);
 				})
 				.catch(err => {
@@ -63,7 +62,6 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 			fetch(`http://localhost:8000/categories/${activeWorkspace._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
-					console.log('Categories:', data);
 					setDBCategories(data);
 				})
 				.catch(err => {
@@ -81,7 +79,6 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	}
 
 	useEffect(() => {
-		console.log('update nav data');
 		setNavData({
 			user: activeUser,
 			workspaces: workspaces,

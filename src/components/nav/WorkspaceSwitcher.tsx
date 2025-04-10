@@ -11,6 +11,7 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/c
 import DOMPurify from 'dompurify';
 import { activeWorkspace as activeWorkspaceStore, setActiveWorkspace } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
+import { cn } from '@/lib/utils';
 
 export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
 	const { isMobile } = useSidebar();
@@ -66,7 +67,12 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
 							svgElement.setAttribute('class', 'size-4 shrink-0');
 
 							return (
-								<DropdownMenuItem key={index} onClick={() => handleWorkspaceChange(workspace._id)} className='gap-2 p-2'>
+								<DropdownMenuItem
+									key={index}
+									onClick={() => handleWorkspaceChange(workspace._id)}
+									className={cn('gap-2 p-2 cursor-pointer', {
+										'border-2 border-primary rounded-lg': activeWorkspace._id === workspace._id,
+									})}>
 									<div className='flex size-6 items-center justify-center rounded-sm border'>
 										{<div dangerouslySetInnerHTML={{ __html: svgElement.outerHTML }} />}
 									</div>
