@@ -6,7 +6,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { ConnectionPersist } from '@/components/ConnectionPersist';
-import { setUserId } from '@/stores/Auth';
+import { DashboardLoader } from '@/components/DashboardLoader';
 // import '@/server';
 
 const defaultSidebarOpen = Astro.cookies.get('sidebar:state')?.value === 'true';
@@ -34,6 +34,7 @@ const { APPNAME: appName } = import.meta.env;
 		<ClientRouter />
 	</head>
 	<body class='flex flex-row'>
+			<DashboardLoader client:only="react" />
 		<Toaster client:only='react' transition:persist />
 		<Sidebar appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} transition:persist />
 		<ConnectionPersist client:load transition:persist  />

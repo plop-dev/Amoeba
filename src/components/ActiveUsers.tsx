@@ -16,10 +16,6 @@ export function ActiveUsers({ workspaceTitle }: { workspaceTitle: string }) {
 	const activeUsers = useStore(activeUsersStore);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 
-	// useEffect(() => {
-	// 	setActiveUsersWorkspace(activeUsers.find(entry => entry.workspaceId === activeWorkspace?._id) ?? null);
-	// }, [activeUsers, activeWorkspace]);
-
 	useEffect(() => {
 		setIsLoadingVisible(true);
 		// callback function to call when event triggers
