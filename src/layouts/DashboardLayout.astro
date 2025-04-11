@@ -34,7 +34,7 @@ const { APPNAME: appName } = import.meta.env;
 		<ClientRouter />
 	</head>
 	<body class='flex flex-row'>
-			<DashboardLoader client:only="react" />
+		<DashboardLoader client:only="react" />
 		<Toaster client:only='react' transition:persist />
 		<Sidebar appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} transition:persist />
 		<ConnectionPersist client:load transition:persist  />

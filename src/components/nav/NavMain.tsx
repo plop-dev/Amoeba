@@ -1,19 +1,4 @@
-import {
-	AudioWaveform,
-	Book,
-	ChevronRight,
-	Copy,
-	Home,
-	List,
-	MessageCircle,
-	Pencil,
-	Plus,
-	Settings2,
-	Sidebar,
-	Users,
-	type LucideIcon,
-	type LucideProps,
-} from 'lucide-react';
+import { ChevronRight, Home, Pencil, Plus, Settings2, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
 	SidebarGroup,
@@ -43,9 +28,9 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { activeWorkspace as activeWorkspaceStore, setActiveWorkspace } from '@/stores/Workspace';
+import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
 import { Icon, IconPicker, type IconName } from '@/components/ui/icon-picker';
@@ -61,6 +46,7 @@ function ChannelDialog(props: {
 	className?: string;
 	onChannelCreated?: (channel: Channel) => void;
 	onChannelUpdated?: (channel: Channel) => void;
+	onChannelDeleted?: (channelId: string) => void;
 }) {
 	const { toast } = useToast();
 	const { mode, category, channel } = props;
@@ -133,6 +119,39 @@ function ChannelDialog(props: {
 						});
 						props.onChannelCreated?.(res.data);
 					}
+				});
+		}
+	}
+
+	async function handleDeleteChannel() {
+		if (isEditMode && channel) {
+			await fetch(`http://localhost:8000/channel/delete/${channel._id}`, {
+				method: 'DELETE',
+				credentials: 'include',
+			})
+				.then(res => res.json())
+				.then(res => {
+					if (res.success) {
+						toast({
+							title: `${channel.name} channel deleted`,
+							description: `Channel ${channel.name} deleted successfully.`,
+							variant: 'success',
+						});
+						props.onChannelDeleted?.(channel._id);
+					} else {
+						toast({
+							title: 'Error',
+							description: res.message || 'Failed to delete channel.',
+							variant: 'destructive',
+						});
+					}
+				})
+				.catch(err => {
+					toast({
+						title: 'Error',
+						description: 'Failed to delete channel.',
+						variant: 'destructive',
+					});
 				});
 		}
 	}
@@ -210,9 +229,16 @@ function ChannelDialog(props: {
 								/>
 							)}
 						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel>Cancel</AlertDialogCancel>
-							<AlertDialogAction type='submit'>{actionText}</AlertDialogAction>
+						<AlertDialogFooter className='justify-between'>
+							{isEditMode && (
+								<Button type='button' variant='destructive' onClick={handleDeleteChannel}>
+									Delete Channel
+								</Button>
+							)}
+							<div className='flex space-x-2'>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction type='submit'>{actionText}</AlertDialogAction>
+							</div>
 						</AlertDialogFooter>
 					</form>
 				</Form>
@@ -228,6 +254,7 @@ function CategoryDialog(props: {
 	category?: Category;
 	onCategoryCreated?: (category: Category) => void;
 	onCategoryUpdated?: (category: Category) => void;
+	onCategoryDeleted?: (categoryId: string) => void;
 }) {
 	const { toast } = useToast();
 	const { mode, category } = props;
@@ -300,6 +327,39 @@ function CategoryDialog(props: {
 		}
 	}
 
+	async function handleDeleteCategory() {
+		if (isEditMode && category) {
+			await fetch(`http://localhost:8000/category/delete/${category._id}`, {
+				method: 'DELETE',
+				credentials: 'include',
+			})
+				.then(res => res.json())
+				.then(res => {
+					if (res.success) {
+						toast({
+							title: `${category.name} category deleted`,
+							description: `Category ${category.name} deleted successfully.`,
+							variant: 'success',
+						});
+						props.onCategoryDeleted?.(category._id);
+					} else {
+						toast({
+							title: 'Error',
+							description: res.message || 'Failed to delete category.',
+							variant: 'destructive',
+						});
+					}
+				})
+				.catch(err => {
+					toast({
+						title: 'Error',
+						description: 'Failed to delete category.',
+						variant: 'destructive',
+					});
+				});
+		}
+	}
+
 	const title = isEditMode ? `Edit ${category?.name} Category` : 'Create New Category';
 	const description = isEditMode ? 'Edit the name and icon of this category.' : 'Create a new category for organizing channels.';
 	const actionText = isEditMode ? 'Update' : 'Create';
@@ -354,9 +414,16 @@ function CategoryDialog(props: {
 								)}
 							/>
 						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel>Cancel</AlertDialogCancel>
-							<AlertDialogAction type='submit'>{actionText}</AlertDialogAction>
+						<AlertDialogFooter className='justify-between'>
+							{isEditMode && (
+								<Button type='button' variant='destructive' onClick={handleDeleteCategory}>
+									Delete Category
+								</Button>
+							)}
+							<div className='flex space-x-2'>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction type='submit'>{actionText}</AlertDialogAction>
+							</div>
 						</AlertDialogFooter>
 					</form>
 				</Form>
@@ -482,6 +549,15 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 		});
 	}
 
+	function handleChannelDeleted(channelId: string) {
+		setCategories(prev =>
+			prev.map(category => ({
+				...category,
+				items: category.items?.filter(item => item._id !== channelId),
+			})),
+		);
+	}
+
 	function handleCategoryCreated(newCategory: Category) {
 		setCategories(prev => [
 			...prev,
@@ -531,6 +607,11 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 			}
 			return prev;
 		});
+	}
+
+	function handleCategoryDeleted(categoryId: string) {
+		setCategories(prev => prev.filter(category => category._id !== categoryId));
+		setEmptyCategories(prev => prev.filter(category => category._id !== categoryId));
 	}
 
 	// reset categories on workspace change
@@ -590,7 +671,11 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 												<span>{item.name}</span>
 
 												<div className='hidden group-hover/category:block'>
-													<CategoryDialog mode='edit' category={item} onCategoryUpdated={handleCategoryUpdated}>
+													<CategoryDialog
+														mode='edit'
+														category={item}
+														onCategoryUpdated={handleCategoryUpdated}
+														onCategoryDeleted={handleCategoryDeleted}>
 														<span
 															className={cn(
 																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
@@ -652,6 +737,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 																mode='edit'
 																channel={subItem as Channel}
 																onChannelUpdated={handleChannelUpdated}
+																onChannelDeleted={handleChannelDeleted}
 																className='hidden group-hover/channelItem:flex absolute top-1/2 -translate-y-1/2 right-0.5'>
 																<span
 																	className={cn(
@@ -698,7 +784,11 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 												<span>{item.name}</span>
 
 												<div className='hidden group-hover/category:block'>
-													<CategoryDialog mode='edit' category={item} onCategoryUpdated={handleCategoryUpdated}>
+													<CategoryDialog
+														mode='edit'
+														category={item}
+														onCategoryUpdated={handleCategoryUpdated}
+														onCategoryDeleted={handleCategoryDeleted}>
 														<span
 															className={cn(
 																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
