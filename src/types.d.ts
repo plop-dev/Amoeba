@@ -31,7 +31,13 @@ interface Workspace {
 	name: string;
 	creationDate: Date;
 	icon: string;
-	members: { userId: User['_id']; role: UserRoles }[];
+	members: WorkspaceUser[];
+}
+
+interface WorkspaceUser {
+	userId: User['_id'];
+	role: UserRoles;
+	dateJoined: Date;
 }
 
 // Channel Related Types
