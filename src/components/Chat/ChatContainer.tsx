@@ -1,6 +1,5 @@
 import { useEffect, useReducer } from 'react';
 import { Message } from '@/components/chat/Message';
-import { UserConstant, UserConstant2 } from '@/constants/globalUser';
 
 export function ChatContainer({
 	messageEndRef,

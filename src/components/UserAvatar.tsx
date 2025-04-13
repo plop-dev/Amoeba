@@ -44,7 +44,7 @@ export default function UserAvatar({ user, userId, className, size = 8 }: Avatar
 
 	return (
 		<Avatar className={cn(`rounded-full relative border-2 ${sizeClass[size]}`, statusClasses[userData.status], className)}>
-			<AvatarImage src={userData.avatarUrl} alt={userData.username.split('')[0].toUpperCase()} />
+			<AvatarImage src={!userData.avatarUrl.trim() ? '#' : userData.avatarUrl} alt={userData.username.split('')[0].toUpperCase()} />
 			<AvatarFallback>{userData.username.split('')[0].toUpperCase()}</AvatarFallback>
 		</Avatar>
 	);

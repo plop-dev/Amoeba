@@ -342,7 +342,7 @@ export function Message({
 								{variant !== 'inline' && (
 									<div className={cn('info flex')}>
 										<div className='username'>
-											<UserProfile user={UserConstant} isOpen={isProfileOpen} openChange={setProfileOpen}>
+											<UserProfile user={message.author} isOpen={isProfileOpen} openChange={setProfileOpen}>
 												<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: message.author.accentColour }}>
 													@{message.author.username}
 												</Button>

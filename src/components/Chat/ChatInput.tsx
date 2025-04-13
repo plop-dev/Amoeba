@@ -151,10 +151,6 @@ export function ChatInput({
 					workspaceId: activeWorkspace._id,
 					reactions: new Map<string, User['_id'][]>(),
 					replyTo: replyingTo || undefined,
-					// reactions: new Map([
-					// 	['ThumbsUp', [UserConstant, UserConstant2]],
-					// 	['ThumbsDown', [UserConstant]],
-					// ]),
 				};
 
 				handleSendMessage(messageData);

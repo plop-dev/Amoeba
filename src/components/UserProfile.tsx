@@ -21,6 +21,7 @@ import { statusClasses } from '@/utils/statusClass';
 import { useToast } from '@/hooks/use-toast';
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
+import { activeUser as activeUserStore } from '@/stores/User';
 
 export function UserProfile({
 	user,
@@ -42,7 +43,9 @@ export function UserProfile({
 	const { toast } = useToast();
 	const [userData, setUserData] = useState(user || UserConstant);
 	const [status, setStatus] = useState(user?.status || 'offline');
+
 	const activeWorkspace = useStore(activeWorkspaceStore);
+	const activeUser = useStore(activeUserStore);
 
 	useEffect(() => {
 		if (userId && !user) {
@@ -56,12 +59,12 @@ export function UserProfile({
 					setUserData(data);
 				});
 		}
-	});
+	}, [userId, user]);
 
 	useEffect(() => {
 		console.log(`Status changed to: ${status}`);
 		// add backend call to update user status
-	}, [status]);
+	}, [userData.status]);
 
 	const handleStatusChange = (newStatus: UserStatus) => {
 		setStatus(newStatus);
@@ -97,36 +100,42 @@ export function UserProfile({
 						<span className='text-xs text-muted-foreground'>{userData._id}</span>
 					</h4>
 					<span className='text-sm h-6 flex gap-x-2 items-center'>
-						<DropdownMenu>
-							<DropdownMenuTrigger>
-								<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[status])}>
-									{status.charAt(0).toUpperCase() + status.slice(1)}
-									<ChevronsUpDown className='size-4 text-muted-foreground'></ChevronsUpDown>
-								</Badge>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent className='!w-24 !min-w-0' sideOffset={10}>
-								<DropdownMenuItem onClick={() => handleStatusChange('online')}>
-									<Badge variant={'outline'} className={cn('h-6', statusClasses['online'])}>
-										Online
+						{userData._id !== activeUser?._id ? (
+							<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[userData.status])}>
+								{status.charAt(0).toUpperCase() + status.slice(1)}
+							</Badge>
+						) : (
+							<DropdownMenu>
+								<DropdownMenuTrigger>
+									<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[userData.status])}>
+										{status.charAt(0).toUpperCase() + status.slice(1)}
+										<ChevronsUpDown className='size-4 text-muted-foreground'></ChevronsUpDown>
 									</Badge>
-								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => handleStatusChange('away')}>
-									<Badge variant={'outline'} className={cn('h-6', statusClasses['away'])}>
-										Away
-									</Badge>
-								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => handleStatusChange('busy')}>
-									<Badge variant={'outline'} className={cn('h-6', statusClasses['busy'])}>
-										Busy
-									</Badge>
-								</DropdownMenuItem>
-								<DropdownMenuItem onClick={() => handleStatusChange('offline')}>
-									<Badge variant={'outline'} className={cn('h-6', statusClasses['offline'])}>
-										Offline
-									</Badge>
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent className='!w-24 !min-w-0' sideOffset={10}>
+									<DropdownMenuItem onClick={() => handleStatusChange('online')}>
+										<Badge variant={'outline'} className={cn('h-6', statusClasses['online'])}>
+											Online
+										</Badge>
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => handleStatusChange('away')}>
+										<Badge variant={'outline'} className={cn('h-6', statusClasses['away'])}>
+											Away
+										</Badge>
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => handleStatusChange('busy')}>
+										<Badge variant={'outline'} className={cn('h-6', statusClasses['busy'])}>
+											Busy
+										</Badge>
+									</DropdownMenuItem>
+									<DropdownMenuItem onClick={() => handleStatusChange('offline')}>
+										<Badge variant={'outline'} className={cn('h-6', statusClasses['offline'])}>
+											Offline
+										</Badge>
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						)}
 
 						<Separator orientation='vertical' className='h-4'></Separator>
 
