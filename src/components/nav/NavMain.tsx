@@ -595,7 +595,9 @@ function WorkspaceDialog(props: {
 	}
 
 	const title = isEditMode ? `Edit ${workspace?.name} Workspace` : 'Create New Workspace';
-	const description = isEditMode ? 'Edit the name and icon of this workspace.' : 'Create a new workspace where you can create channels and invite members.';
+	const description = isEditMode
+		? 'Edit the name, icon and members of this workspace.'
+		: 'Create a new workspace where you can create channels and invite members.';
 	const actionText = isEditMode ? 'Update' : 'Create';
 
 	return (
@@ -743,7 +745,9 @@ function WorkspaceDialog(props: {
 														<TableBody>
 															{field.value?.map((member: any) => (
 																<TableRow key={member.userId} className='border-b border-gray-800 hover:bg-gray-900/50'>
-																	<TableCell className='font-medium'>{member.userId}</TableCell>
+																	<TableCell className='font-medium flex gap-x-2'>
+																		{member.userId} {member.userId === activeUserStore.get()?._id && <p>(you)</p>}
+																	</TableCell>
 																	<TableCell>{formatDate(new Date(member.dateJoined))}</TableCell>
 																	<TableCell>
 																		<span
@@ -844,7 +848,9 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 				icon: dbCategory.icon,
 				url: `/${activeWorkspaceId}/categories/${dbCategory._id}`,
 				items: [],
-				canCreate: true,
+				canCreate: activeWorkspace?.members.some(
+					member => member.userId === activeUserStore.get()?._id && (member.role === 'admin' || member.role === 'owner'),
+				),
 				isActive: true,
 			});
 		});
@@ -887,23 +893,40 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 	//#region Channel Utils
 
 	function handleChannelCreated(newChannel: Channel) {
+		const channelUrl = `/${activeWorkspaceId}/dashboard/${newChannel.type}s/${newChannel._id}`;
+
+		// First, try to update if the category already exists in "categories"
+		let updatedInCategories = false;
 		setCategories(prev => {
-			const categoryIndex = prev.findIndex(c => c._id === newChannel.categoryId);
-			if (categoryIndex !== -1) {
-				return [
-					...prev.slice(0, categoryIndex),
-					{
-						...prev[categoryIndex],
-						items: [
-							...(prev[categoryIndex].items ?? []).map(item => ({ ...item, url: item.url })),
-							{ ...newChannel, url: `/${activeWorkspaceId}/dashboard/${newChannel.type}s/${newChannel._id}` as string },
-						],
-					},
-					...prev.slice(categoryIndex + 1),
-				];
-			}
-			return prev;
+			const newCategories = prev.map(category => {
+				if (category._id === newChannel.categoryId) {
+					updatedInCategories = true;
+					return {
+						...category,
+						items: [...(category.items ?? []), { ...newChannel, url: channelUrl }],
+					};
+				}
+				return category;
+			});
+			return newCategories;
 		});
+
+		// If not updated, then the channel belongs to a category in "emptyCategories"
+		if (!updatedInCategories) {
+			setEmptyCategories(prevEmpty => {
+				const foundCategory = prevEmpty.find(c => c._id === newChannel.categoryId);
+				if (foundCategory) {
+					// Remove the category from emptyCategories and add it to categories with the new channel
+					const updatedCategory = {
+						...foundCategory,
+						items: [{ ...newChannel, url: channelUrl }],
+					};
+					setCategories(prevCategories => [...prevCategories, updatedCategory]);
+					return prevEmpty.filter(c => c._id !== newChannel.categoryId);
+				}
+				return prevEmpty;
+			});
+		}
 	}
 
 	function handleChannelUpdated(updatedChannel: Channel) {
@@ -949,7 +972,9 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 				icon: newCategory.icon,
 				url: `/${activeWorkspaceId}/categories/${newCategory._id}`,
 				items: [],
-				canCreate: true,
+				canCreate: activeWorkspace?.members.some(
+					member => member.userId === activeUserStore.get()?._id && (member.role === 'admin' || member.role === 'owner'),
+				),
 				isActive: true,
 			},
 		]);
@@ -1026,20 +1051,22 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 
 	return (
 		<>
-			{/* <SidebarGroup>
+			<SidebarGroup>
 				<SidebarGroupLabel className='flex justify-between items-center'>Workspace</SidebarGroupLabel>
 				<SidebarMenu>
 					<SidebarMenuItem key={'__settings__'}>
-						<WorkspaceDialog
-							mode='edit'
-							workspace={activeWorkspace || undefined}
-							onWorkspaceCreated={handleWorkspaceCreated}
-							onWorkspaceUpdated={handleWorkspaceUpdated}
-							onWorkspaceDeleted={handleWorkspaceDeleted}>
-							<SidebarMenuButton>
-								<Settings2></Settings2> Settings
-							</SidebarMenuButton>
-						</WorkspaceDialog>
+						{activeWorkspace?.members.some(member => member.userId === activeUserStore.get()?._id && member.role === 'owner') && (
+							<WorkspaceDialog
+								mode='edit'
+								workspace={activeWorkspace || undefined}
+								onWorkspaceCreated={handleWorkspaceCreated}
+								onWorkspaceUpdated={handleWorkspaceUpdated}
+								onWorkspaceDeleted={handleWorkspaceDeleted}>
+								<SidebarMenuButton>
+									<Settings2 className='size-4'></Settings2> Settings
+								</SidebarMenuButton>
+							</WorkspaceDialog>
+						)}
 					</SidebarMenuItem>
 					<SidebarMenuItem key={'__members__'}>
 						<SidebarMenuButton>
@@ -1047,7 +1074,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 						</SidebarMenuButton>
 					</SidebarMenuItem>
 				</SidebarMenu>
-			</SidebarGroup> */}
+			</SidebarGroup>
 
 			<SidebarGroup>
 				<SidebarGroupLabel className='flex justify-between items-center'>
@@ -1059,21 +1086,6 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 					</CategoryDialog>
 				</SidebarGroupLabel>
 				<SidebarMenu>
-					<SidebarMenuItem key={'__settings__'}>
-						<SidebarMenuButton>
-							<WorkspaceDialog
-								mode='edit'
-								workspace={activeWorkspace || undefined}
-								onWorkspaceCreated={handleWorkspaceCreated}
-								onWorkspaceUpdated={handleWorkspaceUpdated}
-								onWorkspaceDeleted={handleWorkspaceDeleted}>
-								<span>
-									<Settings2></Settings2>
-								</span>
-							</WorkspaceDialog>
-							<Settings2></Settings2> Settings
-						</SidebarMenuButton>
-					</SidebarMenuItem>
 					<SidebarMenuItem key={'__home__'}>
 						<SidebarMenuButton
 							asChild
@@ -1097,22 +1109,24 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 												<span>{item.name}</span>
 
 												<div className='hidden group-hover/category:block'>
-													<CategoryDialog
-														mode='edit'
-														category={item}
-														onCategoryUpdated={handleCategoryUpdated}
-														onCategoryDeleted={handleCategoryDeleted}>
-														<span
-															className={cn(
-																buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-																'size-4 ml-auto p-3 absolute top-1/2 right-16 z-50 -translate-y-1/2',
-															)}
-															onClick={e => {
-																e.stopPropagation();
-															}}>
-															<Pencil />
-														</span>
-													</CategoryDialog>
+													{item.canCreate && (
+														<CategoryDialog
+															mode='edit'
+															category={item}
+															onCategoryUpdated={handleCategoryUpdated}
+															onCategoryDeleted={handleCategoryDeleted}>
+															<span
+																className={cn(
+																	buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+																	'size-4 ml-auto p-3 absolute top-1/2 right-16 z-50 -translate-y-1/2',
+																)}
+																onClick={e => {
+																	e.stopPropagation();
+																}}>
+																<Pencil />
+															</span>
+														</CategoryDialog>
+													)}
 
 													{item.canCreate && (
 														<ChannelDialog category={item} mode='create' onChannelCreated={handleChannelCreated}>
@@ -1158,24 +1172,26 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 																	<p className='w-full'>#{subItem.name}</p>
 																</span>
 															</SidebarMenuSubButton>
-															<ChannelDialog
-																category={item}
-																mode='edit'
-																channel={subItem as Channel}
-																onChannelUpdated={handleChannelUpdated}
-																onChannelDeleted={handleChannelDeleted}
-																className='hidden group-hover/channelItem:flex absolute top-1/2 -translate-y-1/2 right-0.5'>
-																<span
-																	className={cn(
-																		buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
-																		'size-4 ml-auto p-3 absolute top-1/2 right-0.5 z-50 -translate-y-1/2',
-																	)}
-																	onClick={e => {
-																		e.stopPropagation();
-																	}}>
-																	<Pencil />
-																</span>
-															</ChannelDialog>
+															{item.canCreate && (
+																<ChannelDialog
+																	category={item}
+																	mode='edit'
+																	channel={subItem as Channel}
+																	onChannelUpdated={handleChannelUpdated}
+																	onChannelDeleted={handleChannelDeleted}
+																	className='hidden group-hover/channelItem:flex absolute top-1/2 -translate-y-1/2 right-0.5'>
+																	<span
+																		className={cn(
+																			buttonVariants({ variant: 'ghostBackground', size: 'icon' }),
+																			'size-4 ml-auto p-3 absolute top-1/2 right-0.5 z-50 -translate-y-1/2',
+																		)}
+																		onClick={e => {
+																			e.stopPropagation();
+																		}}>
+																		<Pencil />
+																	</span>
+																</ChannelDialog>
+															)}
 														</div>
 													</SidebarMenuSubItem>
 												))}

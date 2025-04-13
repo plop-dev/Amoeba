@@ -1,6 +1,6 @@
 // User Related Types
 type UserStatus = 'online' | 'offline' | 'away' | 'busy';
-type UserRoles = 'admin' | 'user' | 'guest';
+type UserRoles = 'owner' | 'admin' | 'member';
 
 interface User {
 	_id: string;
