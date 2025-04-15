@@ -19,7 +19,7 @@ export default function UserAvatar({ user, userId, className, size = 8 }: Avatar
 					setUserData(data);
 				});
 		}
-	});
+	}, [userId, user]);
 
 	const sizeClass: { [key: number]: string } = {
 		0: 'size-0',
