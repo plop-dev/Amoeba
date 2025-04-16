@@ -126,6 +126,8 @@ const { APPNAME } = import.meta.env;
 	const accountIdInput = document.getElementById('login-account-id') as HTMLInputElement;
 	const alertContainer = document.getElementById('alert-container');
 
+	const keyCheckSource = new EventSource('http://localhost:8000/auth/key-check-events');
+
 	async function fetchChallenge() {
 		updateKeyCheckHeader('Generating challenge...');
 		const res = await fetch('http://localhost:8000/auth/challenge');
@@ -352,7 +354,10 @@ const { APPNAME } = import.meta.env;
 									title: 'Error setting user data',
 									description: 'An error occurred while setting user data',
 								});
+								updateStep(0);
+								return;
 							}
+							keyCheckSource.close();
 						} catch (err) {
 							console.error('Error setting user data:', err);
 							toast({
@@ -397,7 +402,6 @@ const { APPNAME } = import.meta.env;
 
 	//#region Key Check Progress
 
-	const keyCheckSource = new EventSource('http://localhost:8000/auth/key-check-events');
 	keyCheckSource.addEventListener('message', e => {
 		const data: SSEMessage = JSON.parse(e.data);
 		keyCheckProgressStore.set(data.message);

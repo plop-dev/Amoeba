@@ -300,7 +300,7 @@ function ChatPageContent() {
 			// Clean up EventSource when component unmounts or channel changes
 			chatEventSource.close();
 		};
-	}, [activeChannel, activeWorkspace, activeUser]);
+	}, [activeChannel, activeWorkspace]);
 
 	useEffect(() => {
 		setIsLoadingVisible(true);

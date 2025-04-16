@@ -5,47 +5,32 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import UsersOnlineBadge from '@/components/UsersOnlineBadge';
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
-import { useEffect, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export function ActiveUsers({ workspaceTitle }: { workspaceTitle: string }) {
-	const [activeUsersWorkspace, setActiveUsersWorkspace] = useState<{ workspaceId: string; users: User[] } | null>(null);
 	const [loading, setLoading] = useState(true);
-	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
-
-	const activeUsers = useStore(activeUsersStore);
 	const activeWorkspace = useStore(activeWorkspaceStore);
+	const activeUsers = useStore(activeUsersStore);
 
+	// Find users for the current workspace
+	const workspaceUsers = activeUsers.find(entry => entry.workspaceId === activeWorkspace?._id) || { users: [] };
+
+	// Set loading state on initial render
 	useEffect(() => {
-		setIsLoadingVisible(true);
-		// callback function to call when event triggers
-		const onPageLoad = async () => {
-			setActiveUsersWorkspace(activeUsers.find(entry => entry.workspaceId === activeWorkspace?._id) ?? null);
-			setIsLoadingVisible(false);
+		const timer = setTimeout(() => {
 			setLoading(false);
-		};
+		}, 500);
 
-		// Check if the page has already loaded
-		if (document.readyState === 'complete') {
-			setTimeout(() => {
-				onPageLoad();
-			}, 250);
-		} else {
-			window.addEventListener('load', onPageLoad, false);
-			// Remove the event listener when component unmounts
-			return () => window.removeEventListener('load', onPageLoad);
-		}
+		return () => clearTimeout(timer);
 	}, []);
 
 	return (
 		<>
-			{isLoadingVisible && (
-				<div
-					className={`absolute inset-0 flex items-center justify-center bg-background z-50 transition-opacity duration-300 ${
-						loading ? 'opacity-100' : 'opacity-0'
-					}`}>
+			{loading && (
+				<div className='absolute inset-0 flex items-center justify-center bg-background z-50'>
 					<div className='flex flex-col items-center gap-4'>
-						<LoaderCircle className='animate-spin'></LoaderCircle>
+						<LoaderCircle className='animate-spin' />
 						<p className='text-sm font-medium'>Loading Users...</p>
 					</div>
 				</div>
@@ -53,18 +38,24 @@ export function ActiveUsers({ workspaceTitle }: { workspaceTitle: string }) {
 
 			<div className='text-sm flex gap-2'>
 				<p>Users in {workspaceTitle} online:</p>
-				<UsersOnlineBadge usersOnline={activeUsersWorkspace?.users ? activeUsersWorkspace.users.length : 0} />
+				<UsersOnlineBadge usersOnline={workspaceUsers.users.filter(user => user.status && user.status !== 'offline').length} />
 			</div>
 
-			{(activeUsersWorkspace?.users?.length ?? 0) > 0 && (
+			{workspaceUsers.users.length > 0 && (
 				<ScrollArea className='users-online border-border border-2 rounded-lg w-min'>
 					<div className='flex flex-col gap-2 p-4 w-min'>
-						{activeUsersWorkspace?.users.map((user, index) => (
-							<div className='contents' key={index}>
-								<UserProfile user={user} contentOnly={true} />
-								<Separator></Separator>
-							</div>
-						))}
+						{workspaceUsers.users
+							.sort((a, b) => {
+								// Sort users by status priority: online > away > busy > offline
+								const statusPriority = { online: 0, away: 1, busy: 2, offline: 3 };
+								return statusPriority[a.status || 'offline'] - statusPriority[b.status || 'offline'];
+							})
+							.map((user, index) => (
+								<div className='contents' key={user._id || index}>
+									<UserProfile user={user} contentOnly={true} />
+									{index < workspaceUsers.users.length - 1 && <Separator />}
+								</div>
+							))}
 					</div>
 				</ScrollArea>
 			)}

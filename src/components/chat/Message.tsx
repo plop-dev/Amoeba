@@ -335,14 +335,16 @@ export function Message({
 								onClick={() => {
 									setProfileOpen(true);
 								}}>
-								{message.author && <UserAvatar user={message.author} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />}
+								{message.author && (
+									<UserAvatar userId={message.author._id} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
+								)}
 							</div>
 
 							<div className='content flex flex-col w-full overflow-hidden'>
 								{variant !== 'inline' && (
 									<div className={cn('info flex')}>
 										<div className='username'>
-											<UserProfile user={message.author} isOpen={isProfileOpen} openChange={setProfileOpen}>
+											<UserProfile userId={message.author._id} isOpen={isProfileOpen} openChange={setProfileOpen}>
 												<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: message.author.accentColour }}>
 													@{message.author.username}
 												</Button>

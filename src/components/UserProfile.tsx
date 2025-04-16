@@ -1,16 +1,9 @@
 import { formatDate } from '@/utils/formatDate';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, ChevronsUpDown, LogOut, Mail, MessageCircle, Phone, Settings, Settings2, UserPlus } from 'lucide-react';
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useEffect, useRef, useState } from 'react';
+import { CalendarDays, ChevronsUpDown, LogOut, MessageCircle, Phone, Settings } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -22,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { activeUser as activeUserStore } from '@/stores/User';
+import { updateUserStatus } from '@/utils/statusManager';
 
 export function UserProfile({
 	user,
@@ -32,7 +26,7 @@ export function UserProfile({
 	isOpen = false,
 	openChange = () => {},
 }: {
-	user?: User;
+	user?: User | null;
 	userId?: string;
 	children?: React.ReactNode;
 	contentOnly?: boolean;
@@ -41,37 +35,50 @@ export function UserProfile({
 	openChange?: (isOpen: boolean) => void;
 }) {
 	const { toast } = useToast();
-	const [userData, setUserData] = useState(user || UserConstant);
-	const [status, setStatus] = useState(user?.status || 'offline');
-
+	const [fetchedUser, setFetchedUser] = useState<User | null>(null);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeUser = useStore(activeUserStore);
 
+	// If a userId is provided but no user object, fetch the user data
 	useEffect(() => {
 		if (userId && !user) {
-			// fetch user data since only the user id is provided
 			fetch(`http://localhost:8000/user/${userId}`, {
 				method: 'GET',
 				credentials: 'include',
 			})
 				.then(res => res.json())
 				.then((data: User) => {
-					setUserData(data);
+					setFetchedUser(data);
+				})
+				.catch(error => {
+					console.error('Error fetching user:', error);
 				});
 		}
 	}, [userId, user]);
 
-	useEffect(() => {
-		console.log(`Status changed to: ${status}`);
-		// add backend call to update user status
-	}, [userData.status]);
+	// Determine which user to display
+	const displayUser = user || fetchedUser || UserConstant;
 
-	const handleStatusChange = (newStatus: UserStatus) => {
-		setStatus(newStatus);
-		// add backend call to update user status
+	// Handle status change initiated by the user
+	const handleStatusChange = async (newStatus: UserStatus) => {
+		if (!activeUser) return;
+
+		const success = await updateUserStatus(newStatus);
+
+		if (!success) {
+			toast({
+				title: 'Status update failed',
+				description: 'Could not update your status. Please try again.',
+				variant: 'destructive',
+			});
+		}
 	};
 
+	// Handle user logout
 	const handleLogout = async () => {
+		// Set status to offline before logging out
+		await updateUserStatus('offline');
+
 		const res = await fetch('http://localhost:8000/auth/logout', {
 			method: 'POST',
 			credentials: 'include',
@@ -81,7 +88,6 @@ export function UserProfile({
 		if (data.success) {
 			toast({ title: 'Logged out', description: 'You have been logged out', variant: 'success' });
 			window.location.href = '/auth/login';
-			setStatus('offline');
 		} else {
 			toast({ title: 'Error', description: 'An error occurred while logging out', variant: 'destructive' });
 		}
@@ -91,24 +97,31 @@ export function UserProfile({
 		<>
 			<div className='grid grid-cols-[5fr,9fr] grid-rows-1 space-x-4'>
 				<div className='m-auto'>
-					<UserAvatar user={userData} size={16}></UserAvatar>
+					<UserAvatar user={displayUser} size={16}></UserAvatar>
 				</div>
 				<div className='space-y-1'>
-					<h4 className='text-sm font-semibold' style={{ color: userData.accentColour }}>
-						@{userData.username}
+					<h4 className='text-sm font-semibold' style={{ color: displayUser.accentColour }}>
+						@{displayUser.username}
 						<br></br>
-						<span className='text-xs text-muted-foreground'>{userData._id}</span>
+						<span
+							className='text-xs text-muted-foreground cursor-pointer'
+							onClick={() => {
+								navigator.clipboard.writeText(displayUser._id);
+								toast({ title: 'User ID copied', description: 'User ID has been copied to clipboard', variant: 'success' });
+							}}>
+							{displayUser._id}
+						</span>
 					</h4>
 					<span className='text-sm h-6 flex gap-x-2 items-center'>
-						{userData._id !== activeUser?._id ? (
-							<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[userData.status])}>
-								{status.charAt(0).toUpperCase() + status.slice(1)}
+						{displayUser._id !== activeUser?._id ? (
+							<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[displayUser.status || 'offline'])}>
+								{(displayUser.status || 'offline').charAt(0).toUpperCase() + (displayUser.status || 'offline').slice(1)}
 							</Badge>
 						) : (
 							<DropdownMenu>
 								<DropdownMenuTrigger>
-									<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[userData.status])}>
-										{status.charAt(0).toUpperCase() + status.slice(1)}
+									<Badge variant={'outline'} className={cn('h-6 gap-x-1', statusClasses[activeUser.status || 'offline'])}>
+										{(activeUser.status || 'offline').charAt(0).toUpperCase() + (activeUser.status || 'offline').slice(1)}
 										<ChevronsUpDown className='size-4 text-muted-foreground'></ChevronsUpDown>
 									</Badge>
 								</DropdownMenuTrigger>
@@ -140,18 +153,17 @@ export function UserProfile({
 						<Separator orientation='vertical' className='h-4'></Separator>
 
 						<Badge variant={'outline'} className='h-6'>
-							{/* {user.role.charAt(0).toUpperCase() + user.role.slice(1)} */}
 							Admin
 						</Badge>
 					</span>
 					<div className='flex items-center pt-2'>
 						<CalendarDays className='mr-2 h-4 w-4 opacity-70' />{' '}
-						<span className='text-xs text-muted-foreground'>Joined {formatDate(new Date(userData.creationDate))}</span>
+						<span className='text-xs text-muted-foreground'>Joined {formatDate(new Date(displayUser.creationDate))}</span>
 					</div>
 				</div>
 			</div>
 			<div className='mt-4'>
-				<p className='text-sm'>{userData.description}</p>
+				<p className='text-sm'>{displayUser.description}</p>
 			</div>
 			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1'>
 				{userControl ? (
