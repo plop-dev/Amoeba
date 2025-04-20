@@ -16,6 +16,7 @@ import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { activeUser as activeUserStore } from '@/stores/User';
 import { updateUserStatus } from '@/utils/statusManager';
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 export function UserProfile({
 	user,
@@ -42,7 +43,7 @@ export function UserProfile({
 	// If a userId is provided but no user object, fetch the user data
 	useEffect(() => {
 		if (userId && !user) {
-			fetch(`http://localhost:8000/user/${userId}`, {
+			fetch(`${PUBLIC_API_URL}/user/${userId}`, {
 				method: 'GET',
 				credentials: 'include',
 			})
@@ -79,7 +80,7 @@ export function UserProfile({
 		// Set status to offline before logging out
 		await updateUserStatus('offline');
 
-		const res = await fetch('http://localhost:8000/auth/logout', {
+		const res = await fetch(`${PUBLIC_API_URL}/auth/logout`, {
 			method: 'POST',
 			credentials: 'include',
 		});

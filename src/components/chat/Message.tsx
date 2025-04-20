@@ -11,6 +11,7 @@ import { UserConstant } from '@/constants/globalUser';
 import UserAvatar from '@/components/UserAvatar';
 import { useStore } from '@nanostores/react';
 import { activeUser as activeUserStore } from '@/stores/User';
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 function OptionsButton({
 	children,
@@ -229,7 +230,7 @@ export function Message({
 	};
 
 	const handleAddReaction = async (emojiName: string) => {
-		await fetch(`http://localhost:8000/msg/${message._id}/reaction/${emojiName}`, { method: 'POST', credentials: 'include' })
+		await fetch(`${PUBLIC_API_URL}/msg/${message._id}/reaction/${emojiName}`, { method: 'POST', credentials: 'include' })
 			.then(res => res.json())
 			.then(data => {
 				if (data.success) {

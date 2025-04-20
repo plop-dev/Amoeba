@@ -1,6 +1,7 @@
 import { atom } from 'nanostores';
 import { activeUser, setActiveUser, activeUsers } from '@/stores/User';
 import { activeWorkspace } from '@/stores/Workspace';
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 // Status update queue to prevent race conditions
 export const statusUpdateQueue = atom<
@@ -45,7 +46,7 @@ export async function updateUserStatus(newStatus: UserStatus): Promise<boolean> 
 		};
 
 		// Send status update to server
-		const response = await fetch(`http://localhost:8000/workspace/${workspace._id}`, {
+		const response = await fetch(`${PUBLIC_API_URL}/workspace/${workspace._id}`, {
 			method: 'POST',
 			credentials: 'include',
 			headers: { 'Content-Type': 'application/json' },
@@ -70,7 +71,7 @@ export async function fetchActiveUsers(workspaceId: string): Promise<boolean> {
 	fetching.set(workspaceId, true);
 
 	try {
-		const res = await fetch(`http://localhost:8000/workspace/users/${workspaceId}`, {
+		const res = await fetch(`${PUBLIC_API_URL}/workspace/users/${workspaceId}`, {
 			method: 'GET',
 			credentials: 'include',
 		});
@@ -198,7 +199,7 @@ export function setupStatusListeners(): void {
 					message: { ...currentUser, status: 'offline' },
 				};
 
-				navigator.sendBeacon(`http://localhost:8000/workspace/${workspace._id}`, new Blob([JSON.stringify(data)], { type: 'application/json' }));
+				navigator.sendBeacon(`${PUBLIC_API_URL}/workspace/${workspace._id}`, new Blob([JSON.stringify(data)], { type: 'application/json' }));
 			}
 		}
 	});

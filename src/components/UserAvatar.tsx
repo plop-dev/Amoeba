@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { statusClasses } from '@/utils/statusClass';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 export default function UserAvatar({ user, userId, className, size = 8 }: AvatarProps) {
 	const [userData, setUserData] = useState(user || UserConstant);
@@ -17,7 +18,7 @@ export default function UserAvatar({ user, userId, className, size = 8 }: Avatar
 	useEffect(() => {
 		if (userId && !user) {
 			// fetch user data since only the user id is provided
-			fetch(`http://localhost:8000/user/${userId}`, {
+			fetch(`${PUBLIC_API_URL}/user/${userId}`, {
 				method: 'GET',
 				credentials: 'include',
 			})

@@ -1,4 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 export const onRequest = defineMiddleware(async (context, next) => {
 	const session = context.request.headers.get('cookie')?.match(/session=([^;]*)/)?.[1];
@@ -9,7 +10,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
 			let data;
 			try {
-				const res = await fetch('http://localhost:8000/auth/middleware', {
+				const res = await fetch(`${PUBLIC_API_URL}/auth/middleware`, {
 					method: 'POST',
 					headers: {
 						'Content-Type': 'application/json',

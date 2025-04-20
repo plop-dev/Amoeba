@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatDate } from '@/utils/formatDate';
 import { validateObjectId } from '@/utils/validateObjectId';
+import { PUBLIC_API_URL } from 'astro:env/client'
 
 function ChannelDialog(props: {
 	children: React.ReactNode;
@@ -84,7 +85,7 @@ function ChannelDialog(props: {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		if (isEditMode && channel) {
 			// Update existing channel
-			await fetch(`http://localhost:8000/channel/update/${channel._id}`, {
+			await fetch(`${PUBLIC_API_URL}/channel/update/${channel._id}`, {
 				method: 'POST',
 				body: JSON.stringify(values),
 				headers: { 'Content-Type': 'application/json' },
@@ -110,7 +111,7 @@ function ChannelDialog(props: {
 				workspaceId: activeWorkspaceStore.get()?._id,
 			};
 
-			await fetch(`http://localhost:8000/channel/new`, {
+			await fetch(`${PUBLIC_API_URL}/channel/new`, {
 				method: 'POST',
 				body: JSON.stringify(updatedValues),
 				headers: { 'Content-Type': 'application/json' },
@@ -132,7 +133,7 @@ function ChannelDialog(props: {
 
 	async function handleDeleteChannel() {
 		if (isEditMode && channel) {
-			await fetch(`http://localhost:8000/channel/delete/${channel._id}`, {
+			await fetch(`${PUBLIC_API_URL}/channel/delete/${channel._id}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			})
@@ -290,7 +291,7 @@ function CategoryDialog(props: {
 
 		if (isEditMode && category) {
 			// Update existing category
-			await fetch(`http://localhost:8000/category/update/${category._id}`, {
+			await fetch(`${PUBLIC_API_URL}/category/update/${category._id}`, {
 				method: 'POST',
 				body: JSON.stringify(updatedValues),
 				headers: { 'Content-Type': 'application/json' },
@@ -314,7 +315,7 @@ function CategoryDialog(props: {
 				workspaceId: activeWorkspaceStore.get()?._id,
 			};
 
-			await fetch(`http://localhost:8000/category/new`, {
+			await fetch(`${PUBLIC_API_URL}/category/new`, {
 				method: 'POST',
 				body: JSON.stringify(newCategoryData),
 				headers: { 'Content-Type': 'application/json' },
@@ -336,7 +337,7 @@ function CategoryDialog(props: {
 
 	async function handleDeleteCategory() {
 		if (isEditMode && category) {
-			await fetch(`http://localhost:8000/category/delete/${category._id}`, {
+			await fetch(`${PUBLIC_API_URL}/category/delete/${category._id}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			})
@@ -494,7 +495,7 @@ function WorkspaceDialog(props: {
 
 			if (isEditMode && workspace) {
 				// Update existing workspace
-				await fetch(`http://localhost:8000/workspace/update/${workspace._id}`, {
+				await fetch(`${PUBLIC_API_URL}/workspace/update/${workspace._id}`, {
 					method: 'POST',
 					body: JSON.stringify(updatedValues),
 					headers: { 'Content-Type': 'application/json' },
@@ -523,7 +524,7 @@ function WorkspaceDialog(props: {
 					...updatedValues,
 				};
 
-				await fetch(`http://localhost:8000/workspace/new`, {
+				await fetch(`${PUBLIC_API_URL}/workspace/new`, {
 					method: 'POST',
 					body: JSON.stringify(newWorkspaceData),
 					headers: { 'Content-Type': 'application/json' },
@@ -559,7 +560,7 @@ function WorkspaceDialog(props: {
 
 	async function handleDeleteWorkspace() {
 		if (isEditMode && workspace) {
-			await fetch(`http://localhost:8000/workspace/delete/${workspace._id}`, {
+			await fetch(`${PUBLIC_API_URL}/workspace/delete/${workspace._id}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			})
@@ -682,7 +683,7 @@ function WorkspaceDialog(props: {
 										}
 
 										// Check if user exists
-										const userRes = await fetch(`http://localhost:8000/user/${newUserId}`, {
+										const userRes = await fetch(`${PUBLIC_API_URL}/user/${newUserId}`, {
 											method: 'GET',
 											credentials: 'include',
 										}).then(res => res.json());

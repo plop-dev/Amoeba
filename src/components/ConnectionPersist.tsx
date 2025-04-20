@@ -4,7 +4,7 @@ import { activeUsers as activeUsersStore, activeUser as activeUserStore, addActi
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { updateUserStatus, updateUserInActiveUsers, setupStatusListeners } from '@/utils/statusManager';
-// import { } from 'astro:env/client'
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 export function ConnectionPersist() {
 	const activeUser = useStore(activeUserStore);
@@ -36,7 +36,7 @@ export function ConnectionPersist() {
 		resetActiveUsers(activeWorkspace._id);
 
 		// Create new EventSource connection
-		const projectEventSource = new EventSource(`http://localhost:8000/sse/${activeWorkspace._id}/`, { withCredentials: true });
+		const projectEventSource = new EventSource(`${PUBLIC_API_URL}/sse/${activeWorkspace._id}/`, { withCredentials: true });
 		eventSourceRef.current = projectEventSource;
 
 		// Handle incoming messages
@@ -174,7 +174,7 @@ export function ConnectionPersist() {
 			};
 
 			// Send the announcement to the server
-			const response = await fetch(`http://localhost:8000/workspace/${workspaceId}/`, {
+			const response = await fetch(`${PUBLIC_API_URL}/workspace/${workspaceId}/`, {
 				method: 'POST',
 				credentials: 'include',
 				headers: { 'Content-Type': 'application/json' },

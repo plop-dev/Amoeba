@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ReactQueryProvider } from '@/components/ReactQueryProvider';
 import { useToast } from '@/hooks/use-toast';
 import { activeChannel as activeChannelStore, setActiveChannel } from '@/stores/Channel';
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 // Updated reducer to handle optimistic updates with temp IDs and prepend older messages
 const messagesReducer = (state: Message[], action: any) => {
@@ -60,7 +61,7 @@ function ChatPageContent() {
 
 	const handleDeleteMessage = async (msgId: string) => {
 		try {
-			await fetch(`http://localhost:8000/msg/${msgId}`, {
+			await fetch(`${PUBLIC_API_URL}/msg/${msgId}`, {
 				method: 'DELETE',
 				credentials: 'include',
 			});
@@ -86,7 +87,7 @@ function ChatPageContent() {
 				message,
 			};
 
-			return fetch(`http://localhost:8000/msg`, {
+			return fetch(`${PUBLIC_API_URL}/msg`, {
 				method: 'POST',
 				credentials: 'include',
 				body: JSON.stringify(data),
@@ -206,7 +207,7 @@ function ChatPageContent() {
 	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false): Promise<{ success: boolean }> => {
 		try {
 			const response = await fetch(
-				`http://localhost:8000/msgs/${activeChannel?._id}?` +
+				`${PUBLIC_API_URL}/msgs/${activeChannel?._id}?` +
 					new URLSearchParams({
 						limit: limit.toString(),
 						...(initialLoad ? {} : { cursor: cursor || '' }),
@@ -262,7 +263,7 @@ function ChatPageContent() {
 		// null active channel probably means user is on 'home'
 		if (!activeChannel || !activeWorkspace) return;
 
-		const chatEventSource = new EventSource(`http://localhost:8000/sse/${activeWorkspace?._id}/chat/${activeChannel?._id}`, { withCredentials: true });
+		const chatEventSource = new EventSource(`${PUBLIC_API_URL}/sse/${activeWorkspace?._id}/chat/${activeChannel?._id}`, { withCredentials: true });
 
 		chatEventSource.addEventListener('open', async event => {
 			// tell user that connection is open

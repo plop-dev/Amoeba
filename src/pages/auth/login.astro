@@ -116,6 +116,7 @@ const { APPNAME } = import.meta.env;
 	import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from '@/components/ui/toast';
 	import * as React from 'react';
 	import { setActiveUser } from '@/stores/User';
+	import { PUBLIC_API_URL } from 'astro:env/client';
 
 	const wrapper = document.getElementById('login-wrapper');
 	const formKey = document.getElementById('login-key');
@@ -126,7 +127,7 @@ const { APPNAME } = import.meta.env;
 	const accountIdInput = document.getElementById('login-account-id') as HTMLInputElement;
 	const alertContainer = document.getElementById('alert-container');
 
-	const keyCheckSource = new EventSource('http://localhost:8000/auth/key-check-events');
+	const keyCheckSource = new EventSource(`${PUBLIC_API_URL}/auth/key-check-events`);
 
 	document.getElementById('proceed-to-dashboard')?.addEventListener('click', e => {
 		keyCheckSource.close();
@@ -134,7 +135,7 @@ const { APPNAME } = import.meta.env;
 
 	async function fetchChallenge() {
 		updateKeyCheckHeader('Generating challenge...');
-		const res = await fetch('http://localhost:8000/auth/challenge');
+		const res = await fetch(`${PUBLIC_API_URL}/auth/challenge`);
 		const data = await res.json();
 		setChallenge(data.challenge);
 		setPublicKey(data.publicKey);
@@ -223,7 +224,7 @@ const { APPNAME } = import.meta.env;
 
 			// --- Send the payload to the server ---
 			updateKeyCheckHeader('Sending encrypted key file...');
-			const res = await fetch('http://localhost:8000/auth/login', {
+			const res = await fetch(`${PUBLIC_API_URL}/auth/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ encryptedAesKey, encryptedFile, iv, response, accountId: accountIdInput.value }),
@@ -335,14 +336,14 @@ const { APPNAME } = import.meta.env;
 			if (res) {
 				updateKeyCheckHeader('Key file verified successfully', false, true);
 				setUserId(accountIdInput.value);
-				const userRes = await fetch(`http://localhost:8000/user/${userId.get()}`, { credentials: 'include' });
+				const userRes = await fetch(`${PUBLIC_API_URL}/user/${userId.get()}`, { credentials: 'include' });
 
 				userRes
 					.json()
 					.then(async (data: User) => {
 						setActiveUser(data);
 						try {
-							const res = await fetch('http://localhost:8000/set-cookie', {
+							const res = await fetch(`${PUBLIC_API_URL}/set-cookie`, {
 								method: 'POST',
 								credentials: 'include',
 								headers: { 'Content-Type': 'application/json' },

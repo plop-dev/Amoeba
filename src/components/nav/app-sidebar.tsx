@@ -12,6 +12,7 @@ import { Separator } from '../ui/separator';
 import { useStore } from '@nanostores/react';
 import { activeUser as activeUserStore } from '@/stores/User';
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 	appName: string;
@@ -31,7 +32,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	// load user workspaces
 	useEffect(() => {
 		if (activeUser)
-			fetch(`http://localhost:8000/workspaces/${activeUser._id}`, { credentials: 'include' })
+			fetch(`${PUBLIC_API_URL}/workspaces/${activeUser._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
 					setWorkspaces(data);
@@ -45,7 +46,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	// load channels from active workspace
 	useEffect(() => {
 		if (activeWorkspace && !Object.keys(activeWorkspace).includes('error')) {
-			fetch(`http://localhost:8000/channels/${activeWorkspace._id}`, { credentials: 'include' })
+			fetch(`${PUBLIC_API_URL}/channels/${activeWorkspace._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
 					setChannels(data);
@@ -59,7 +60,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 	// load categories from db (keep in mind DBCategories is a 'stripped' down version of Channel type)
 	useEffect(() => {
 		if (activeWorkspace && !Object.keys(activeWorkspace).includes('error')) {
-			fetch(`http://localhost:8000/categories/${activeWorkspace._id}`, { credentials: 'include' })
+			fetch(`${PUBLIC_API_URL}/categories/${activeWorkspace._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
 					setDBCategories(data);
@@ -72,7 +73,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 
 	if (!activeUser || !workspaces) {
 		document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-		fetch('http://localhost:8000/auth/logout', { credentials: 'include' }).then(() => {
+		fetch(`${PUBLIC_API_URL}/auth/logout`, { credentials: 'include' }).then(() => {
 			window.location.href = '/auth/login';
 		});
 		return null;
