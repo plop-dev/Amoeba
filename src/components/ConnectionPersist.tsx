@@ -4,6 +4,7 @@ import { activeUsers as activeUsersStore, activeUser as activeUserStore, addActi
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { updateUserStatus, updateUserInActiveUsers, setupStatusListeners } from '@/utils/statusManager';
+// import { } from 'astro:env/client'
 
 export function ConnectionPersist() {
 	const activeUser = useStore(activeUserStore);
@@ -71,13 +72,55 @@ export function ConnectionPersist() {
 							addActiveUser(activeWorkspace._id, data.message);
 						}
 					}
+				} else if (data.event.type === 'welcome') {
+					// When a new connection is established, the server sends a welcome event
+					console.log('Welcome event received:', data);
+
+					// Announce current user's presence to everyone in the workspace
+					if (activeUser) {
+						announcePresence(activeWorkspace._id, activeUser);
+					}
+
+					// If the welcome message includes active users, sync with them
+					if (data.message && Array.isArray(data.message.activeUsers)) {
+						console.log("Syncing with server's active users list:", data.message.activeUsers);
+
+						// Reset the workspace's users first to avoid duplicates
+						resetActiveUsers(activeWorkspace._id);
+
+						// Add each active user from the server's list
+						data.message.activeUsers.forEach((user: User) => {
+							if (user._id !== activeUser?._id) {
+								// Don't add yourself twice
+								addActiveUser(activeWorkspace._id, user);
+							}
+						});
+
+						// Always add yourself to ensure you're in the list
+						if (activeUser) {
+							addActiveUser(activeWorkspace._id, activeUser);
+						}
+					}
+				} else if (data.event.type === 'user-joined') {
+					// A new user has joined the workspace
+					console.log('User joined workspace:', data.message);
+
+					// Add the new user to our active users list if they're not already there
+					if (data.message._id !== activeUser?._id) {
+						addActiveUser(activeWorkspace._id, data.message);
+
+						// Announce current user's presence to the new user
+						if (activeUser) {
+							announcePresence(activeWorkspace._id, activeUser);
+						}
+					}
 				}
 			} catch (error) {
 				console.error('Error processing SSE message:', error);
 			}
 		});
 
-		// When connection opens, set status to online
+		// When connection opens, set status to online and announce presence
 		projectEventSource.addEventListener('open', async () => {
 			console.log('SSE connection established');
 			if (activeUser) {
@@ -116,6 +159,35 @@ export function ConnectionPersist() {
 			}
 		};
 	}, [activeWorkspace?._id]);
+
+	// Function to announce user presence to the workspace
+	const announcePresence = async (workspaceId: string, user: User) => {
+		try {
+			// Prepare the announcement data
+			const data: SSEMessage = {
+				event: {
+					author: 'client',
+					type: 'status',
+					variant: user.status || 'online',
+				},
+				message: user,
+			};
+
+			// Send the announcement to the server
+			const response = await fetch(`http://localhost:8000/workspace/${workspaceId}/`, {
+				method: 'POST',
+				credentials: 'include',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(data),
+			});
+
+			if (!response.ok) {
+				console.error('Failed to announce presence:', await response.text());
+			}
+		} catch (error) {
+			console.error('Error announcing presence:', error);
+		}
+	};
 
 	return <></>;
 }

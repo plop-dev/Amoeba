@@ -31,7 +31,7 @@ const { APPNAME } = import.meta.env;
 		</div>
 
 		<div class='' id='login-timeline'>
-			<LoginTimeline className='w-[36rem] mx-0' client:load />
+			<LoginTimeline className='w-[36rem] mx-0' client:only='react' />
 		</div>
 
 		<div class='w-[28rem] flex gap-x-8 overflow-hidden' id='login-wrapper'>
@@ -127,6 +127,10 @@ const { APPNAME } = import.meta.env;
 	const alertContainer = document.getElementById('alert-container');
 
 	const keyCheckSource = new EventSource('http://localhost:8000/auth/key-check-events');
+
+	document.getElementById('proceed-to-dashboard')?.addEventListener('click', e => {
+		keyCheckSource.close();
+	});
 
 	async function fetchChallenge() {
 		updateKeyCheckHeader('Generating challenge...');
@@ -357,7 +361,6 @@ const { APPNAME } = import.meta.env;
 								updateStep(0);
 								return;
 							}
-							keyCheckSource.close();
 						} catch (err) {
 							console.error('Error setting user data:', err);
 							toast({
@@ -370,6 +373,10 @@ const { APPNAME } = import.meta.env;
 						if (data.workspaces.length > 0) {
 							// redirect to first workspace
 							console.log('Redirecting to workspace:', `/${data.workspaces[0]}/dashboard`);
+
+							document.getElementById('proceed-to-dashboard')?.addEventListener('click', e => {
+								keyCheckSource.close();
+							});
 							document.getElementById('proceed-to-dashboard')?.setAttribute('href', `/${data.workspaces[0]}/dashboard`);
 						} else {
 							// USER HAS NO WORKSPACES. REDIRECT WHERE??

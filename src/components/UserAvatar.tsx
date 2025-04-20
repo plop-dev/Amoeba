@@ -2,10 +2,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserConstant } from '@/constants/globalUser';
 import { cn } from '@/lib/utils';
 import { statusClasses } from '@/utils/statusClass';
+import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
 
 export default function UserAvatar({ user, userId, className, size = 8 }: AvatarProps) {
 	const [userData, setUserData] = useState(user || UserConstant);
+
+	useEffect(() => {
+		if (user) {
+			setUserData(user);
+		}
+	}, [user]);
 
 	useEffect(() => {
 		if (userId && !user) {
@@ -19,7 +26,7 @@ export default function UserAvatar({ user, userId, className, size = 8 }: Avatar
 					setUserData(data);
 				});
 		}
-	}, [userId, user]);
+	}, [userId]);
 
 	const sizeClass: { [key: number]: string } = {
 		0: 'size-0',

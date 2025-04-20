@@ -5,25 +5,47 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import UsersOnlineBadge from '@/components/UsersOnlineBadge';
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
-import { LoaderCircle } from 'lucide-react';
+import { LoaderCircle, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { fetchActiveUsers } from '@/utils/statusManager';
+import { Button } from '@/components/ui/button';
+import { activeUser as activeUserStore } from '@/stores/User';
 
 export function ActiveUsers({ workspaceTitle }: { workspaceTitle: string }) {
 	const [loading, setLoading] = useState(true);
+	const [refreshing, setRefreshing] = useState(false);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeUsers = useStore(activeUsersStore);
+	const activeUser = useStore(activeUserStore);
 
 	// Find users for the current workspace
 	const workspaceUsers = activeUsers.find(entry => entry.workspaceId === activeWorkspace?._id) || { users: [] };
 
-	// Set loading state on initial render
+	// Initial data fetch and periodic refresh
 	useEffect(() => {
-		const timer = setTimeout(() => {
-			setLoading(false);
-		}, 500);
+		if (!activeWorkspace?._id) return;
 
-		return () => clearTimeout(timer);
-	}, []);
+		// Initial fetch
+		setLoading(true);
+		fetchActiveUsers(activeWorkspace._id)
+			.then(() => setLoading(false))
+			.catch(err => {
+				console.error('Failed to fetch active users:', err);
+				setLoading(false);
+			});
+
+		// Set up periodic refresh
+		return;
+	}, [activeWorkspace?._id]);
+
+	// Handle manual refresh
+	const handleRefresh = async () => {
+		if (!activeWorkspace?._id) return;
+
+		setRefreshing(true);
+		await fetchActiveUsers(activeWorkspace._id).catch(err => console.error('Error during manual refresh:', err));
+		setRefreshing(false);
+	};
 
 	return (
 		<>
@@ -36,9 +58,14 @@ export function ActiveUsers({ workspaceTitle }: { workspaceTitle: string }) {
 				</div>
 			)}
 
-			<div className='text-sm flex gap-2'>
-				<p>Users in {workspaceTitle} online:</p>
-				<UsersOnlineBadge usersOnline={workspaceUsers.users.filter(user => user.status && user.status !== 'offline').length} />
+			<div className='text-sm flex justify-between items-center'>
+				<div className='flex gap-2 items-center'>
+					<p>Users in {workspaceTitle} online:</p>
+					<UsersOnlineBadge usersOnline={workspaceUsers.users.filter(user => user.status && user.status !== 'offline').length} />
+				</div>
+				<Button size='icon' variant='ghost' className='h-6 w-6' onClick={handleRefresh} disabled={refreshing}>
+					<RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+				</Button>
 			</div>
 
 			{workspaceUsers.users.length > 0 && (

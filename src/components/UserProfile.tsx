@@ -97,7 +97,11 @@ export function UserProfile({
 		<>
 			<div className='grid grid-cols-[5fr,9fr] grid-rows-1 space-x-4'>
 				<div className='m-auto'>
-					<UserAvatar user={displayUser} size={16}></UserAvatar>
+					{displayUser._id !== activeUser?._id ? (
+						<UserAvatar user={displayUser} size={16}></UserAvatar>
+					) : (
+						<UserAvatar user={activeUser} size={16}></UserAvatar>
+					)}
 				</div>
 				<div className='space-y-1'>
 					<h4 className='text-sm font-semibold' style={{ color: displayUser.accentColour }}>

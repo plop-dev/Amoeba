@@ -80,7 +80,7 @@ interface SSEMessage {
 	message: Message | any;
 	event: {
 		author: 'server' | 'client';
-		type: 'welcome' | 'message' | 'file' | 'status';
+		type: 'welcome' | 'message' | 'file' | 'status' | 'user-joined';
 		variant?: UserStatus | any;
 	};
 }

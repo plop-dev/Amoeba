@@ -60,6 +60,44 @@ export async function updateUserStatus(newStatus: UserStatus): Promise<boolean> 
 }
 
 /**
+ * Explicitly request the current active users list from the server
+ * Use this to force a refresh of the active users list
+ * @param workspaceId - The workspace ID to get active users for
+ */
+const fetching = new Map<string, boolean>();
+export async function fetchActiveUsers(workspaceId: string): Promise<boolean> {
+	if (fetching.get(workspaceId)) return false;
+	fetching.set(workspaceId, true);
+
+	try {
+		const res = await fetch(`http://localhost:8000/workspace/users/${workspaceId}`, {
+			method: 'GET',
+			credentials: 'include',
+		});
+		if (!res.ok) return false;
+
+		const { activeUsers: list } = await res.json();
+		// reset + repopulate store
+		const all = activeUsers.get().filter(e => e.workspaceId !== workspaceId);
+		all.push({ workspaceId, users: list });
+		activeUsers.set(all);
+
+		// make sure me is in there
+		const me = activeUser.get();
+		if (me) {
+			// reuse your existing helper
+			updateUserInActiveUsers(me._id, me.status, workspaceId);
+		}
+
+		return true;
+	} catch {
+		return false;
+	} finally {
+		fetching.set(workspaceId, false);
+	}
+}
+
+/**
  * Update a user's status in the activeUsers store
  * @param userId - The ID of the user to update
  * @param status - The new status
@@ -113,7 +151,14 @@ export function updateUserInActiveUsers(userId: string, status: UserStatus, work
 
 			// Update store with new reference
 			activeUsers.set(updatedList);
+		} else {
+			// If user isn't found, try to fetch the current active users
+			fetchActiveUsers(workspaceId).catch(err => console.error('Failed to fetch users after finding missing user:', err));
 		}
+	} else {
+		// If workspace isn't in the list, create it with this user
+		// But first need to fetch the user info
+		fetchActiveUsers(workspaceId).catch(err => console.error('Failed to fetch users for new workspace entry:', err));
 	}
 }
 
@@ -154,6 +199,17 @@ export function setupStatusListeners(): void {
 				};
 
 				navigator.sendBeacon(`http://localhost:8000/workspace/${workspace._id}`, new Blob([JSON.stringify(data)], { type: 'application/json' }));
+			}
+		}
+	});
+
+	// When the page is first loaded or becomes visible,
+	// initiate a refresh of the active users list to ensure synchronization
+	document.addEventListener('visibilitychange', () => {
+		if (document.visibilityState === 'visible') {
+			const workspace = activeWorkspace.get();
+			if (workspace) {
+				fetchActiveUsers(workspace._id).catch(err => console.error('Failed to refresh active users on visibility change:', err));
 			}
 		}
 	});

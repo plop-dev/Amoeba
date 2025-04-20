@@ -17,8 +17,13 @@ export default defineConfig({
 	env: {
 		schema: {
 			PORT: envField.number({ context: 'server', access: 'public', default: 3000 }),
-			APPNAME: envField.string({ context: 'server', access: 'public', default: 'Amoeba' }),
+			APPNAME: envField.string({ context: 'client', access: 'public', default: 'Amoeba' }),
 			TIPTAP_APPID: envField.string({ context: 'client', access: 'public', default: '7j9y6m10' }),
+			PUBLIC_API_URL: envField.string({
+				context: 'client',
+				access: 'public',
+				default: 'http://localhost:8000',
+			}),
 		},
 	},
 	adapter: vercel({
