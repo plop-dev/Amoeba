@@ -336,7 +336,7 @@ const { APPNAME } = import.meta.env;
 			if (res) {
 				updateKeyCheckHeader('Key file verified successfully', false, true);
 				setUserId(accountIdInput.value);
-				const userRes = await fetch(`${PUBLIC_API_URL}/user/${userId.get()}`, { credentials: 'include' });
+				const userRes = await fetch(`${PUBLIC_API_URL}/user/public/${userId.get()}`, { credentials: 'include' });
 
 				userRes
 					.json()
@@ -357,7 +357,7 @@ const { APPNAME } = import.meta.env;
 								toast({
 									variant: 'destructive',
 									title: 'Error setting user data',
-									description: 'An error occurred while setting user data',
+									description: 'An error occurred while setting user data cookie',
 								});
 								updateStep(0);
 								return;

@@ -170,7 +170,7 @@ function ChatPageContent() {
 							const scrollContainer = messageStartRef.current?.parentElement?.parentElement;
 							const scrollPosition = scrollContainer?.scrollHeight || 0;
 
-							await fetchMessages(50, false);
+							await fetchMessages(50, false, activeChannel);
 
 							// restore scroll position
 							setTimeout(() => {
@@ -204,7 +204,7 @@ function ChatPageContent() {
 		};
 	}, [cursor, loading]);
 
-	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false): Promise<{ success: boolean }> => {
+	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false, activeChannel: Channel | null): Promise<{ success: boolean }> => {
 		try {
 			const response = await fetch(
 				`${PUBLIC_API_URL}/msgs/${activeChannel?._id}?` +
@@ -310,7 +310,7 @@ function ChatPageContent() {
 			// clear messages
 			dispatch({ type: 'RESET' });
 
-			await fetchMessages(50, true).then(() => {
+			await fetchMessages(50, true, activeChannel).then(() => {
 				setTimeout(() => {
 					messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 				}, 100);
