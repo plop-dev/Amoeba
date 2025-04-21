@@ -202,12 +202,12 @@ function ChatPageContent() {
 				observer.unobserve(messageStartRef.current);
 			}
 		};
-	}, [cursor, loading]);
+	}, [cursor, loading, activeChannel]);
 
-	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false, activeChannel: Channel | null): Promise<{ success: boolean }> => {
+	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false, activeChannelData: Channel | null): Promise<{ success: boolean }> => {
 		try {
 			const response = await fetch(
-				`${PUBLIC_API_URL}/msgs/${activeChannel?._id}?` +
+				`${PUBLIC_API_URL}/msgs/${activeChannelData?._id}?` +
 					new URLSearchParams({
 						limit: limit.toString(),
 						...(initialLoad ? {} : { cursor: cursor || '' }),
@@ -329,7 +329,7 @@ function ChatPageContent() {
 			// Remove the event listener when component unmounts
 			return () => window.removeEventListener('load', onPageLoad);
 		}
-	}, []);
+	}, [activeChannel]);
 
 	return (
 		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-4 max-w-full'>

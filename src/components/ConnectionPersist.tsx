@@ -43,22 +43,22 @@ export function ConnectionPersist() {
 		projectEventSource.addEventListener('message', event => {
 			try {
 				const data: SSEMessage = JSON.parse(event.data);
-				console.log('SSE message received:', data);
+				// console.log('SSE message received:', data);
 
 				if (data.event.type === 'status') {
 					const userId = data.message._id;
 					const status: UserStatus = data.event.variant;
-					console.log(`Status update received for user ${userId}: ${status}`);
+					// console.log(`Status update received for user ${userId}: ${status}`);
 
 					if (status === 'offline') {
 						// Remove offline users
 						removeActiveUser(activeWorkspace._id, userId);
-						console.log(`User ${userId} removed (offline)`);
+						// console.log(`User ${userId} removed (offline)`);
 					} else {
 						// If this status update is about the current user and was triggered elsewhere
 						// (like another tab/device), make sure local state reflects it
 						if (activeUser && userId === activeUser._id && activeUser.status !== status) {
-							console.log(`Syncing current user status from server: ${status}`);
+							// console.log(`Syncing current user status from server: ${status}`);
 							activeUserStore.set({ ...activeUser, status });
 						}
 
@@ -68,13 +68,13 @@ export function ConnectionPersist() {
 						// If the user isn't in our list yet, add them
 						const workspaceEntry = activeUsers.find(entry => entry.workspaceId === activeWorkspace._id);
 						if (!workspaceEntry || !workspaceEntry.users.some(user => user._id === userId)) {
-							console.log(`Adding new user ${userId} with status: ${status}`);
+							// console.log(`Adding new user ${userId} with status: ${status}`);
 							addActiveUser(activeWorkspace._id, data.message);
 						}
 					}
 				} else if (data.event.type === 'welcome') {
 					// When a new connection is established, the server sends a welcome event
-					console.log('Welcome event received:', data);
+					// console.log('Welcome event received:', data);
 
 					// Announce current user's presence to everyone in the workspace
 					if (activeUser) {
@@ -83,7 +83,7 @@ export function ConnectionPersist() {
 
 					// If the welcome message includes active users, sync with them
 					if (data.message && Array.isArray(data.message.activeUsers)) {
-						console.log("Syncing with server's active users list:", data.message.activeUsers);
+						// console.log("Syncing with server's active users list:", data.message.activeUsers);
 
 						// Reset the workspace's users first to avoid duplicates
 						resetActiveUsers(activeWorkspace._id);
@@ -103,7 +103,7 @@ export function ConnectionPersist() {
 					}
 				} else if (data.event.type === 'user-joined') {
 					// A new user has joined the workspace
-					console.log('User joined workspace:', data.message);
+					// console.log('User joined workspace:', data.message);
 
 					// Add the new user to our active users list if they're not already there
 					if (data.message._id !== activeUser?._id) {
