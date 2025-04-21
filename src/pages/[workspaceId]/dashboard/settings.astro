@@ -60,7 +60,7 @@ import { Button } from '@/components/ui/button';
 		const reader = new FileReader();
 		reader.onload = function (e) {
 			const base64 = e.target?.result as string;
-			console.log(base64);
+			// console.log(base64);
 		};
 		if (avatar) {
 			reader.readAsDataURL(avatar);

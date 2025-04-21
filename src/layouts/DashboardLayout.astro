@@ -5,6 +5,8 @@ import { ClientRouter } from 'astro:transitions';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
+import { ConnectionPersist } from '@/components/ConnectionPersist';
+import { DashboardLoader } from '@/components/DashboardLoader';
 // import '@/server';
 
 const defaultSidebarOpen = Astro.cookies.get('sidebar:state')?.value === 'true';
@@ -15,6 +17,7 @@ interface Props {
 }
 
 const { title, containerClassName = '' } = Astro.props;
+const {userId} = Astro.locals
 const { APPNAME: appName } = import.meta.env;
 ---
 
@@ -31,8 +34,10 @@ const { APPNAME: appName } = import.meta.env;
 		<ClientRouter />
 	</head>
 	<body class='flex flex-row'>
-		<Toaster client:only='react' />
+		<DashboardLoader client:only="react" />
+		<Toaster client:only='react' transition:persist />
 		<Sidebar appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} transition:persist />
+		<ConnectionPersist client:load transition:persist  />
 
 		<main
 			class='relative flex min-h-svh flex-1 flex-col bg-background peer-data-[variant=inset]:min-h-[calc(100svh-theme(spacing.4))] md:peer-data-[variant=inset]:m-2 md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow'>
@@ -41,15 +46,15 @@ const { APPNAME: appName } = import.meta.env;
 				<Breadcrumb className='' transition:persist>
 					<BreadcrumbList>
 						<BreadcrumbItem className='hidden md:block'>
-							<BreadcrumbLink href={'/' + Astro.url.pathname.split('/')[1] + '/' + Astro.url.pathname.split('/')[2]}
-								>#{Astro.url.pathname.split('/')[2]}</BreadcrumbLink
+							<BreadcrumbLink href={'/' + Astro.url.pathname.split('/')[2] + '/' + Astro.url.pathname.split('/')[3]}
+								>#{Astro.url.pathname.split('/')[3]}</BreadcrumbLink
 							>
 						</BreadcrumbItem>
 						{
-							Astro.url.pathname.split('/')[3] && (
+							Astro.url.pathname.split('/')[4] && (
 								<BreadcrumbSeparator className='hidden md:block' />
 								<BreadcrumbItem>
-									<BreadcrumbPage>#{Astro.url.pathname.split('/')[3]}</BreadcrumbPage>
+									<BreadcrumbPage>#{Astro.url.pathname.split('/')[4]}</BreadcrumbPage>
 								</BreadcrumbItem>
 							)
 						}
@@ -62,3 +67,32 @@ const { APPNAME: appName } = import.meta.env;
 		</main>
 	</body>
 </html>
+
+<script>
+	import { setActiveChannel } from "@/stores/Channel";
+	import { activeWorkspace, setActiveWorkspace } from "@/stores/Workspace";
+	import { PUBLIC_API_URL } from 'astro:env/client'
+
+	const activeWorkspaceId = window.location.pathname.split('/')[1]
+
+	const workspace = activeWorkspace.get();
+	if (!workspace || ('error' in workspace)) {
+		const res = await fetch(`${PUBLIC_API_URL}/workspace/${activeWorkspaceId}`, {credentials: 'include'})
+		const data = await res.json()
+		setActiveWorkspace(data)
+	}
+
+	const pathSegments = window.location.pathname.split('/');
+	const channelName = pathSegments[pathSegments.length - 1];
+	const channelType = pathSegments[pathSegments.length - 2];
+
+	if (window.location.pathname.includes('home') || window.location.pathname.includes('settings')) {
+		setActiveChannel(null);
+	}
+
+	fetch(`${PUBLIC_API_URL}/channel/${channelType}/${channelName}`, { credentials: 'include' })
+		.then(res => res.json())
+		.then((data: Channel) => {
+			setActiveChannel(data);
+		});
+</script>

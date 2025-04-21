@@ -4,13 +4,33 @@ import { useImageUpload } from '@/hooks/use-image-upload';
 import { ImagePlus, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { keyInput, setKeyInput } from '@/stores/Auth';
 
-export function FileUpload() {
+export function FileUpload({ id }: { id?: string }) {
 	const { previewUrl, fileName, fileInputRef, handleThumbnailClick, handleFileChange, handleRemove } = useImageUpload({
 		onUpload: url => console.log('Uploaded file URL:', url),
 	});
 
 	const [isDragging, setIsDragging] = useState(false);
+
+	// Wrap the file change event to also read the file as base64.
+	const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		// Call the original handler to update previewUrl and fileName.
+		handleFileChange(e);
+
+		if (e.target.files && e.target.files[0]) {
+			const file = e.target.files[0];
+			const reader = new FileReader();
+			reader.onload = () => {
+				const result = reader.result as string;
+				// Extract base64 without the Data URL prefix
+				const base64 = result.includes(',') ? result.split(',')[1] : result;
+
+				if (id === 'login-key') setKeyInput(base64);
+			};
+			reader.readAsDataURL(file);
+		}
+	};
 
 	const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
 		e.preventDefault();
@@ -42,10 +62,10 @@ export function FileUpload() {
 						files: [file],
 					},
 				} as unknown as React.ChangeEvent<HTMLInputElement>;
-				handleFileChange(fakeEvent);
+				onFileChange(fakeEvent);
 			}
 		},
-		[handleFileChange],
+		[onFileChange],
 	);
 
 	return (
@@ -57,7 +77,7 @@ export function FileUpload() {
 				</p>
 			</div>
 
-			<Input type='file' className='hidden' ref={fileInputRef} onChange={handleFileChange} />
+			<Input type='file' className='hidden' ref={fileInputRef} onChange={onFileChange} />
 
 			{!previewUrl ? (
 				<div

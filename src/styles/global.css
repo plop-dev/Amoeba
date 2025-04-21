@@ -1,4 +1,4 @@
-/* @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap'); */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -65,7 +65,7 @@
 		--muted-foreground: 217.9 10.6% 64.9%;
 		--accent: 215 27.9% 16.9%;
 		--accent-foreground: 210 20% 98%;
-		--destructive: 0 62.8% 30.6%;
+		--destructive: 0 62.8% 55.6%;
 		--destructive-foreground: 210 20% 98%;
 		--success: 120 50% 50%;
 		--success-foreground: 210 15% 95%;
@@ -121,4 +121,53 @@ body {
 	to {
 		opacity: 1;
 	}
+}
+
+.dot-anim {
+	opacity: 0.5;
+	animation: blink 1.4s infinite;
+}
+.dot-anim:nth-child(1) {
+	animation-delay: 0s;
+}
+.dot-anim:nth-child(2) {
+	animation-delay: 0.2s;
+}
+.dot-anim:nth-child(3) {
+	animation-delay: 0.4s;
+}
+@keyframes blink {
+	0%,
+	60%,
+	100% {
+		opacity: 0.5;
+		color: gray;
+	}
+	30% {
+		opacity: 1;
+		color: white;
+	}
+}
+
+.reply-spine {
+	display: block;
+	position: relative;
+	box-sizing: border-box;
+	top: 50%;
+	left: 0;
+	width: 25px;
+	height: 15px;
+	border-left: 2px solid hsl(var(--secondary-foreground) / 55%);
+	border-bottom: 0 solid hsl(var(--secondary-foreground) / 55%);
+	border-right: 0 solid hsl(var(--secondary-foreground) / 55%);
+	border-top: 2px solid hsl(var(--secondary-foreground) / 55%);
+	border-top-left-radius: var(--radius);
+	transition: all 150ms ease-in-out;
+}
+
+.reply-to-header:hover .reply-spine {
+	border-left: 2px solid hsl(var(--foreground) / 70%);
+	border-bottom: 0 solid hsl(var(--foreground) / 70%);
+	border-right: 0 solid hsl(var(--foreground) / 70%);
+	border-top: 2px solid hsl(var(--foreground) / 70%);
 }

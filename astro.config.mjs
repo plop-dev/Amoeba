@@ -17,8 +17,13 @@ export default defineConfig({
 	env: {
 		schema: {
 			PORT: envField.number({ context: 'server', access: 'public', default: 3000 }),
-			APPNAME: envField.string({ context: 'server', access: 'public', default: 'Amoeba' }),
+			APPNAME: envField.string({ context: 'client', access: 'public', default: 'Amoeba' }),
 			TIPTAP_APPID: envField.string({ context: 'client', access: 'public', default: '7j9y6m10' }),
+			PUBLIC_API_URL: envField.string({
+				context: 'client',
+				access: 'public',
+				default: 'http://localhost:8000',
+			}),
 		},
 	},
 	adapter: vercel({
@@ -33,6 +38,19 @@ export default defineConfig({
 				'@': path.resolve(process.cwd(), 'src'),
 			},
 		},
+		optimizeDeps: {
+			force: true,
+			exclude: ['lucide-react/dynamicIconImports', 'lucide-react/dynamic'],
+			// include: ['lucide-react/dynamic'],
+		},
+		...(process.env.ENV === 'dev'
+			? {
+					ssr: {
+						noExternal: true,
+					},
+			  }
+			: {}),
+
 		// plugins: [MillionLint.vite({ enabled: true }), million.vite({ mode: 'react', server: false, auto: { threshold: 0 } })],
 	},
 });

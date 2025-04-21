@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import CustomAvatar from '@/components/UserAvatar';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Copy, Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -8,14 +7,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { UserProfile } from '@/components/UserProfile';
-import User from '@/constants/globalUser';
+import { UserConstant } from '@/constants/globalUser';
 import UserAvatar from '@/components/UserAvatar';
+import { useStore } from '@nanostores/react';
+import { activeUser as activeUserStore } from '@/stores/User';
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 function OptionsButton({
 	children,
 	variant,
 	emoji = false,
-	messageId,
 	onEmojiClick,
 	onClick,
 }: {
@@ -29,7 +30,7 @@ function OptionsButton({
 	const handleClick = () => {
 		if (React.isValidElement(children) && emoji) {
 			const { type } = children;
-			let emojiName = '';
+			let emojiName: Reactions = 'Ban';
 
 			switch (type) {
 				case SmilePlus:
@@ -51,7 +52,7 @@ function OptionsButton({
 					emojiName = 'PartyPopper';
 					break;
 				default:
-					emojiName = 'Unknown';
+					emojiName = 'Ban';
 			}
 
 			onEmojiClick?.(emojiName);
@@ -99,32 +100,61 @@ function ReactionPicker({ onEmojiClick }: { onEmojiClick: (emojiName: string) =>
 	);
 }
 
-function EmojiReaction({ emojiName, count, messageVariant }: { emojiName: string; count: number; messageVariant: 'default' | 'inline' }) {
-	const style = 'w-4 h-4';
+function EmojiReaction({
+	emojiName,
+	users,
+	messageVariant,
+	isActive = false,
+	onToggle,
+}: {
+	emojiName: string;
+	users: User[] | User['_id'][];
+	messageVariant: 'default' | 'inline';
+	isActive?: boolean;
+	onToggle?: () => void;
+}) {
+	// Use a single state to track the index of the user profile currently open
+	const [openUser, setOpenUser] = useState<number | null>(null);
 
 	return (
 		<div
-			className={cn(
-				'emoji-reaction flex gap-x-2 rounded-lg border border-border px-1 items-center hover:border-primary/75 transition-colors duration-300',
-				{
-					'mb-1': messageVariant === 'inline',
-				},
-			)}>
-			<TooltipProvider delayDuration={50}>
-				<Tooltip>
+			className={cn('emoji-reaction flex gap-x-2 rounded-lg border border-border items-center transition-colors duration-150', {
+				'mb-1': messageVariant === 'inline',
+				'!border-primary/75': isActive,
+			})}>
+			<TooltipProvider delayDuration={500}>
+				<Tooltip onOpenChange={open => !open && setOpenUser(null)}>
 					<TooltipTrigger asChild>
-						<span className='flex gap-x-1 items-center px-2 py-1'>
-							<p>{count}</p>
-							{emojiName === 'Smile' && <Smile className={style} />}
-							{emojiName === 'Laugh' && <Laugh className={style} />}
-							{emojiName === 'ThumbsUp' && <ThumbsUp className={style} />}
-							{emojiName === 'ThumbsDown' && <ThumbsDown className={style} />}
-							{emojiName === 'PartyPopper' && <PartyPopper className={style} />}
-						</span>
+						<Button
+							variant='ghost'
+							onClick={onToggle}
+							className={cn('flex gap-x-1 items-center px-2 h-7', {
+								'bg-primary/10': isActive,
+							})}
+							size={'default'}>
+							<p>{users.length}</p>
+							{emojiName === 'Smile' && <Smile className='!size-4' />}
+							{emojiName === 'Laugh' && <Laugh className='!size-4' />}
+							{emojiName === 'ThumbsUp' && <ThumbsUp className='!size-4' />}
+							{emojiName === 'ThumbsDown' && <ThumbsDown className='!size-4' />}
+							{emojiName === 'PartyPopper' && <PartyPopper className='!size-4' />}
+						</Button>
 					</TooltipTrigger>
 					<TooltipContent border={true} asChild>
 						<div className='flex flex-row gap-x-2'>
-							<UserAvatar user={User}></UserAvatar>
+							{users.map((user, i) => (
+								<UserProfile
+									key={i}
+									userId={user as User['_id']}
+									isOpen={openUser === i}
+									openChange={(open: boolean) => {
+										setOpenUser(open ? i : openUser === i ? null : openUser);
+									}}>
+									<div className='cursor-pointer' onClick={() => setOpenUser(i)}>
+										<UserAvatar userId={user as User['_id']} />
+									</div>
+								</UserProfile>
+							))}
 						</div>
 					</TooltipContent>
 				</Tooltip>
@@ -134,91 +164,215 @@ function EmojiReaction({ emojiName, count, messageVariant }: { emojiName: string
 }
 
 export function Message({
-	messageId,
+	message,
 	onReplyClick,
+	handleDeleteMessage,
 	isHighlighted,
 	variant = 'default',
 }: {
-	messageId: string;
+	message: Message;
 	onReplyClick?: (msgId: string) => void;
+	handleDeleteMessage: (msgId: string) => void;
 	isHighlighted?: boolean;
 	variant?: 'default' | 'inline';
 }) {
 	const { toast } = useToast();
-	const [reactions, setReactions] = useState<{ emojiName: string; count: number }[]>([]);
+	const [reactions, setReactions] = useState<Message['reactions']>(
+		message.reactions instanceof Map ? message.reactions : new Map(Object.entries(message.reactions || {})),
+	);
+	const [replyToMessage, setReplyToMessage] = useState<Element | null>(null);
+	const [userReactions, setUserReactions] = useState<Set<string>>(new Set());
 	const [isProfileOpen, setProfileOpen] = useState(false);
+	const [isNextInline, setIsNextInline] = useState(false);
 	const messageRef = useRef<HTMLDivElement | null>(null);
+	const activeUser = useStore(activeUserStore);
 
 	const handleCopyMessage = () => {
 		navigator.clipboard.writeText(messageRef.current?.querySelector('.text')?.textContent ?? '');
 		toast({ title: 'Message copied to clipboard', variant: 'default' });
 	};
 
-	const handleAddReaction = (emojiName: string) => {
-		setReactions(prevReactions => {
-			const reactionIndex = prevReactions.findIndex(r => r.emojiName === emojiName);
-			if (reactionIndex !== -1) {
-				const updatedReactions = [...prevReactions];
-				updatedReactions[reactionIndex].count += 1;
-				return updatedReactions;
-			} else {
-				return [...prevReactions, { emojiName, count: 1 }];
+	useEffect(() => {
+		const currentUser = activeUser; // current user
+		const userReactionsSet = new Set<string>();
+
+		if (reactions.size === 0) return;
+		reactions.forEach((users, emojiName) => {
+			if (users.length === 0) {
+				console.log('No users for emoji:', emojiName);
+				return;
 			}
+			if (users.some(user => user === currentUser?._id)) {
+				userReactionsSet.add(emojiName);
+			}
+		});
+
+		setUserReactions(userReactionsSet);
+	}, [reactions]);
+
+	useEffect(() => {
+		if (message.replyTo) {
+			const replyMessage = document.querySelector(`.message[data-message-id="${message.replyTo}"]`);
+			if (replyMessage) {
+				setReplyToMessage(replyMessage);
+			}
+		}
+	}, [message.replyTo]);
+
+	const scrollToReplyTo = () => {
+		replyToMessage?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+		if (replyToMessage) {
+			replyToMessage.classList.add('bg-primary/30', 'duration-500');
+			setTimeout(() => {
+				replyToMessage.classList.remove('bg-primary/30');
+			}, 500);
+		}
+	};
+
+	const handleAddReaction = async (emojiName: string) => {
+		await fetch(`${PUBLIC_API_URL}/msg/${message._id}/reaction/${emojiName}`, { method: 'POST', credentials: 'include' })
+			.then(res => res.json())
+			.then(data => {
+				if (data.success) {
+					// well nothing
+				} else {
+					toast({ title: 'Failed to add reaction', description: data.error, variant: 'destructive' });
+				}
+			});
+
+		const currentUser = activeUser; // current user
+
+		setReactions(prevReactions => {
+			const newReactions = new Map(prevReactions);
+			const reactionUsers = newReactions.get(emojiName) || [];
+			const hasReacted = reactionUsers.some(user => user === currentUser?._id);
+
+			if (hasReacted) {
+				// User is removing their reaction
+				const updatedUsers = reactionUsers.filter(user => user !== currentUser?._id);
+				if (updatedUsers.length === 0) {
+					newReactions.delete(emojiName);
+				} else {
+					newReactions.set(emojiName, updatedUsers);
+				}
+				setUserReactions(prev => {
+					const newUserReactions = new Set(prev);
+					newUserReactions.delete(emojiName);
+					return newUserReactions;
+				});
+			} else {
+				// User is adding a reaction
+				if (currentUser) {
+					newReactions.set(emojiName, [...reactionUsers, currentUser._id]);
+				}
+				setUserReactions(prev => {
+					const newUserReactions = new Set(prev);
+					newUserReactions.add(emojiName);
+					return newUserReactions;
+				});
+			}
+
+			return newReactions;
 		});
 
 		if (!messageRef.current) return;
 		messageRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 	};
 
-	const date = new Date(Date.now() + Math.random() * 10000000000).toLocaleTimeString();
+	//* Check if the next message is inline
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const nextElem = messageRef.current?.parentElement?.nextElementSibling?.children[0];
+			if (nextElem) {
+				const inline = nextElem.hasAttribute('data-message-type') && nextElem.getAttribute('data-message-type') === 'inline';
+				setIsNextInline(inline);
+				clearInterval(interval);
+			}
+		}, 10);
+
+		return () => clearInterval(interval);
+	}, []);
 
 	return (
-		<TooltipProvider delayDuration={50}>
-			<Tooltip>
+		<TooltipProvider>
+			<Tooltip delayDuration={50}>
 				<TooltipTrigger asChild>
-					<div
-						className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors', {
-							'bg-primary/20 hover:bg-primary/15': isHighlighted,
-							'hover:bg-secondary/50': !isHighlighted,
-							'my-1 p-2 items-start': variant === 'default',
-							'!pb-0 !mb-0':
-								messageRef.current?.nextElementSibling?.hasAttribute('data-message-type') &&
-								messageRef.current?.nextElementSibling?.getAttribute('data-message-type') === 'inline',
-							'px-2 items-center': variant === 'inline',
-						})}
-						ref={messageRef}
-						data-message-id={messageId}
-						data-message-type={variant}>
+					<div className=''>
+						{variant !== 'inline' && <Separator orientation='horizontal' className='mt-2'></Separator>}
+						{message.replyTo && (
+							<div className='reply-to-header cursor-pointer w-max flex items-center h-4 pl-6 gap-x-1 group mt-1' onClick={scrollToReplyTo}>
+								<span className='reply-spine'></span>
+								{replyToMessage ? (
+									<>
+										<div className='text-xs text-muted-foreground font-bold group-hover:text-foreground transition flex'>
+											{replyToMessage?.getAttribute('data-message-username')}
+											<span>:</span>
+										</div>
+										<div className='text-xs text-muted-foreground group-hover:text-foreground transition'>
+											{replyToMessage?.querySelector('.msg-content')?.textContent?.substring(0, 40)}
+										</div>
+									</>
+								) : (
+									<div className='text-xs text-muted-foreground font-bold group-hover:text-foreground transition flex'>
+										MESSAGE NOT LOADED
+									</div>
+								)}
+							</div>
+						)}
 						<div
-							className='avatar cursor-pointer'
-							onClick={() => {
-								setProfileOpen(true);
-							}}>
-							<CustomAvatar user={User} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
-						</div>
+							className={cn('message flex gap-x-4 rounded-lg first:mt-0 transition-colors animate-fade-in animate-duration-300', {
+								'bg-primary/20 hover:bg-primary/15': isHighlighted,
+								'hover:bg-secondary/50': !isHighlighted,
+								'my-1 p-2 items-start': variant === 'default',
+								'!pb-0 !mb-0': isNextInline,
+								'px-2 items-center': variant === 'inline',
+							})}
+							ref={messageRef}
+							data-message-id={message._id}
+							data-message-type={variant}
+							data-message-username={message.author.username}>
+							<div
+								className='avatar cursor-pointer'
+								onClick={() => {
+									setProfileOpen(true);
+								}}>
+								{message.author && (
+									<UserAvatar userId={message.author._id} className={variant === 'inline' ? 'invisible max-h-0' : undefined} />
+								)}
+							</div>
 
-						<div className='content flex flex-col w-full'>
-							<div className={cn('info flex', { hidden: variant === 'inline' })}>
-								<div className='username'>
-									<UserProfile user={User} isOpen={isProfileOpen} openChange={setProfileOpen}>
-										<Button variant='link' className='text-base p-0 m-0 h-auto text-[#55d38e]'>
-											@plop
-										</Button>
-									</UserProfile>
+							<div className='content flex flex-col w-full overflow-hidden'>
+								{variant !== 'inline' && (
+									<div className={cn('info flex')}>
+										<div className='username'>
+											<UserProfile userId={message.author._id} isOpen={isProfileOpen} openChange={setProfileOpen}>
+												<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: message.author.accentColour }}>
+													@{message.author.username}
+												</Button>
+											</UserProfile>
+										</div>
+									</div>
+								)}
+								<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden msg-content'>{message.content}</div>
+
+								<div className={cn('reactions flex gap-x-1', reactions.size > 0 ? 'my-1' : '')}>
+									{Array.from(reactions).map(([emojiName, users], index) => (
+										<EmojiReaction
+											key={index}
+											messageVariant={variant}
+											emojiName={emojiName}
+											users={users}
+											isActive={userReactions.has(emojiName)}
+											onToggle={() => handleAddReaction(emojiName)}
+										/>
+									))}
 								</div>
 							</div>
-							<div className='text'>hey guys first message</div>
 
-							<div className='reactions flex gap-x-2 mt-1'>
-								{reactions.map((reaction, index) => (
-									<EmojiReaction key={index} messageVariant={variant} emojiName={reaction.emojiName} count={reaction.count} />
-								))}
+							<div className={cn('dates flex gap-x-8 flex-1 items-end flex-col', { hidden: variant === 'inline' })}>
+								<div className=''>{new Date(message.sent).toLocaleTimeString()}</div>
+								<div className='text-xs text-muted-foreground'>{new Date(message.sent).toLocaleDateString()}</div>
 							</div>
-						</div>
-
-						<div className={cn('dates flex gap-x-8 flex-1 items-end flex-col', { hidden: variant === 'inline' })}>
-							<div className='sent'>{date}</div>
-							<div className='expiry text-xs text-red-900'>{date}</div>
 						</div>
 					</div>
 				</TooltipTrigger>
@@ -231,7 +385,7 @@ export function Message({
 					onMouseLeave={() => messageRef.current?.classList.remove('bg-secondary/50')}>
 					<div className='flex gap-x-1'>
 						<ReactionPicker onEmojiClick={handleAddReaction} />
-						<OptionsButton variant='outline' messageId={messageId} onClick={() => onReplyClick?.(messageId)}>
+						<OptionsButton variant='outline' messageId={message._id} onClick={() => onReplyClick?.(message._id)}>
 							<Reply />
 						</OptionsButton>
 
@@ -241,7 +395,7 @@ export function Message({
 							<Copy></Copy>
 						</OptionsButton>
 
-						<OptionsButton variant='destructive'>
+						<OptionsButton variant='destructive' onClick={() => handleDeleteMessage(message._id)}>
 							<Trash2></Trash2>
 						</OptionsButton>
 					</div>

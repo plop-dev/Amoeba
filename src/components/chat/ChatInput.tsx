@@ -1,18 +1,100 @@
 import { v4 as uuidv4 } from 'uuid';
-
 import { Input } from '@/components/ui/input';
 import { Upload, SendHorizonal, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { useStore } from '@nanostores/react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { UploadedFile } from '@/components/chat/UploadedFile';
+import { cn } from '@/lib/utils';
+import '@/styles/animations.css';
+import { activeUser as activeUserStore } from '@/stores/User';
+import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 
-export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | null; onClearReply?: () => void }) {
+export function ChatInput({
+	replyingTo,
+	setReplyingTo,
+	onClearReply,
+	handleSendMessage,
+	activeChannel,
+	editorRef,
+}: {
+	replyingTo?: string | null;
+	setReplyingTo: React.Dispatch<React.SetStateAction<string | null>>;
+	onClearReply?: () => void;
+	handleSendMessage: (message: MessageToSend) => void;
+	activeChannel?: Channel | null;
+	editorRef: React.RefObject<HTMLDivElement | null>;
+}) {
 	const { toast } = useToast();
 	const [files, setFiles] = useState<{ id: string; file: File }[]>([]);
 	const [previews, setPreviews] = useState<FilePreview[]>([]);
+	const [closingReply, setClosingReply] = useState(false);
+	const [containerHeight, setContainerHeight] = useState('auto');
+	const [messageContent, setMessageContent] = useState('');
+
+	const activeUser = useStore(activeUserStore);
+	const activeWorkspace = useStore(activeWorkspaceStore);
+
+	// Refs for measuring height
+	const typingIndicatorRef = useRef<HTMLDivElement>(null);
+	const replyContainerRef = useRef<HTMLDivElement>(null);
+
+	const messageContentRef = useRef<HTMLInputElement>(null);
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const handleInputKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+		if (e.key === 'Enter') {
+			if (!e.shiftKey) {
+				e.preventDefault();
+
+				if (messageContent.trim()) {
+					handleSend();
+					setMessageContent('');
+					if (editorRef.current) {
+						editorRef.current.innerHTML = '&#8203;';
+
+						// Place cursor at the beginning
+						const selection = window.getSelection();
+						const range = document.createRange();
+						if (selection && editorRef.current.firstChild) {
+							range.setStart(editorRef.current.firstChild, 0);
+							range.collapse(true);
+							selection.removeAllRanges();
+							selection.addRange(range);
+						}
+					}
+				}
+			}
+		}
+	};
+
+	const handleContentChange = () => {
+		if (editorRef.current) {
+			setMessageContent(editorRef.current.innerText.replace('&#8203;', '\n').trim());
+		}
+	};
+
+	useEffect(() => {
+		if (editorRef.current) editorRef.current.innerHTML = '&#8203;';
+		editorRef.current?.focus();
+	}, []);
+
+	// Handle container height transitions
+	useEffect(() => {
+		if (replyingTo && !closingReply) {
+			// Sum of both heights when replying
+			const height = (typingIndicatorRef.current?.offsetHeight || 0) + (replyContainerRef.current?.offsetHeight || 0);
+			setContainerHeight(`${height}px`);
+		} else if (closingReply) {
+			// Just typing indicator height when closing reply
+			setContainerHeight(`${typingIndicatorRef.current?.offsetHeight || 0}px`);
+		} else {
+			// Just typing indicator in normal state
+			setContainerHeight(`${typingIndicatorRef.current?.offsetHeight || 0}px`);
+		}
+	}, [replyingTo, closingReply]);
 
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const input = event.target;
@@ -29,7 +111,7 @@ export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | 
 				setPreviews(prevPreviews => [
 					...prevPreviews,
 					{
-						id,
+						_id: id,
 						src: e.target?.result as string,
 						name: file.name,
 						extension: file.name.split('.').pop() as string,
@@ -47,11 +129,53 @@ export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | 
 
 	const handleDeleteFile = (id: string) => {
 		setFiles(prevFiles => prevFiles.filter(file => file.id !== id));
-		setPreviews(prevPreviews => prevPreviews.filter(preview => preview.id !== id));
+		setPreviews(prevPreviews => prevPreviews.filter(preview => preview._id !== id));
+	};
+
+	const handleClearReply = () => {
+		setClosingReply(true);
+		setTimeout(() => {
+			setClosingReply(false);
+			onClearReply?.();
+		}, 300);
 	};
 
 	const handleSend = () => {
-		console.log('send');
+		if (activeUser) {
+			if (activeWorkspace && activeChannel && messageContent.trim() !== '') {
+				const messageData: MessageToSend = {
+					author: activeUser,
+					channelId: activeChannel._id,
+					content: messageContent,
+					sent: new Date(),
+					workspaceId: activeWorkspace._id,
+					reactions: new Map<string, User['_id'][]>(),
+					replyTo: replyingTo || undefined,
+				};
+
+				handleSendMessage(messageData);
+				setMessageContent('');
+				messageContentRef.current?.focus();
+
+				setReplyingTo(null);
+				setClosingReply(false);
+
+				if (messageContentRef.current) {
+					messageContentRef.current.value = '';
+				}
+			} else {
+				console.error('Error: activeUser, activeWorkspace or activeChannel is not defined');
+				console.error('activeUser:', activeUser);
+				console.error('activeWorkspace:', activeWorkspace);
+				console.error('activeChannel:', activeChannel);
+			}
+		} else {
+			toast({
+				title: 'Error',
+				description: 'You must be logged in to send a message',
+				variant: 'destructive',
+			});
+		}
 	};
 
 	return (
@@ -64,24 +188,74 @@ export function ChatInput({ replyingTo, onClearReply }: { replyingTo?: string | 
 				</div>
 			)}
 
-			{replyingTo && (
-				<div className='replying-to flex items-center gap-2 p-2 text-sm bg-muted'>
-					<span>Replying to {document.querySelector(`.message[data-message-id="${replyingTo}"]`)?.querySelector('.username')?.textContent}</span>
-					<X className='cursor-pointer' onClick={onClearReply} />
+			<div className='input-container grid gap-x-4 grid-cols-[100fr_1fr_5fr] grid-rows-1 align-bottom'>
+				<div className=''>
+					<div className='animated-container overflow-hidden transition-all duration-100' style={{ height: containerHeight }}>
+						{false && (
+							<div
+								ref={typingIndicatorRef}
+								className={cn(
+									'typing-indicator sticky top-0 z-40 bg-background h-10 flex items-center gap-2 p-2 text-sm border-2 border-b-0 rounded-b-none rounded-lg',
+								)}>
+								<span className='font-bold'>plop</span>
+								<span>is typing</span>
+								<div className='flex items-center'>
+									<span className='dot-anim'>•</span>
+									<span className='dot-anim'>•</span>
+									<span className='dot-anim'>•</span>
+								</div>
+							</div>
+						)}
+
+						{(replyingTo || closingReply) && (
+							<div
+								ref={replyContainerRef}
+								className={cn(
+									'replying-to h-10 w-full flex items-center gap-2 p-2 z-0 relative text-sm border-2 border-b-0 rounded-b-none rounded-lg transition-all duration-100 transform',
+									closingReply ? 'animate-slideOutDown' : 'animate-slideInUp',
+								)}>
+								<span className='flex justify-start'>
+									Replying to{' '}
+									{document
+										.querySelector(`.message[data-message-id="${replyingTo}"]`)
+										?.getAttribute('data-message-username')
+										?.split(' ')[0] || 'Unknown'}
+								</span>
+								<div className='flex justify-end ml-auto'>
+									<X className='cursor-pointer opacity-80' onClick={handleClearReply} />
+								</div>
+							</div>
+						)}
+					</div>
+
+					<div
+						ref={editorRef}
+						contentEditable
+						onKeyDown={handleInputKeyDown}
+						onInput={handleContentChange}
+						aria-placeholder={`Message ${activeChannel?.name}`}
+						className={cn(
+							`py-[14px] z-50 relative bg-background flex w-full rounded-md border border-input px-3 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm`,
+							`break-words whitespace-break-spaces`,
+							{
+								'relative after:content-[attr(aria-placeholder)] after:text-muted-foreground after:absolute after:top-1/2 after:left-3 after:-translate-y-1/2 cursor-text':
+									editorRef.current?.innerText.length === 1,
+							},
+						)}
+					/>
 				</div>
-			)}
 
-			<div className='input-container grid gap-x-4 grid-cols-[100fr_1fr_5fr] grid-rows-1'>
-				<Input placeholder='Type message' type='text' className='py-6' />
-
-				<input type='file' id='uploadFile' className='hidden' ref={fileInputRef} multiple onChange={handleFileChange} />
-				<label htmlFor='uploadFile' className={buttonVariants({ variant: 'outline', size: 'icon' }) + ' p-6 cursor-pointer'}>
-					<Upload />
-				</label>
-
-				<Button size='icon' className='p-6' onClick={handleSend}>
-					<SendHorizonal />
-				</Button>
+				<div className='flex items-end'>
+					<input type='file' id='uploadFile' className='hidden' ref={fileInputRef} multiple onChange={handleFileChange} />
+					<label htmlFor='uploadFile' className={buttonVariants({ variant: 'outline', size: 'icon' }) + ' p-6 cursor-pointer'}>
+						<Upload />
+					</label>
+				</div>
+				<div className='flex items-end'>
+					<Button size='icon' className='p-6' onClick={handleSend}>
+						<SendHorizonal />
+					</Button>
+				</div>
 			</div>
 		</>
 	);

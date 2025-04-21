@@ -1,0 +1,51 @@
+---
+import { ActiveUsers } from '@/components/ActiveUsers';
+import DashboardLayout from '@/layouts/DashboardLayout.astro';
+import { activeWorkspace } from '@/stores/Workspace';
+
+const workspaceTitle = activeWorkspace.get()?.name;
+---
+
+<DashboardLayout title='Home'>
+	<h1 class='text-2xl'>Dashboard Home</h1>
+
+	<div class='grid'>
+		<div class='users flex flex-col gap-4'>
+			<ActiveUsers workspaceTitle={workspaceTitle || 'Workspace'} client:only='react' />
+		</div>
+	</div>
+</DashboardLayout>
+
+<style>
+	.scroll-area-dynamic {
+		height: calc(100vh - 12rem); /* Subtract space for header and margins */
+		max-height: calc(100vh - 2rem); /* Prevent overflow */
+	}
+</style>
+
+<script>
+	const scrollArea = document.querySelector('.users-online') as HTMLElement;
+
+	if (scrollArea) {
+		scrollArea.classList.add('scroll-area-dynamic');
+
+		let resizeTimeout: number;
+		const MIN_HEIGHT = 300;
+		const BOTTOM_MARGIN = 20;
+
+		const adjustHeight = () => {
+			if (resizeTimeout) {
+				cancelAnimationFrame(resizeTimeout);
+			}
+
+			resizeTimeout = requestAnimationFrame(() => {
+				const viewportHeight = window.innerHeight;
+				const top = scrollArea.getBoundingClientRect().top;
+				scrollArea.style.height = `${Math.max(MIN_HEIGHT, viewportHeight - top - BOTTOM_MARGIN)}px`;
+			});
+		};
+
+		adjustHeight();
+		window.addEventListener('resize', adjustHeight);
+	}
+</script>

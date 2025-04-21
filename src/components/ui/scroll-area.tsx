@@ -5,8 +5,10 @@ import { cn } from '@/lib/utils';
 
 const ScrollArea = React.forwardRef<React.ElementRef<typeof ScrollAreaPrimitive.Root>, React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>>(
 	({ className, children, ...props }, ref) => (
-		<ScrollAreaPrimitive.Root ref={ref} className={cn('relative', className)} {...props}>
-			<ScrollAreaPrimitive.Viewport className='h-full w-full rounded-[inherit]'>{children}</ScrollAreaPrimitive.Viewport>
+		<ScrollAreaPrimitive.Root className={cn('flex flex-col relative overflow-hidden', className)}>
+			<ScrollAreaPrimitive.Viewport ref={ref} className='flex-grow w-full rounded-[inherit]' {...props}>
+				{children}
+			</ScrollAreaPrimitive.Viewport>
 			<ScrollBar />
 			<ScrollAreaPrimitive.Corner />
 		</ScrollAreaPrimitive.Root>

@@ -6,7 +6,10 @@ import { CurlyBraces, Lock, User, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CustomInputOTS } from '@/components/custom/CustomInputOTS';
 import { LoginTimeline } from '@/components/auth/LoginTimeline';
-import { VerificationDialog } from '@/components/auth/VerificationDialog';
+import { Loader2 } from 'lucide-react';
+// Add Toast imports
+import { ToastProvider, ToastViewport } from '@/components/ui/toast';
+import { Input } from '@/components/ui/input';
 
 const { APPNAME } = import.meta.env;
 ---
@@ -28,7 +31,7 @@ const { APPNAME } = import.meta.env;
 		</div>
 
 		<div class='' id='login-timeline'>
-			<LoginTimeline className='w-[28rem] mx-0' client:load />
+			<LoginTimeline className='w-[36rem] mx-0' client:only='react' />
 		</div>
 
 		<div class='w-[28rem] flex gap-x-8 overflow-hidden' id='login-wrapper'>
@@ -37,7 +40,7 @@ const { APPNAME } = import.meta.env;
 					<div class='flex flex-col gap-6'>
 						<div class='flex flex-col gap-6'>
 							<div class='grid gap-2'>
-								<FileUpload client:load />
+								<FileUpload id='login-key' client:load />
 							</div>
 							<Button type='submit' className='w-full'>Continue</Button>
 						</div>
@@ -52,6 +55,17 @@ const { APPNAME } = import.meta.env;
 			</div>
 
 			<div class='min-w-[28rem] w-[28rem]'>
+				<div id='check-key' class='flex items-center justify-center flex-col gap-4 p-4'>
+					<Input type='text' placeholder='Your Account ID' id='login-account-id' client:load />
+
+					<Loader2 className='animate-spin hidden' id='key-check-loading' />
+					<h1 class='text-muted-foreground' id='key-check-header'></h1>
+
+					<Button variant={'default'} type='submit' className='w-full'>Login</Button>
+				</div>
+			</div>
+
+			<div class='min-w-[28rem] w-[28rem]'>
 				<form id='login-otp'>
 					<div class='flex flex-col gap-6'>
 						<div class='flex flex-col gap-2 items-center'>
@@ -59,7 +73,7 @@ const { APPNAME } = import.meta.env;
 							<CustomInputOTS groups={[3, 3]} pattern='[0-9]*' client:only='react' />
 						</div>
 						<div class='flex gap-2 justify-center'>
-							<Button variant='outline' className='w-full' id='to-login-key'>Back</Button>
+							<Button variant='outline' className='w-full timeline-back' id='to-key-login'>Back</Button>
 							<Button type='submit' className='w-full'>Verify</Button>
 						</div>
 					</div>
@@ -68,50 +82,350 @@ const { APPNAME } = import.meta.env;
 					</div>
 				</form>
 			</div>
-			<VerificationDialog client:load />
+
+			<div class='min-w-[28rem] w-[28rem]'>
+				<div id='check-key' class='grid place-items-center'>
+					<h1 class='text-success text-lg'>Verified</h1>
+					<p class='text-muted-foreground text-sm'>You have successfully been logged in and verified.</p>
+
+					<div class='flex flex-col items-center justify-center p-6'>
+						<div class={`relative w-24 h-24`}>
+							<video src='/media/tickanim.webm' muted autoplay></video>
+						</div>
+					</div>
+
+					<Button variant={'default'} size={'lg'}><a href='#' id='proceed-to-dashboard'> Proceed to Dashboard </a></Button>
+				</div>
+			</div>
 		</div>
 	</div>
+	<div class='absolute bottom-4 right-4' id='alert-container'></div>
 </AuthLayout>
 
 <script>
 	import { updateStepStatus } from '@/stores/LoginTimelineStore';
-	import { updateIsOpenState } from '@/stores/VerificationDialogStore';
+	import { keyCheckProgressStore, nextStep, previousStep } from '@/stores/KeyCheckProgress';
+	import { remToPixels } from '@/utils/remToPixels';
+	import { EventSource } from 'eventsource';
+	import { challenge, setChallenge, publicKey, setPublicKey, keyInput, userId, setUserId } from '@/stores/Auth';
+	import { arrayBufferToBase64 } from '@/utils/arrayToBase64';
+	import { pemToArrayBuffer } from '@/utils/pemToArrayBuffer';
+	import { convertPkcs1ToSpki } from '@/utils/rsaKeyConverter';
+	import { createRoot } from 'react-dom/client';
+	import { toast } from '@/hooks/use-toast';
+	import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from '@/components/ui/toast';
+	import * as React from 'react';
+	import { setActiveUser } from '@/stores/User';
+	import { PUBLIC_API_URL } from 'astro:env/client';
 
 	const wrapper = document.getElementById('login-wrapper');
 	const formKey = document.getElementById('login-key');
 	const formOTP = document.getElementById('login-otp');
-	let currentStep = 0;
-	let totalSteps = 3;
+	const checkKeyContainer = document.getElementById('check-key');
+	const keyCheckHeader = document.getElementById('key-check-header');
+	const keyCheckLoading = document.getElementById('key-check-loading');
+	const accountIdInput = document.getElementById('login-account-id') as HTMLInputElement;
+	const alertContainer = document.getElementById('alert-container');
+
+	const keyCheckSource = new EventSource(`${PUBLIC_API_URL}/auth/key-check-events`);
+
+	document.getElementById('proceed-to-dashboard')?.addEventListener('click', e => {
+		keyCheckSource.close();
+	});
+
+	async function fetchChallenge() {
+		updateKeyCheckHeader('Generating challenge...');
+		const res = await fetch(`${PUBLIC_API_URL}/auth/challenge`);
+		const data = await res.json();
+		setChallenge(data.challenge);
+		setPublicKey(data.publicKey);
+	}
+
+	async function computeHMAC(key: string, message: string): Promise<string> {
+		const enc = new TextEncoder();
+		const keyData = enc.encode(key);
+		const cryptoKey = await window.crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+		const signature = await window.crypto.subtle.sign('HMAC', cryptoKey, enc.encode(message));
+		const byteArray = new Uint8Array(signature);
+		return Array.from(byteArray)
+			.map(b => b.toString(16).padStart(2, '0'))
+			.join('');
+	}
+
+	// Encrypt the AES key using RSA-OAEP with the Web Crypto API.
+	async function encryptAesKey(aesKeyRaw: ArrayBuffer, pemPublicKey: string): Promise<string> {
+		try {
+			const spkiKey = convertPkcs1ToSpki(pemPublicKey);
+			const publicKeyBuffer = pemToArrayBuffer(spkiKey);
+
+			// Try to import the key with better error handling
+			try {
+				const importedKey = await window.crypto.subtle.importKey(
+					'spki',
+					publicKeyBuffer,
+					{
+						name: 'RSA-OAEP',
+						hash: 'SHA-256',
+					},
+					false,
+					['encrypt'],
+				);
+
+				const encrypted = await window.crypto.subtle.encrypt({ name: 'RSA-OAEP' }, importedKey, aesKeyRaw);
+				return arrayBufferToBase64(encrypted);
+			} catch (cryptoError: any) {
+				console.error('Crypto operation error:', cryptoError);
+				console.debug('Public key buffer size:', publicKeyBuffer.byteLength);
+				throw new Error(`Crypto operation failed: ${cryptoError.message}`);
+			}
+		} catch (error) {
+			console.error('Error in encryptAesKey:', error);
+			throw error;
+		}
+	}
+
+	async function handleLogin() {
+		try {
+			// Ensure challenge and public key are available.
+			if (!challenge.get() || !publicKey.get()) {
+				await fetchChallenge();
+			}
+
+			const rawKey = keyInput.get(); // 10KB key file content as text
+			if (!rawKey) {
+				return false;
+			}
+
+			// --- Generate a random AES key (256-bit) ---
+			const aesKey = await window.crypto.subtle.generateKey(
+				{ name: 'AES-CBC', length: 256 },
+				true, // extractable
+				['encrypt', 'decrypt'],
+			);
+			// Export the AES key as raw bytes.
+			const aesKeyRaw = await window.crypto.subtle.exportKey('raw', aesKey);
+
+			// --- Generate a random IV (16 bytes for AES-CBC) ---
+			const ivBuffer = window.crypto.getRandomValues(new Uint8Array(16));
+
+			// --- Encrypt the key file using AES-CBC ---
+			const enc = new TextEncoder();
+			const encryptedFileBuffer = await window.crypto.subtle.encrypt({ name: 'AES-CBC', iv: ivBuffer }, aesKey, enc.encode(rawKey));
+
+			// Convert encrypted file, IV, and AES key to base64 strings.
+			const encryptedFile = arrayBufferToBase64(encryptedFileBuffer);
+			const iv = arrayBufferToBase64(ivBuffer.buffer);
+
+			// --- Encrypt the AES key using RSA-OAEP ---
+			const encryptedAesKey = await encryptAesKey(aesKeyRaw, publicKey.get());
+
+			// --- Compute the challenge response using the raw key file ---
+			const response = await computeHMAC(rawKey, challenge.get());
+
+			// --- Send the payload to the server ---
+			updateKeyCheckHeader('Sending encrypted key file...');
+			const res = await fetch(`${PUBLIC_API_URL}/auth/login`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ encryptedAesKey, encryptedFile, iv, response, accountId: accountIdInput.value }),
+				credentials: 'include',
+			});
+			const result = await res.json();
+			if (result.success) {
+				return true;
+			} else {
+				console.error(`Login failed: ${result.error}`);
+				return false;
+			}
+		} catch (error: any) {
+			console.error('Error in handleLogin:', error);
+			toast({
+				variant: 'destructive',
+				title: 'Login failed',
+				description: error.message,
+			});
+			return false;
+		}
+	}
+
+	//#region Login Store
+
+	// Initialize React root for Toast container
+	let toastRoot;
+	if (alertContainer) {
+		toastRoot = createRoot(alertContainer);
+		// Render the toast provider and viewport
+		toastRoot.render(React.createElement(ToastProvider, {}, React.createElement(ToastViewport, {})));
+	}
+
+	let currentLoginStep = 0;
+	let totalLoginSteps = 4;
 
 	const updateStep = (step: number) => {
-		currentStep = step;
+		currentLoginStep = step;
 		if (step > 0) {
 			updateStepStatus(step, 'complete');
 		} else {
-			for (let i = 1; i <= totalSteps; i++) {
+			for (let i = 1; i <= totalLoginSteps; i++) {
 				updateStepStatus(i, 'upcoming');
 			}
 		}
 
 		updateStepStatus(step + 1, 'current');
+		wrapper?.scrollTo({ left: ((wrapper?.scrollWidth + remToPixels(2)) / totalLoginSteps) * currentLoginStep, behavior: 'smooth' });
 	};
 
-	document.getElementById('to-login-key')?.addEventListener('click', e => {
-		e.preventDefault();
-		wrapper?.scrollTo({ left: 0, behavior: 'smooth' });
-		updateStep(0);
+	document.querySelectorAll('.timeline-back')?.forEach(btn => {
+		btn.addEventListener('click', e => {
+			e.preventDefault();
+
+			if (btn.id === 'to-key-login') updateStep(0);
+			else updateStep(currentLoginStep - 1);
+		});
 	});
 
-	formKey?.addEventListener('submit', e => {
+	function updateKeyCheckHeader(message: string, loading: boolean = true, success: boolean = false) {
+		if (keyCheckHeader) keyCheckHeader.textContent = message;
+		if (!loading) {
+			keyCheckLoading?.classList.add('hidden');
+		} else {
+			keyCheckLoading?.classList.remove('hidden');
+		}
+		if (success) {
+			const tick = document.createElement('svg');
+			tick.id = 'key-check-tick';
+			tick.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
+			keyCheckLoading?.insertAdjacentElement('afterend', tick);
+		} else {
+			const tick = document.getElementById('key-check-tick');
+			if (tick) tick.remove();
+		}
+	}
+
+	formKey?.addEventListener('submit', async e => {
 		e.preventDefault();
-		wrapper?.scrollTo({ left: wrapper?.scrollWidth, behavior: 'smooth' });
+
+		if (!keyInput.get()) {
+			// Show toast for no key file selected
+			toast({
+				variant: 'destructive',
+				title: 'No key file selected',
+				description: 'Please select a valid key file to continue',
+			});
+			return;
+		}
+
 		updateStep(1);
+	});
+
+	checkKeyContainer?.querySelector('button')?.addEventListener('click', async e => {
+		e.preventDefault();
+
+		if (accountIdInput.value.trim() === '') {
+			toast({
+				variant: 'destructive',
+				title: 'No account ID',
+				description: 'Please enter your account ID to continue',
+			});
+			return;
+		}
+
+		updateKeyCheckHeader('Processing...', true);
+
+		handleLogin().then(async res => {
+			if (res) {
+				updateKeyCheckHeader('Key file verified successfully', false, true);
+				setUserId(accountIdInput.value);
+				const userRes = await fetch(`${PUBLIC_API_URL}/user/${userId.get()}`, { credentials: 'include' });
+
+				userRes
+					.json()
+					.then(async (data: User) => {
+						setActiveUser(data);
+						try {
+							const res = await fetch(`${PUBLIC_API_URL}/set-cookie`, {
+								method: 'POST',
+								credentials: 'include',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({
+									data,
+									name: 'userData',
+								}),
+							});
+							const body = await res.json();
+							if (!body.success) {
+								toast({
+									variant: 'destructive',
+									title: 'Error setting user data',
+									description: 'An error occurred while setting user data',
+								});
+								updateStep(0);
+								return;
+							}
+						} catch (err) {
+							console.error('Error setting user data:', err);
+							toast({
+								variant: 'destructive',
+								title: 'Error setting user data',
+								description: 'An error occurred while setting user data',
+							});
+						}
+
+						if (data.workspaces.length > 0) {
+							// redirect to first workspace
+							console.log('Redirecting to workspace:', `/${data.workspaces[0]}/dashboard`);
+
+							document.getElementById('proceed-to-dashboard')?.addEventListener('click', e => {
+								keyCheckSource.close();
+							});
+							document.getElementById('proceed-to-dashboard')?.setAttribute('href', `/${data.workspaces[0]}/dashboard`);
+						} else {
+							// USER HAS NO WORKSPACES. REDIRECT WHERE??
+						}
+						setTimeout(() => updateStep(2), 750);
+					})
+					.catch((err: any) => {
+						console.error('Error fetching user data:', err);
+						toast({
+							variant: 'destructive',
+							title: 'Error fetching user data',
+							description: 'An error occurred while fetching user data',
+						});
+					});
+			} else {
+				updateKeyCheckHeader('Key file verification failed', false);
+				updateStep(0);
+			}
+		});
+
+		updateKeyCheckHeader('Starting...');
 	});
 
 	formOTP?.addEventListener('submit', e => {
 		e.preventDefault();
-		console.log('OTP Submitted');
-		updateStep(2);
-		updateIsOpenState(true);
+		updateStep(3);
 	});
+
+	//#endregion
+
+	//#region Key Check Progress
+
+	keyCheckSource.addEventListener('message', e => {
+		const data: SSEMessage = JSON.parse(e.data);
+		keyCheckProgressStore.set(data.message);
+		if (keyCheckHeader) {
+			if (data.event.variant === 'error') {
+				keyCheckHeader.textContent = `${data.message}`;
+				toast({
+					variant: 'destructive',
+					title: 'Key check failed',
+					description: data.message,
+				});
+				setTimeout(() => updateStep(0), 1500);
+			}
+			keyCheckHeader.textContent = `${data.message}`;
+		}
+	});
+
+	//#endregion
 </script>
