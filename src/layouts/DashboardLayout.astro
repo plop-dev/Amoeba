@@ -73,26 +73,29 @@ const { APPNAME: appName } = import.meta.env;
 	import { activeWorkspace, setActiveWorkspace } from "@/stores/Workspace";
 	import { PUBLIC_API_URL } from 'astro:env/client'
 
-	const activeWorkspaceId = window.location.pathname.split('/')[1]
-
-	const workspace = activeWorkspace.get();
-	if (!workspace || ('error' in workspace)) {
-		const res = await fetch(`${PUBLIC_API_URL}/workspace/${activeWorkspaceId}`, {credentials: 'include'})
-		const data = await res.json()
-		setActiveWorkspace(data)
-	}
-
-	const pathSegments = window.location.pathname.split('/');
-	const channelName = pathSegments[pathSegments.length - 1];
-	const channelType = pathSegments[pathSegments.length - 2];
-
-	if (window.location.pathname.includes('home') || window.location.pathname.includes('settings')) {
-		setActiveChannel(null);
-	}
-
-	fetch(`${PUBLIC_API_URL}/channel/${channelType}/${channelName}`, { credentials: 'include' })
-		.then(res => res.json())
-		.then((data: Channel) => {
-			setActiveChannel(data);
-		});
+	document.addEventListener('astro:page-load', async () => {
+		const activeWorkspaceId = window.location.pathname.split('/')[1]
+	
+		const workspace = activeWorkspace.get();
+		if (!workspace || ('error' in workspace)) {
+			const res = await fetch(`${PUBLIC_API_URL}/workspace/${activeWorkspaceId}`, {credentials: 'include'})
+			const data = await res.json()
+			setActiveWorkspace(data)
+		}
+	
+		const pathSegments = window.location.pathname.split('/');
+		const channelName = pathSegments[pathSegments.length - 1];
+		const channelType = pathSegments[pathSegments.length - 2];
+	
+		if (window.location.pathname.includes('home') || window.location.pathname.includes('settings')) {
+			setActiveChannel(null);
+		}
+	
+		await fetch(`${PUBLIC_API_URL}/channel/${channelType}/${channelName}`, { credentials: 'include' })
+			.then(res => res.json())
+			.then((data: Channel) => {
+				console.log('Channel data:', data);
+				setActiveChannel(data);
+			});
+	})
 </script>
