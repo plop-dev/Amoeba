@@ -43,7 +43,7 @@ export default defineConfig({
 			exclude: ['lucide-react/dynamicIconImports', 'lucide-react/dynamic'],
 			// include: ['lucide-react/dynamic'],
 		},
-		...(process.env.ENV === 'dev'
+		...(process.env.ENV === 'production'
 			? {
 					ssr: {
 						noExternal: true,
