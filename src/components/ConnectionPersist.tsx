@@ -3,7 +3,7 @@ import { EventSource } from 'eventsource';
 import { activeUsers as activeUsersStore, activeUser as activeUserStore, addActiveUser, removeActiveUser, resetActiveUsers } from '@/stores/User';
 import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
-import { updateUserStatus, updateUserInActiveUsers, setupStatusListeners } from '@/utils/statusManager';
+import { updateUserStatus, updateUserInActiveUsers, setupStatusListeners, cleanupActivityTracking } from '@/utils/statusManager';
 import { PUBLIC_API_URL } from 'astro:env/client';
 
 export function ConnectionPersist() {
@@ -20,6 +20,8 @@ export function ConnectionPersist() {
 		return () => {
 			if (reconnectTimeoutRef.current) {
 				clearTimeout(reconnectTimeoutRef.current);
+				// Clean up activity tracking timers when component unmounts
+				cleanupActivityTracking();
 			}
 		};
 	}, []);

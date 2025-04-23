@@ -12,6 +12,51 @@ export const statusUpdateQueue = atom<
 	}[]
 >([]);
 
+// Inactivity timeout constants (in milliseconds)
+const AWAY_TIMEOUT = 2 * 60 * 1000; // 2 minutes
+const OFFLINE_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+
+// Timers for tracking user inactivity
+let awayTimer: number | undefined;
+let offlineTimer: number | undefined;
+let lastActivityTime = Date.now();
+
+/**
+ * Resets inactivity timers when user activity is detected
+ */
+function resetActivityTimers() {
+	// Clear existing timers
+	if (awayTimer) clearTimeout(awayTimer);
+	if (offlineTimer) clearTimeout(offlineTimer);
+
+	// Update last activity timestamp
+	lastActivityTime = Date.now();
+
+	// Get current user
+	const currentUser = activeUser.get();
+	if (!currentUser) return;
+
+	// If user was away, set them back to online
+	if (currentUser.status === 'away') {
+		updateUserStatus('online');
+	}
+
+	// Set new timers
+	awayTimer = window.setTimeout(() => {
+		const user = activeUser.get();
+		if (user && user.status === 'online') {
+			updateUserStatus('away');
+		}
+	}, AWAY_TIMEOUT);
+
+	offlineTimer = window.setTimeout(() => {
+		const user = activeUser.get();
+		if (user && (user.status === 'online' || user.status === 'away')) {
+			updateUserStatus('offline');
+		}
+	}, OFFLINE_TIMEOUT);
+}
+
 /**
  * Updates the user status both locally and on the server
  * @param newStatus - The new status to set
@@ -53,6 +98,15 @@ export async function updateUserStatus(newStatus: UserStatus): Promise<boolean> 
 			body: JSON.stringify(data),
 		});
 
+		// Reset activity timers when status is explicitly set to online
+		if (newStatus === 'online') {
+			resetActivityTimers();
+		} else if (newStatus === 'offline') {
+			// Clear timers when setting to offline
+			if (awayTimer) clearTimeout(awayTimer);
+			if (offlineTimer) clearTimeout(offlineTimer);
+		}
+
 		return response.ok;
 	} catch (error) {
 		console.error('Error updating user status:', error);
@@ -77,7 +131,7 @@ export async function fetchActiveUsers(workspaceId: string): Promise<boolean> {
 		});
 		if (!res.ok) return false;
 
-		const { activeUsers: list } = await res.json();
+		const { data: list } = await res.json();
 		// reset + repopulate store
 		const all = activeUsers.get().filter(e => e.workspaceId !== workspaceId);
 		all.push({ workspaceId, users: list });
@@ -167,6 +221,30 @@ export function updateUserInActiveUsers(userId: string, status: UserStatus, work
  * Set up listeners for page events to automatically update status
  */
 export function setupStatusListeners(): void {
+	// Set up activity tracking
+	const activityEvents = ['mousedown', 'keydown', 'mousemove', 'wheel', 'touchstart', 'touchmove', 'scroll'];
+
+	// Add event listeners for user activity
+	activityEvents.forEach(eventName => {
+		window.addEventListener(
+			eventName,
+			() => {
+				const currentUser = activeUser.get();
+				if (currentUser && (currentUser.status === 'online' || currentUser.status === 'away')) {
+					resetActivityTimers();
+				}
+			},
+			{ passive: true },
+		);
+	});
+
+	// Initialize activity timers when user is online
+	const currentUser = activeUser.get();
+	if (currentUser && currentUser.status === 'online') {
+		resetActivityTimers();
+	}
+
+	// Original event listeners
 	// Set status to away when tab/window loses focus
 	window.addEventListener('blur', () => {
 		const currentUser = activeUser.get();
@@ -185,6 +263,9 @@ export function setupStatusListeners(): void {
 
 	// Set user to offline status when leaving/closing the app
 	window.addEventListener('beforeunload', () => {
+		if (awayTimer) clearTimeout(awayTimer);
+		if (offlineTimer) clearTimeout(offlineTimer);
+
 		const currentUser = activeUser.get();
 		if (currentUser && currentUser.status !== 'offline') {
 			// Use fetch with keepalive to ensure the request completes
@@ -212,6 +293,21 @@ export function setupStatusListeners(): void {
 			if (workspace) {
 				fetchActiveUsers(workspace._id).catch(err => console.error('Failed to refresh active users on visibility change:', err));
 			}
+
+			// Reset timers when page becomes visible again
+			const currentUser = activeUser.get();
+			if (currentUser && (currentUser.status === 'online' || currentUser.status === 'away')) {
+				resetActivityTimers();
+			}
 		}
 	});
+}
+
+/**
+ * Cleans up all activity tracking timers
+ * Should be called when application is unmounted
+ */
+export function cleanupActivityTracking() {
+	if (awayTimer) clearTimeout(awayTimer);
+	if (offlineTimer) clearTimeout(offlineTimer);
 }
