@@ -340,7 +340,8 @@ const { APPNAME } = import.meta.env;
 
 				userRes
 					.json()
-					.then(async (data: User) => {
+					.then(async _data => {
+						const data = _data as User;
 						setActiveUser(data);
 						try {
 							const res = await fetch(`${PUBLIC_API_URL}/set-cookie`, {

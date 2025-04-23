@@ -247,7 +247,7 @@ function ChatPageContent() {
 					hasMore: boolean;
 				};
 				messages: Message[];
-			} = await response.json();
+			} = await response.json().then(res => res.data);
 
 			if (data.pagination.hasMore) {
 				setCursor(data.pagination.nextCursor);

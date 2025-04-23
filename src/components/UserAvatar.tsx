@@ -22,9 +22,9 @@ export default function UserAvatar({ user, userId, className, size = 8 }: Avatar
 				method: 'GET',
 				credentials: 'include',
 			})
-				.then(res => res.json())
-				.then((data: User) => {
-					setUserData(data);
+				.then(async res => await res.json())
+				.then(data => {
+					setUserData(data.data);
 				});
 		}
 	}, [userId]);

@@ -48,7 +48,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatDate } from '@/utils/formatDate';
 import { validateObjectId } from '@/utils/validateObjectId';
-import { PUBLIC_API_URL } from 'astro:env/client'
+import { PUBLIC_API_URL } from 'astro:env/client';
 
 function ChannelDialog(props: {
 	children: React.ReactNode;

@@ -18,7 +18,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 					},
 					credentials: 'include',
 				});
-				data = await res.json();
+				data = await res.json().then(res => res.data);
 				console.log('Middleware response:', data);
 			} catch (error) {
 				// In case of a network error, redirect to login.
@@ -26,8 +26,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
 			}
 
 			if (data.success) {
-				console.log('User authenticated:', data.userId);
-				context.locals.userId = data.userId;
+				console.log('User authenticated:', data);
+				context.locals.userId = data;
 
 				// check if user was already going somewhere in the dashboard
 				if (context.url.pathname.includes('dashboard')) {

@@ -35,7 +35,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 			fetch(`${PUBLIC_API_URL}/workspaces/${activeUser._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
-					setWorkspaces(data);
+					setWorkspaces(data.data);
 				})
 				.catch(err => {
 					console.error(err);
@@ -49,7 +49,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 			fetch(`${PUBLIC_API_URL}/channels/${activeWorkspace._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
-					setChannels(data);
+					setChannels(data.data);
 				})
 				.catch(err => {
 					console.error(err);
@@ -63,7 +63,7 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 			fetch(`${PUBLIC_API_URL}/categories/${activeWorkspace._id}`, { credentials: 'include' })
 				.then(res => res.json())
 				.then(data => {
-					setDBCategories(data);
+					setDBCategories(data.data);
 				})
 				.catch(err => {
 					console.error(err);
@@ -78,7 +78,6 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 		});
 		return null;
 	}
-
 	useEffect(() => {
 		setNavData({
 			user: activeUser,

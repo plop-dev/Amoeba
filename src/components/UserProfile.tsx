@@ -47,9 +47,9 @@ export function UserProfile({
 				method: 'GET',
 				credentials: 'include',
 			})
-				.then(res => res.json())
-				.then((data: User) => {
-					setFetchedUser(data);
+				.then(async res => await res.json())
+				.then(data => {
+					setFetchedUser(data.data);
 				})
 				.catch(error => {
 					console.error('Error fetching user:', error);

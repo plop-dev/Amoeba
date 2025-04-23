@@ -115,7 +115,7 @@ const { APPNAME: appName } = import.meta.env;
 		if (!workspace || ('error' in workspace)) {
 			const res = await fetch(`${PUBLIC_API_URL}/workspace/${activeWorkspaceId}`, {credentials: 'include'})
 			const data = await res.json()
-			setActiveWorkspace(data)
+			setActiveWorkspace(data.data)
 		}
 		
 		// Update the active channel
