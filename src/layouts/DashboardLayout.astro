@@ -73,6 +73,41 @@ const { APPNAME: appName } = import.meta.env;
 	import { activeWorkspace, setActiveWorkspace } from "@/stores/Workspace";
 	import { PUBLIC_API_URL } from 'astro:env/client'
 
+	// Function to fetch and set the active channel
+	async function updateActiveChannel() {
+		const pathSegments = window.location.pathname.split('/');
+		const channelName = pathSegments[pathSegments.length - 1];
+		const channelType = pathSegments[pathSegments.length - 2];
+
+		// Clear the channel when not in a channel view
+		if (window.location.pathname.includes('home') || window.location.pathname.includes('settings')) {
+			console.log('Not in a channel view, clearing active channel');
+			setActiveChannel(null);
+			return;
+		}
+
+		try {
+			console.log(`Fetching channel data for ${channelType}/${channelName}`);
+			const res = await fetch(`${PUBLIC_API_URL}/channel/${channelType}/${channelName}`, { credentials: 'include' });
+			
+			if (!res.ok) {
+				console.error('Failed to fetch channel data:', res.statusText);
+				return;
+			}
+			
+			const data = await res.json();
+			console.log('Setting active channel:', data);
+			
+			// Clear first, then set after a small delay to ensure reset takes effect
+			setActiveChannel(null);
+			setTimeout(() => {
+				setActiveChannel(data);
+			}, 10);
+		} catch (error) {
+			console.error('Error fetching channel data:', error);
+		}
+	}
+
 	document.addEventListener('astro:page-load', async () => {
 		const activeWorkspaceId = window.location.pathname.split('/')[1]
 	
@@ -82,20 +117,8 @@ const { APPNAME: appName } = import.meta.env;
 			const data = await res.json()
 			setActiveWorkspace(data)
 		}
-	
-		const pathSegments = window.location.pathname.split('/');
-		const channelName = pathSegments[pathSegments.length - 1];
-		const channelType = pathSegments[pathSegments.length - 2];
-	
-		if (window.location.pathname.includes('home') || window.location.pathname.includes('settings')) {
-			setActiveChannel(null);
-		}
-	
-		await fetch(`${PUBLIC_API_URL}/channel/${channelType}/${channelName}`, { credentials: 'include' })
-			.then(res => res.json())
-			.then((data: Channel) => {
-				console.log('Channel data:', data);
-				setActiveChannel(data);
-			});
+		
+		// Update the active channel
+		await updateActiveChannel();
 	})
 </script>

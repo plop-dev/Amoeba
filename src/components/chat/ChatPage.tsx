@@ -11,6 +11,7 @@ import { ReactQueryProvider } from '@/components/ReactQueryProvider';
 import { useToast } from '@/hooks/use-toast';
 import { activeChannel as activeChannelStore, setActiveChannel } from '@/stores/Channel';
 import { PUBLIC_API_URL } from 'astro:env/client';
+import { sleep } from '@/utils/sleep';
 
 // Updated reducer to handle optimistic updates with temp IDs and prepend older messages
 const messagesReducer = (state: Message[], action: any) => {
@@ -32,6 +33,7 @@ const messagesReducer = (state: Message[], action: any) => {
 		case 'UPDATE_MESSAGE_REACTIONS':
 			return state.map(message => (message._id === action.payload.messageId ? { ...message, reactions: action.payload.reactions } : message));
 		case 'RESET':
+			// Ensure we're truly resetting to an empty array
 			return [];
 		default:
 			return state;
@@ -47,11 +49,14 @@ function ChatPageContent() {
 	const [loading, setLoading] = useState(true);
 	const [isLoadingVisible, setIsLoadingVisible] = useState(true);
 	const [replyingTo, setReplyingTo] = useState<string | null>(null);
+	const [hasLoaded, setHasLoaded] = useState(false);
 	const [cursor, setCursor] = useState<string | null>(null);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeUser = useStore(activeUserStore);
 	const activeChannel = useStore(activeChannelStore);
 	const { toast } = useToast();
+	// Add reference to track current channel ID to prevent race conditions
+	const currentChannelIdRef = useRef<string | null>(null);
 
 	const handleReplyClick = (msgId: string) => {
 		setReplyingTo(msgId);
@@ -159,6 +164,7 @@ function ChatPageContent() {
 	//* LAZY LOAD MESSAGES
 	// Track when messageStartRef is in viewport (top of messages)
 	useEffect(() => {
+		if (!hasLoaded || !cursor || loading) return;
 		if (!messageStartRef.current) return;
 
 		const observer = new IntersectionObserver(
@@ -170,6 +176,7 @@ function ChatPageContent() {
 							const scrollContainer = messageStartRef.current?.parentElement?.parentElement;
 							const scrollPosition = scrollContainer?.scrollHeight || 0;
 
+							console.trace('Loading more messages...');
 							await fetchMessages(50, false, activeChannel);
 
 							// restore scroll position
@@ -187,17 +194,14 @@ function ChatPageContent() {
 			},
 			{ threshold: 0.5 },
 		);
-
 		const timeoutId = setTimeout(() => {
 			if (messageStartRef.current) {
 				observer.observe(messageStartRef.current);
 			}
 		}, 500);
 
-		// Cleanup observer on unmount
 		return () => {
 			clearTimeout(timeoutId);
-
 			if (messageStartRef.current) {
 				observer.unobserve(messageStartRef.current);
 			}
@@ -206,14 +210,36 @@ function ChatPageContent() {
 
 	const fetchMessages = async (limit: number = 50, initialLoad: boolean = false, activeChannelData: Channel | null): Promise<{ success: boolean }> => {
 		try {
+			// Safety check: ensure we have a valid channel
+			if (!activeChannelData?._id) {
+				console.warn('No active channel ID for fetchMessages');
+				return { success: false };
+			}
+
+			// Store the channel ID we're fetching for
+			const channelId = activeChannelData._id;
+
+			// If this doesn't match our current tracking ID, abort
+			if (currentChannelIdRef.current && channelId !== currentChannelIdRef.current) {
+				console.log(`Aborting fetch for ${channelId} - current channel is now ${currentChannelIdRef.current}`);
+				return { success: false };
+			}
+
+			console.log(`Fetching messages for channel: ${channelId}`);
 			const response = await fetch(
-				`${PUBLIC_API_URL}/msgs/${activeChannelData?._id}?` +
+				`${PUBLIC_API_URL}/msgs/${channelId}?` +
 					new URLSearchParams({
 						limit: limit.toString(),
 						...(initialLoad ? {} : { cursor: cursor || '' }),
 					}).toString(),
 				{ credentials: 'include', method: 'GET' },
 			);
+
+			// Another check after the fetch to ensure we're still on the same channel
+			if (channelId !== currentChannelIdRef.current) {
+				console.log(`Discarding fetch results - channel changed from ${channelId} to ${currentChannelIdRef.current}`);
+				return { success: false };
+			}
 
 			const data: {
 				pagination: {
@@ -227,7 +253,7 @@ function ChatPageContent() {
 				setCursor(data.pagination.nextCursor);
 			} else {
 				setCursor(null);
-				console.log('No more messages to load. cursor:', cursor);
+				console.log(`No more messages to load for channel ${channelId}`);
 			}
 
 			// Use a single dispatch to add all messages at once
@@ -257,9 +283,6 @@ function ChatPageContent() {
 
 	//* LOAD SSE CONNECTION FOR REALTIME UPDATES
 	useEffect(() => {
-		// clear messages
-		dispatch({ type: 'RESET' });
-
 		// null active channel probably means user is on 'home'
 		if (!activeChannel || !activeWorkspace) return;
 
@@ -275,8 +298,6 @@ function ChatPageContent() {
 			if (data.event.variant === 'reaction') {
 				// Update the message's reaction state
 				const message: Message & { __v: string } = data.message;
-
-				// Convert reactions object to Map if it's not already
 				const updatedReactions = message.reactions instanceof Map ? message.reactions : new Map(Object.entries(message.reactions || {}));
 
 				dispatch({
@@ -304,32 +325,45 @@ function ChatPageContent() {
 	}, [activeChannel, activeWorkspace]);
 
 	useEffect(() => {
+		if (!activeChannel) return;
+
+		const chanId = activeChannel._id;
+		console.log(`Channel changed to: ${chanId}`);
+
+		// Update our reference to the current channel ID
+		currentChannelIdRef.current = chanId;
+
+		// Reset everything related to messages
+		dispatch({ type: 'RESET' });
+		setCursor(null);
 		setIsLoadingVisible(true);
-		// callback function to call when event triggers
-		const onPageLoad = async () => {
-			// clear messages
-			dispatch({ type: 'RESET' });
+		setLoading(true);
+		setHasLoaded(false);
 
-			await fetchMessages(50, true, activeChannel).then(() => {
-				setTimeout(() => {
-					messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-				}, 100);
+		// Double check to be sure we've cleared existing messages
+		console.log('Messages after reset:', messages);
 
-				setIsLoadingVisible(false);
-				setLoading(false);
-				console.log('page loaded');
-			});
+		(async () => {
+			// Make sure we're still on the same channel before fetching
+			if (chanId !== currentChannelIdRef.current) return;
+
+			await fetchMessages(50, true, activeChannel);
+
+			// Another check after fetching to make sure we're still on the same channel
+			if (chanId !== currentChannelIdRef.current) return;
+
+			messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+			setIsLoadingVisible(false);
+			setLoading(false);
+			setHasLoaded(true);
+		})();
+
+		// Clean up function to handle component unmounting or channel changing again
+		return () => {
+			// This helps identify if a fetch completed after we moved away
+			console.log(`Cleaning up channel: ${chanId}`);
 		};
-
-		// Check if the page has already loaded
-		if (document.readyState === 'complete') {
-			onPageLoad();
-		} else {
-			window.addEventListener('load', onPageLoad, false);
-			// Remove the event listener when component unmounts
-			return () => window.removeEventListener('load', onPageLoad);
-		}
-	}, [activeChannel]);
+	}, [activeChannel?._id]); // Use _id directly to ensure the effect runs properly when changing channels
 
 	return (
 		<div className='container grid grid-cols-[auto] grid-rows-[24fr_1fr] max-h-[calc(100vh-4rem-2rem)] gap-y-4 max-w-full'>

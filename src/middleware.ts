@@ -51,7 +51,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 					return context.redirect('/auth/login');
 				} else {
 					console.log('user is not going to dashboard, next()');
-					next();
+					return next();
 				}
 			}
 		}
