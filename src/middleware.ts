@@ -28,7 +28,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 					},
 					credentials: 'include',
 				});
-				data = await res.json().then(res => res.data);
+				data = await res.json();
 				console.log('Middleware response:', data);
 			} catch (error) {
 				// In case of a network error, redirect to login.

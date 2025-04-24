@@ -101,7 +101,7 @@ const { APPNAME: appName } = import.meta.env;
 			// Clear first, then set after a small delay to ensure reset takes effect
 			setActiveChannel(null);
 			setTimeout(() => {
-				setActiveChannel(data);
+				setActiveChannel(data.data);
 			}, 10);
 		} catch (error) {
 			console.error('Error fetching channel data:', error);
