@@ -2,7 +2,17 @@ import { defineMiddleware } from 'astro:middleware';
 import { PUBLIC_API_URL } from 'astro:env/client';
 
 export const onRequest = defineMiddleware(async (context, next) => {
-	const session = context.request.headers.get('cookie')?.match(/session=([^;]*)/)?.[1];
+	const session = context.cookies.get('session')?.value;
+	const lastLoggedIn = new Date(context.cookies.get('lastLoggedIn')?.value || '');
+
+	if (Date.now() - lastLoggedIn.getTime() > 12 * 60 * 60 * 1000) {
+		// If the last login was more than 12 hours ago, clear the session cookie
+		context.cookies.delete('session');
+		context.cookies.delete('lastLoggedIn');
+
+		console.log('Session expired, cookies cleared.');
+		return context.redirect('/auth/login');
+	}
 
 	if (context.url.pathname.includes('dashboard') || context.url.pathname.includes('auth')) {
 		if (session && session.trim() !== '') {

@@ -26,6 +26,14 @@ export function ConnectionPersist() {
 		};
 	}, []);
 
+	// Make sure current user is always shown in the active users list
+	useEffect(() => {
+		if (activeUser && activeWorkspace?._id) {
+			// Add self to active users immediately, don't wait for server response
+			addActiveUser(activeWorkspace._id, activeUser);
+		}
+	}, [activeUser, activeWorkspace?._id]);
+
 	useEffect(() => {
 		if (!activeWorkspace?._id) return;
 
@@ -36,6 +44,11 @@ export function ConnectionPersist() {
 
 		// Reset active users when the workspace changes
 		resetActiveUsers(activeWorkspace._id);
+
+		// Add self to active users list immediately if available
+		if (activeUser) {
+			addActiveUser(activeWorkspace._id, activeUser);
+		}
 
 		// Create new EventSource connection
 		const projectEventSource = new EventSource(`${PUBLIC_API_URL}/sse/${activeWorkspace._id}/`, { withCredentials: true });
@@ -127,6 +140,8 @@ export function ConnectionPersist() {
 			console.log('SSE connection established');
 			if (activeUser) {
 				await updateUserStatus('online');
+				// Announce presence immediately after connection opens
+				await announcePresence(activeWorkspace._id, activeUser);
 			}
 		});
 

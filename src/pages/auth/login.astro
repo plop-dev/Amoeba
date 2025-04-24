@@ -344,7 +344,7 @@ const { APPNAME } = import.meta.env;
 						const data = _data.data as User;
 						setActiveUser(data);
 						try {
-							const res = await fetch(`${PUBLIC_API_URL}/set-cookie`, {
+							const userDataCookieRes = await fetch(`${PUBLIC_API_URL}/set-cookie`, {
 								method: 'POST',
 								credentials: 'include',
 								headers: { 'Content-Type': 'application/json' },
@@ -353,8 +353,20 @@ const { APPNAME } = import.meta.env;
 									name: 'userData',
 								}),
 							});
-							const body = await res.json();
-							if (!body.success) {
+							const userDataCookieBody = await userDataCookieRes.json();
+
+							const lastLoggedInCookieRes = await fetch(`${PUBLIC_API_URL}/set-cookie`, {
+								method: 'POST',
+								credentials: 'include',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({
+									data: new Date(),
+									name: 'lastLoggedIn',
+								}),
+							});
+							const lastLoggedInCookieBody = await lastLoggedInCookieRes.json();
+
+							if (!userDataCookieBody.success && !lastLoggedInCookieBody.success) {
 								toast({
 									variant: 'destructive',
 									title: 'Error setting user data',
