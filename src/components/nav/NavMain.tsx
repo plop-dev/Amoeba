@@ -30,7 +30,7 @@ import { useToast } from '@/hooks/use-toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { activeWorkspace as activeWorkspaceStore, setActiveWorkspace } from '@/stores/Workspace';
+import { activeWorkspace, activeWorkspace as activeWorkspaceStore, setActiveWorkspace } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
 import { Icon, IconPicker, type IconName } from '@/components/ui/icon-picker';
@@ -49,6 +49,8 @@ import {
 import { formatDate } from '@/utils/formatDate';
 import { validateObjectId } from '@/utils/validateObjectId';
 import { PUBLIC_API_URL } from 'astro:env/client';
+import { Badge } from '../ui/badge';
+import { roleClasses } from '@/utils/statusClass';
 
 function ChannelDialog(props: {
 	children: React.ReactNode;
@@ -453,6 +455,24 @@ function WorkspaceDialog(props: {
 	const { mode, workspace: workspace } = props;
 	const isEditMode = mode === 'edit';
 	const [workspaceIcon, setWorkspaceIcon] = useState<IconName>(isEditMode ? (workspace?.icon as IconName) || 'message-square' : 'message-square');
+	const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceUser[]>();
+	const activeWorkspace = useStore(activeWorkspaceStore);
+
+	useEffect(() => {
+		fetch(`${PUBLIC_API_URL}/workspace/users/${activeWorkspace?._id}`, { credentials: 'include' })
+			.then(res => res.json())
+			.then(res => {
+				if (res.success) {
+					setWorkspaceMembers(res.data);
+				} else {
+					toast({
+						title: 'Error',
+						description: res.message || 'Failed to fetch workspace members.',
+						variant: 'destructive',
+					});
+				}
+			});
+	}, [activeWorkspace]);
 
 	const formSchema = z.object({
 		workspaceName: z
@@ -466,7 +486,7 @@ function WorkspaceDialog(props: {
 					userId: z.string().refine(val => validateObjectId(val), {
 						message: 'Invalid user ID format',
 					}),
-					role: z.enum(['admin', 'member']),
+					role: z.enum(['owner', 'admin', 'member']),
 					dateJoined: z.union([z.date(), z.string().transform(val => new Date(val))]),
 				}),
 			)
@@ -482,7 +502,7 @@ function WorkspaceDialog(props: {
 				? workspace?.members?.map(member => ({
 						...member,
 						dateJoined: new Date(member.dateJoined),
-						role: member.role === 'admin' ? 'admin' : 'member',
+						role: member.role,
 				  })) || []
 				: [{ userId: activeUserStore.get()?._id || '', role: 'admin', dateJoined: new Date() }],
 		},
@@ -751,14 +771,15 @@ function WorkspaceDialog(props: {
 																	</TableCell>
 																	<TableCell>{formatDate(new Date(member.dateJoined))}</TableCell>
 																	<TableCell>
-																		<span
+																		{/* <span
 																			className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
 																				member.role === 'admin'
 																					? 'bg-blue-950/50 text-blue-400'
 																					: 'bg-gray-800 text-gray-300'
 																			}`}>
 																			{member.role}
-																		</span>
+																		</span> */}
+																		<Badge className={roleClasses[member.role as UserRoles]}>{member.role}</Badge>
 																	</TableCell>
 																	<TableCell>
 																		<DropdownMenu>

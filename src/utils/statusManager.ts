@@ -125,7 +125,7 @@ export async function fetchActiveUsers(workspaceId: string): Promise<boolean> {
 	fetching.set(workspaceId, true);
 
 	try {
-		const res = await fetch(`${PUBLIC_API_URL}/workspace/users/${workspaceId}`, {
+		const res = await fetch(`${PUBLIC_API_URL}/workspace/active/users/${workspaceId}`, {
 			method: 'GET',
 			credentials: 'include',
 		});
