@@ -145,11 +145,11 @@ export function ColourPicker({ color = '#000000', onChange, className }: ColorPi
 						ref={colorPlaneRef}
 						className='relative w-full h-48 rounded-lg cursor-crosshair touch-none'
 						style={{
-							backgroundColor: `hsl(${hsl.h}, 100%, 50%)`,
-							backgroundImage: `
-                linear-gradient(to right, #fff 0%, transparent 100%),
-                linear-gradient(to top, #000 0%, transparent 100%)
-              `,
+							// The base is white, then horizontal hue, then vertical black
+							background: `
+								linear-gradient(to top, black, transparent),
+								linear-gradient(315deg, hsl(${hsl.h}, 100%, 50%), white)
+							`,
 						}}
 						onMouseDown={handleMouseDown}
 						onMouseMove={handleMouseMove}
