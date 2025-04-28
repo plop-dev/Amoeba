@@ -5,6 +5,7 @@ import DashboardLayout from '@/layouts/DashboardLayout.astro';
 import { ColourPicker } from '@/components/ColourPicker';
 import AvatarPicker from '@/components/AvatarPicker';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 ---
 
 <DashboardLayout title='Settings'>
@@ -17,7 +18,16 @@ import { Button } from '@/components/ui/button';
 					<p class='text-sm text-muted-foreground'>Your username will be seen by everyone on Chats, VCs and Boards.</p>
 				</div>
 
-				<Input type='text' id='username' placeholder='plop' className='mt-4' />
+				<Input type='text' id='username' defaultValue={'ACTIVEUSER.USERNAME'} className='mt-4' client:load />
+			</div>
+
+			<div class='flex flex-col p-4 rounded-xl border bg-accent/20 gap-y-4'>
+				<div class='flex flex-col gap-y-1'>
+					<h2 class='text-lg'>Description</h2>
+					<p class='text-sm text-muted-foreground'>Tell others a bit about yourself. This will be seen by everyone on Chats, VCs, and Boards.</p>
+				</div>
+
+				<Textarea defaultValue={'ACTIVEUSER.DESCRIPTION'} className='mt-4' id='description' client:load />
 			</div>
 
 			<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
@@ -26,46 +36,47 @@ import { Button } from '@/components/ui/button';
 					<p class='text-sm text-muted-foreground'>This colour will be in your profile, chat accent and board cursor.</p>
 				</div>
 
-				<ColourPicker client:only='react' className='mt-4' />
+				<ColourPicker client:only='react' className='mt-4' colour={'ACTIVEUSER.ACCENTCOLOUR'} />
 			</div>
 
-			<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
+			<div class='flex flex-col p-4 rounded-xl border bg-accent/20 gap-y-4'>
 				<div class='flex flex-col gap-y-1'>
 					<h2 class='text-lg'>Profile Picture</h2>
 					<p class='text-sm text-muted-foreground'>Your profile picture will be seen by everyone on Chats, VCs and Boards.</p>
 				</div>
 
-				<AvatarPicker className='flex-row items-center mt-4' client:load />
+				<AvatarPicker className='mt-2' src={'ACTIVEUSER.AVATARURL'} maxSize={5 * 1024 * 1024} client:only='react' />
 			</div>
 
 			<Button variant={'default'} type='submit'>Save</Button>
 		</div>
 	</form>
-</DashboardLayout>
 
-<script>
-	const form = document.querySelector('form');
+	<script>
+		const form = document.querySelector('form');
 
-	if (form) {
-		form.addEventListener('submit', handleSubmit);
-	}
-
-	function handleSubmit(e: SubmitEvent) {
-		e.preventDefault();
-		const username = (document.getElementById('username') as HTMLInputElement)?.value;
-		const primaryColour = (document.getElementById('currentColour') as HTMLDivElement)?.textContent;
-
-		const avatar = (document.getElementById('uploadPFP') as HTMLInputElement)?.files?.[0];
-
-		const reader = new FileReader();
-		reader.onload = function (e) {
-			const base64 = e.target?.result as string;
-			// console.log(base64);
-		};
-		if (avatar) {
-			reader.readAsDataURL(avatar);
+		if (form) {
+			form.addEventListener('submit', handleSubmit);
 		}
 
-		console.log(username, primaryColour);
-	}
-</script>
+		function handleSubmit(e: SubmitEvent) {
+			e.preventDefault();
+			const username = (document.getElementById('username') as HTMLInputElement)?.value;
+			const description = (document.getElementById('description') as HTMLTextAreaElement)?.value;
+			const primaryColour = (document.getElementById('currentColour') as HTMLDivElement)?.textContent;
+
+			const avatar = (document.getElementById('uploadPFP') as HTMLInputElement)?.files?.[0];
+			let avatarBase64 = '';
+
+			const reader = new FileReader();
+			reader.onload = function (e) {
+				avatarBase64 = e.target?.result as string;
+			};
+			if (avatar) {
+				reader.readAsDataURL(avatar);
+			}
+
+			console.log(username, description, primaryColour);
+		}
+	</script>
+</DashboardLayout>

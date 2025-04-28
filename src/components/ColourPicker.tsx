@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { activeUser } from '@/stores/User';
 
 interface ColorPickerProps {
-	color?: string;
+	colour?: string;
 	onChange?: (value: string) => void;
 	className?: string;
 }
@@ -19,8 +20,9 @@ interface ColorPickerProps {
 type ColorMode = 'hex' | 'rgba' | 'hsla';
 type CopyState = { [key in ColorMode]: boolean };
 
-export function ColourPicker({ color = '#000000', onChange, className }: ColorPickerProps) {
-	const [currentColour, setCurrentColor] = React.useState(color);
+export function ColourPicker({ colour = '#000000', onChange, className }: ColorPickerProps) {
+	const [currentColour, setCurrentColor] = React.useState(colour === 'ACTIVEUSER.ACCENTCOLOUR' ? activeUser.get()?.accentColour ?? '#000000' : colour);
+
 	const [colorMode, setColorMode] = React.useState<ColorMode>('hex');
 	const [copied, setCopied] = React.useState<CopyState>({
 		hex: false,
@@ -34,6 +36,10 @@ export function ColourPicker({ color = '#000000', onChange, className }: ColorPi
 	const hsl = ColorUtils.rgbToHsl(rgb);
 	const rgbaString = ColorUtils.formatRgba(rgb);
 	const hslaString = ColorUtils.formatHsla(hsl);
+
+	React.useEffect(() => {
+		console.log('currentColour', currentColour);
+	}, [currentColour]);
 
 	const handleColorChange = (newColor: string) => {
 		setCurrentColor(newColor);
