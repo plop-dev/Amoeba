@@ -37,6 +37,7 @@ export function UserProfile({
 }) {
 	const { toast } = useToast();
 	const [fetchedUser, setFetchedUser] = useState<User | null>(null);
+	const [open, setOpen] = useState(isOpen);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeUser = useStore(activeUserStore);
 
@@ -173,8 +174,8 @@ export function UserProfile({
 			<div className='grid mt-4 gap-x-2 grid-cols-2 grid-rows-1'>
 				{userControl ? (
 					<>
-						<a href={`/${activeWorkspace?._id}/dashboard/settings`} className='flex flex-1'>
-							<Button size='sm' className='flex-1'>
+						<a href={`/${activeWorkspace?._id}/dashboard/settings`} className='flex flex-1' onClick={() => openChange(false)}>
+							<Button size='sm' className='flex-1' onClick={() => openChange(false)}>
 								<Settings className='mr-2 h-4 w-4' />
 								Settings
 							</Button>
@@ -186,11 +187,11 @@ export function UserProfile({
 					</>
 				) : (
 					<>
-						<Button size='sm' className='flex-1'>
+						<Button size='sm' className='flex-1' onClick={() => openChange(false)}>
 							<MessageCircle className='mr-2 h-4 w-4' />
 							Message
 						</Button>
-						<Button size='sm' variant='outline' className='flex-1'>
+						<Button size='sm' variant='outline' className='flex-1' onClick={() => openChange(false)}>
 							<Phone className='mr-2 h-4 w-4'></Phone>
 							Call
 						</Button>
@@ -208,7 +209,7 @@ export function UserProfile({
 		);
 	} else {
 		return (
-			<HoverCard open={isOpen} onOpenChange={openChange} openDelay={10000} closeDelay={10000}>
+			<HoverCard open={open} onOpenChange={openChange} openDelay={10000} closeDelay={10000}>
 				<HoverCardTrigger asChild>{children}</HoverCardTrigger>
 				<HoverCardContent className='w-80'>{content}</HoverCardContent>
 			</HoverCard>
