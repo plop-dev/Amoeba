@@ -18,7 +18,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		});
 
 		console.log('Session expired, cookies cleared.');
-		return context.redirect('/auth/login');
+		// Prevent infinite redirect loop if already on /auth/login
+		if (context.url.pathname !== '/auth/login') {
+			return context.redirect('/auth/login');
+		} else {
+			return next();
+		}
 	}
 
 	if (context.url.pathname.includes('dashboard') || context.url.pathname.includes('auth')) {
