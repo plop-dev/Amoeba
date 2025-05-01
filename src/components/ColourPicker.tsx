@@ -37,10 +37,6 @@ export function ColourPicker({ colour = '#000000', onChange, className, ...htmlP
 	const rgbaString = ColorUtils.formatRgba(rgb);
 	const hslaString = ColorUtils.formatHsla(hsl);
 
-	React.useEffect(() => {
-		console.log('currentColour', currentColour);
-	}, [currentColour]);
-
 	const handleColorChange = (newColor: string) => {
 		setCurrentColor(newColor);
 		onChange?.(newColor);

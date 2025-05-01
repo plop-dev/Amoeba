@@ -6,6 +6,7 @@ import { ClientRouter } from 'astro:transitions';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { ConnectionPersist } from '@/components/ConnectionPersist';
 import { DashboardLoader } from '@/components/DashboardLoader';
 // import '@/server';
@@ -37,6 +38,8 @@ const { APPNAME: appName } = import.meta.env;
 	<body class='flex flex-row'>
 		<DashboardLoader client:only="react" />
 		<Toaster client:only='react' transition:persist />
+		<SonnerToaster client:only='react' transition:persist />
+		
 		<Sidebar appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} transition:persist />
 		<ConnectionPersist client:load transition:persist  />
 

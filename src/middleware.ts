@@ -10,7 +10,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 		context.cookies.delete('session');
 		context.cookies.delete('lastLoggedIn');
 
-		context.cookies.set('lastLoggedIn', new Date());
+		context.cookies.set('lastLoggedIn', new Date(), {
+			path: '/',
+			httpOnly: true,
+			secure: true,
+			sameSite: 'strict',
+		});
 
 		console.log('Session expired, cookies cleared.');
 		return context.redirect('/auth/login');

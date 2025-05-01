@@ -3,6 +3,7 @@ import '@/styles/global.css';
 import 'sonner/dist/styles.css';
 import { ClientRouter } from 'astro:transitions';
 import { Toaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 // import '@/server';
 
 interface Props {
@@ -27,7 +28,9 @@ const { APPNAME: appName } = import.meta.env;
 		<ClientRouter />
 	</head>
 	<body class='flex flex-row'>
-		<Toaster client:only='react' />
+		<Toaster client:only='react' transition:persist />
+		<SonnerToaster client:only='react' transition:persist />
+
 		<slot />
 	</body>
 </html>
