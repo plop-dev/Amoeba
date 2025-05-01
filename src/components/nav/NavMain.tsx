@@ -52,6 +52,7 @@ import { validateObjectId } from '@/utils/validateObjectId';
 import { PUBLIC_API_URL } from 'astro:env/client';
 import { Badge } from '../ui/badge';
 import { roleClasses } from '@/utils/statusClass';
+import { sleep } from '@/utils/sleep';
 
 function ChannelDialog(props: {
 	children: React.ReactNode;
@@ -1071,6 +1072,18 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 	useEffect(() => {
 		setCategories([]);
 		setEmptyCategories([]);
+
+		// if (activeChannel?.workspace !== activeWorkspaceId) {
+		// 	fetch(`${PUBLIC_API_URL}/recents/${activeWorkspaceId}/chat`, { method: 'GET', credentials: 'include' })
+		// 		.then(res => res.json())
+		// 		.then(res => {
+		// 			if (res.success) {
+		// 				const channel = res.data;
+		// 				// Use SPA navigation to preserve view transitions
+		// 				window.location.assign(`/${activeWorkspaceId}/dashboard/chats/${channel._id}`);
+		// 			}
+		// 		});
+		// }
 	}, [activeWorkspace]);
 
 	return (
@@ -1102,7 +1115,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 
 			<SidebarGroup>
 				<SidebarGroupLabel className='flex justify-between items-center'>
-					App
+					Channels
 					<CategoryDialog mode='create' onCategoryCreated={handleCategoryCreated} className='ml-auto cursor-pointer'>
 						<span className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-4 p-3')}>
 							<Plus />

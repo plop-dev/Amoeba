@@ -36,9 +36,9 @@ const { APPNAME: appName } = import.meta.env;
 		<ClientRouter />
 	</head>
 	<body class='flex flex-row'>
-		<DashboardLoader client:only="react" />
+		
 		<Toaster client:only='react' transition:persist />
-		<SonnerToaster client:only='react' transition:persist />
+		<SonnerToaster client:only='react' richColors transition:persist />
 		
 		<Sidebar appName={appName} client:only='react' defaultSidebarOpen={defaultSidebarOpen} url={Astro.url} transition:persist />
 		<ConnectionPersist client:load transition:persist  />
@@ -66,6 +66,7 @@ const { APPNAME: appName } = import.meta.env;
 				</Breadcrumb>
 			</header>
 			<div class:list={cn('flex flex-1 flex-col gap-4 p-4', containerClassName)}>
+				<!-- <DashboardLoader client:only="react" /> -->
 				<slot />
 			</div>
 		</main>
