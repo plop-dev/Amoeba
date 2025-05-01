@@ -2,6 +2,7 @@ import { atom } from 'nanostores';
 
 export const keyInput = atom('');
 export const challenge = atom('');
+export const challengeId = atom('');
 export const publicKey = atom('');
 export const userId = atom('');
 
@@ -12,6 +13,10 @@ export function setKeyInput(value: string) {
 
 export function setChallenge(value: string) {
 	challenge.set(value);
+}
+
+export function setChallengeId(value: string) {
+	challengeId.set(value);
 }
 
 export function setPublicKey(value: string) {

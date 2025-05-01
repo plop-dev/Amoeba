@@ -107,7 +107,7 @@ const { APPNAME } = import.meta.env;
 	import { keyCheckProgressStore, nextStep, previousStep } from '@/stores/KeyCheckProgress';
 	import { remToPixels } from '@/utils/remToPixels';
 	import { EventSource } from 'eventsource';
-	import { challenge, setChallenge, publicKey, setPublicKey, keyInput, userId, setUserId } from '@/stores/Auth';
+	import { challenge, setChallenge, publicKey, setPublicKey, keyInput, userId, setUserId, setChallengeId, challengeId } from '@/stores/Auth';
 	import { arrayBufferToBase64 } from '@/utils/arrayToBase64';
 	import { pemToArrayBuffer } from '@/utils/pemToArrayBuffer';
 	import { convertPkcs1ToSpki } from '@/utils/rsaKeyConverter';
@@ -137,6 +137,8 @@ const { APPNAME } = import.meta.env;
 		updateKeyCheckHeader('Generating challenge...');
 		const res = await fetch(`${PUBLIC_API_URL}/auth/challenge`);
 		const data = await res.json();
+
+		setChallengeId(data.challengeId);
 		setChallenge(data.challenge);
 		setPublicKey(data.publicKey);
 	}
@@ -187,7 +189,7 @@ const { APPNAME } = import.meta.env;
 	async function handleLogin() {
 		try {
 			// Ensure challenge and public key are available.
-			if (!challenge.get() || !publicKey.get()) {
+			if (!challenge.get() || !publicKey.get() || !challengeId.get()) {
 				await fetchChallenge();
 			}
 
@@ -227,7 +229,7 @@ const { APPNAME } = import.meta.env;
 			const res = await fetch(`${PUBLIC_API_URL}/auth/login`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ encryptedAesKey, encryptedFile, iv, response, accountId: accountIdInput.value }),
+				body: JSON.stringify({ encryptedAesKey, encryptedFile, iv, response, accountId: accountIdInput.value, challengeId: challengeId.get() }),
 				credentials: 'include',
 			});
 			const result = await res.json();
