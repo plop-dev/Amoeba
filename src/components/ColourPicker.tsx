@@ -20,7 +20,7 @@ interface ColorPickerProps {
 type ColorMode = 'hex' | 'rgba' | 'hsla';
 type CopyState = { [key in ColorMode]: boolean };
 
-export function ColourPicker({ colour = '#000000', onChange, className }: ColorPickerProps) {
+export function ColourPicker({ colour = '#000000', onChange, className, ...htmlProps }: ColorPickerProps & React.HTMLAttributes<HTMLDivElement>) {
 	const [currentColour, setCurrentColor] = React.useState(colour === 'ACTIVEUSER.ACCENTCOLOUR' ? activeUser.get()?.accentColour ?? '#000000' : colour);
 
 	const [colorMode, setColorMode] = React.useState<ColorMode>('hex');
@@ -185,14 +185,14 @@ export function ColourPicker({ colour = '#000000', onChange, className }: ColorP
 								onValueChange={([h]) => updateHSL(h, hsl.s, hsl.l)}
 								style={{
 									backgroundImage: `linear-gradient(to right, 
-                    hsl(0, 100%, 50%),
-                    hsl(60, 100%, 50%),
-                    hsl(120, 100%, 50%),
-                    hsl(180, 100%, 50%),
-                    hsl(240, 100%, 50%),
-                    hsl(300, 100%, 50%),
-                    hsl(360, 100%, 50%)
-                  )`,
+					hsl(0, 100%, 50%),
+					hsl(60, 100%, 50%),
+					hsl(120, 100%, 50%),
+					hsl(180, 100%, 50%),
+					hsl(240, 100%, 50%),
+					hsl(300, 100%, 50%),
+					hsl(360, 100%, 50%)
+				  )`,
 								}}
 							/>
 							<style>{`
@@ -220,7 +220,7 @@ export function ColourPicker({ colour = '#000000', onChange, className }: ColorP
 
 						<TabsContent value='hex' className='mt-2'>
 							<div className='flex gap-2'>
-								<Input value={currentColour} onChange={e => handleHexChange(e.target.value)} className='font-mono' />
+								<Input value={currentColour} onChange={e => handleHexChange(e.target.value)} className='font-mono' {...htmlProps} />
 								<Button variant='ghost' size='icon' className='shrink-0' onClick={() => copyToClipboard(currentColour, 'hex')}>
 									{copied.hex ? <Check className='h-4 w-4' /> : <Copy className='h-4 w-4' />}
 								</Button>

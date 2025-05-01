@@ -349,7 +349,7 @@ const { APPNAME } = import.meta.env;
 								credentials: 'include',
 								headers: { 'Content-Type': 'application/json' },
 								body: JSON.stringify({
-									data,
+									data: { ...data, avatarUrl: '' },
 									name: 'userData',
 								}),
 							});

@@ -9,6 +9,7 @@ import {
 	SidebarMenuSub,
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
+	useSidebar,
 } from '@/components/ui/sidebar';
 import {
 	AlertDialog,
@@ -847,6 +848,7 @@ function WorkspaceDialog(props: {
 }
 
 export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCategories: DBCategory[] }) {
+	const { isMobile, state } = useSidebar();
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [emptyCategories, setEmptyCategories] = useState<Category[]>([]);
 
@@ -1297,7 +1299,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 							);
 						})}
 
-					{emptyCategories.length === 0 && categories.length === 0 && (
+					{emptyCategories.length === 0 && categories.length === 0 && !isMobile && (
 						<SidebarMenuItem className='mx-2'>
 							<span className='text-muted-foreground'>No channels in this workspace</span>
 						</SidebarMenuItem>

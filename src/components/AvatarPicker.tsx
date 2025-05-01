@@ -34,7 +34,7 @@ function getAvatarSrc(src?: string, userAvatar?: string | null): string | null {
 	return null;
 }
 
-export default function AvatarPicker({ className, src, maxSize = 5 * 1024 * 1024 }: { className?: string; src?: string; maxSize?: number }) {
+export default function AvatarPicker({ className, src, maxSize = 5 * 1024 * 1024, ...htmlProps }: { className?: string; src?: string; maxSize?: number }  & React.HTMLAttributes<HTMLDivElement>) {
 	const user = useStore(activeUser);
 	const [avatar, setAvatar] = useState<string | null>(getAvatarSrc(src, user?.avatarUrl));
 	const fileInputRef = useRef<HTMLInputElement>(null);

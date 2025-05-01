@@ -41,46 +41,38 @@ export function AppSidebar({ appName, ...props }: AppSidebarProps) {
 					console.error(err);
 				});
 		else console.error('No active user found');
-	}, [activeUser]);
+	}, [activeUser?._id]);
 
-	// load channels from active workspace
+	// load channels and categories from active workspace
 	useEffect(() => {
 		if (activeWorkspace && !Object.keys(activeWorkspace).includes('error')) {
-			fetch(`${PUBLIC_API_URL}/channels/${activeWorkspace._id}`, { credentials: 'include' })
+			const fetchChannels = fetch(`${PUBLIC_API_URL}/channels/${activeWorkspace._id}`, { credentials: 'include' })
 				.then(res => res.json())
-				.then(data => {
-					setChannels(data.data);
-				})
-				.catch(err => {
-					console.error(err);
-				});
-		} else console.error('No active workspace found');
+				.then(data => setChannels(data.data))
+				.catch(err => console.error(err));
+
+			const fetchCategories = fetch(`${PUBLIC_API_URL}/categories/${activeWorkspace._id}`, { credentials: 'include' })
+				.then(res => res.json())
+				.then(data => setDBCategories(data.data))
+				.catch(err => console.error(err));
+
+			Promise.all([fetchChannels, fetchCategories]).catch(err => console.error('Error fetching data:', err));
+		} else {
+			console.error('No active workspace found');
+		}
 	}, [activeWorkspace]);
 
-	// load categories from db (keep in mind DBCategories is a 'stripped' down version of Channel type)
-	useEffect(() => {
-		if (activeWorkspace && !Object.keys(activeWorkspace).includes('error')) {
-			fetch(`${PUBLIC_API_URL}/categories/${activeWorkspace._id}`, { credentials: 'include' })
-				.then(res => res.json())
-				.then(data => {
-					setDBCategories(data.data);
-				})
-				.catch(err => {
-					console.error(err);
-				});
-		} else console.error('No categories found');
-	}, [activeWorkspace]);
+	// if (!activeUser || !workspaces) {
+	// 	document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+	// 	fetch(`${PUBLIC_API_URL}/auth/logout`, { credentials: 'include', method: 'POST' }).then(() => {
+	// 		window.location.href = '/auth/login';
+	// 	});
+	// 	return null;
+	// }
 
-	if (!activeUser || !workspaces) {
-		document.cookie = 'session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-		fetch(`${PUBLIC_API_URL}/auth/logout`, { credentials: 'include' }).then(() => {
-			window.location.href = '/auth/login';
-		});
-		return null;
-	}
 	useEffect(() => {
 		setNavData({
-			user: activeUser,
+			user: activeUser || ({} as User),
 			workspaces: workspaces,
 			channels: channels,
 			DBCategories: DBCategories,

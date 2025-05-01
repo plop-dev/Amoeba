@@ -5,10 +5,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 	const session = context.cookies.get('session')?.value;
 	const lastLoggedIn = new Date(context.cookies.get('lastLoggedIn')?.value || '');
 
-	if (Date.now() - lastLoggedIn.getTime() > 12 * 60 * 60 * 1000) {
-		// If the last login was more than 12 hours ago, clear the session cookie
+	if (isNaN(lastLoggedIn.getTime()) || Date.now() - lastLoggedIn.getTime() > 12 * 60 * 60 * 1000) {
+		// If the last login was more than 12 hours ago (or if there's no last logged in cookie), clear the session cookie
 		context.cookies.delete('session');
 		context.cookies.delete('lastLoggedIn');
+
+		context.cookies.set('lastLoggedIn', new Date());
 
 		console.log('Session expired, cookies cleared.');
 		return context.redirect('/auth/login');
@@ -32,12 +34,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
 				console.log('Middleware response:', data);
 			} catch (error) {
 				// In case of a network error, redirect to login.
+				console.error('Error fetching middleware (redirecting to login):', error);
 				return context.redirect('/auth/login');
 			}
 
 			if (data.success) {
 				console.log('User authenticated:', data);
-				context.locals.userId = data;
+				context.locals.userId = data.data;
 
 				// check if user was already going somewhere in the dashboard
 				if (context.url.pathname.includes('dashboard')) {
@@ -48,6 +51,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 					const user = context.cookies.get('userData')?.json();
 
 					if (user?.workspaces && user?.workspaces.length > 0) {
+						console.log('User has workspaces, redirecting to dashboard');
 						return context.redirect(`/${user.workspaces[0]}/dashboard/home`);
 					} else {
 						// user has no workspaces

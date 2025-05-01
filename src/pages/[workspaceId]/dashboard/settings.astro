@@ -6,77 +6,94 @@ import { ColourPicker } from '@/components/ColourPicker';
 import AvatarPicker from '@/components/AvatarPicker';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { PUBLIC_API_URL } from 'astro:env/client';
+import { activeUser } from '@/stores/User';
 ---
 
 <DashboardLayout title='Settings'>
-	<form>
-		<h1 class='text-2xl mb-4'>Settings</h1>
-		<div class='flex flex-col gap-y-8 w-full xl:w-1/2 md:w-3/4'>
-			<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
-				<div class='flex flex-col gap-y-1'>
-					<h2 class='text-lg'>Username</h2>
-					<p class='text-sm text-muted-foreground'>Your username will be seen by everyone on Chats, VCs and Boards.</p>
-				</div>
-
-				<Input type='text' id='username' defaultValue={'ACTIVEUSER.USERNAME'} className='mt-4' client:load />
+	<h1 class='text-2xl mb-4'>Settings</h1>
+	<div class='flex flex-col gap-y-8 w-full xl:w-1/2 md:w-3/4'>
+		<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
+			<div class='flex flex-col gap-y-1'>
+				<h2 class='text-lg'>Username</h2>
+				<p class='text-sm text-muted-foreground'>Your username will be seen by everyone on Chats, VCs and Boards.</p>
 			</div>
 
-			<div class='flex flex-col p-4 rounded-xl border bg-accent/20 gap-y-4'>
-				<div class='flex flex-col gap-y-1'>
-					<h2 class='text-lg'>Description</h2>
-					<p class='text-sm text-muted-foreground'>Tell others a bit about yourself. This will be seen by everyone on Chats, VCs, and Boards.</p>
-				</div>
-
-				<Textarea defaultValue={'ACTIVEUSER.DESCRIPTION'} className='mt-4' id='description' client:load />
-			</div>
-
-			<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
-				<div class='flex flex-col gap-y-1'>
-					<h2 class='text-lg'>Primary Colour</h2>
-					<p class='text-sm text-muted-foreground'>This colour will be in your profile, chat accent and board cursor.</p>
-				</div>
-
-				<ColourPicker client:only='react' className='mt-4' colour={'ACTIVEUSER.ACCENTCOLOUR'} />
-			</div>
-
-			<div class='flex flex-col p-4 rounded-xl border bg-accent/20 gap-y-4'>
-				<div class='flex flex-col gap-y-1'>
-					<h2 class='text-lg'>Profile Picture</h2>
-					<p class='text-sm text-muted-foreground'>Your profile picture will be seen by everyone on Chats, VCs and Boards.</p>
-				</div>
-
-				<AvatarPicker className='mt-2' src={'ACTIVEUSER.AVATARURL'} maxSize={5 * 1024 * 1024} client:only='react' />
-			</div>
-
-			<Button variant={'default'} type='submit'>Save</Button>
+			<Input type='text' id='username' defaultValue={'ACTIVEUSER.USERNAME'} className='mt-4' client:load />
 		</div>
-	</form>
+
+		<div class='flex flex-col p-4 rounded-xl border bg-accent/20 gap-y-4'>
+			<div class='flex flex-col gap-y-1'>
+				<h2 class='text-lg'>Description</h2>
+				<p class='text-sm text-muted-foreground'>Tell others a bit about yourself. This will be seen by everyone on Chats, VCs, and Boards.</p>
+			</div>
+
+			<Textarea defaultValue={'ACTIVEUSER.DESCRIPTION'} className='mt-4' id='description' client:load />
+		</div>
+
+		<div class='p-4 rounded-xl border bg-accent/20 gap-y-4'>
+			<div class='flex flex-col gap-y-1'>
+				<h2 class='text-lg'>Primary Colour</h2>
+				<p class='text-sm text-muted-foreground'>This colour will be in your profile, chat accent and board cursor.</p>
+			</div>
+
+			<ColourPicker id='currentColour' client:only='react' className='mt-4' colour={activeUser.get()?.accentColour ?? ''} />
+		</div>
+
+		<div class='flex flex-col p-4 rounded-xl border bg-accent/20 gap-y-4'>
+			<div class='flex flex-col gap-y-1'>
+				<h2 class='text-lg'>Profile Picture</h2>
+				<p class='text-sm text-muted-foreground'>Your profile picture will be seen by everyone on Chats, VCs and Boards.</p>
+			</div>
+
+			<AvatarPicker className='mt-2' src={activeUser.get()?.avatarUrl ?? ''} maxSize={5 * 1024 * 1024} client:only='react' />
+		</div>
+
+		<Button variant={'default'} id='settings-save'>Save</Button>
+	</div>
 
 	<script>
-		const form = document.querySelector('form');
+		import { activeUser, setActiveUser } from '@/stores/User';
+		import { PUBLIC_API_URL } from 'astro:env/client';
 
-		if (form) {
-			form.addEventListener('submit', handleSubmit);
+		document.getElementById('settings-save')?.addEventListener('click', handleSubmit);
+
+		async function getBase64(file: File): Promise<string> {
+			return new Promise((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = () => resolve(reader.result as string);
+				reader.onerror = () => reject(reader.error);
+				reader.readAsDataURL(file);
+			});
 		}
 
-		function handleSubmit(e: SubmitEvent) {
+		async function handleSubmit(e: MouseEvent) {
 			e.preventDefault();
-			const username = (document.getElementById('username') as HTMLInputElement)?.value;
-			const description = (document.getElementById('description') as HTMLTextAreaElement)?.value;
-			const primaryColour = (document.getElementById('currentColour') as HTMLDivElement)?.textContent;
 
-			const avatar = (document.getElementById('uploadPFP') as HTMLInputElement)?.files?.[0];
-			let avatarBase64 = '';
+			const username = (document.getElementById('username') as HTMLInputElement).value;
+			const description = (document.getElementById('description') as HTMLTextAreaElement).value;
+			const accentColour = (document.getElementById('currentColour') as HTMLDivElement).textContent || '';
+			const avatarFile = (document.getElementById('uploadPFP') as HTMLInputElement).files?.[0];
+			const avatarUrl = avatarFile ? await getBase64(avatarFile) : '';
 
-			const reader = new FileReader();
-			reader.onload = function (e) {
-				avatarBase64 = e.target?.result as string;
-			};
-			if (avatar) {
-				reader.readAsDataURL(avatar);
+			const payload = { username, description, accentColour, avatarUrl };
+
+			try {
+				const res = await fetch(`${PUBLIC_API_URL}/user/update/${activeUser.get()?._id}`, {
+					method: 'POST',
+					credentials: 'include',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify(payload),
+				});
+				const result = await res.json();
+				if (result.success) {
+					setActiveUser(result.user);
+				} else {
+					console.error('Error updating user:', result.error);
+				}
+			} catch (err) {
+				console.error('Error updating user:', err);
 			}
-
-			console.log(username, description, primaryColour);
 		}
 	</script>
 </DashboardLayout>
