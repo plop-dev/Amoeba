@@ -37,7 +37,7 @@ export function UserProfile({
 }) {
 	const { toast } = useToast();
 	const [fetchedUser, setFetchedUser] = useState<User | null>(null);
-	const [open, setOpen] = useState(isOpen);
+	// const [open, setOpen] = useState(isOpen);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeUser = useStore(activeUserStore);
 
@@ -209,7 +209,7 @@ export function UserProfile({
 		);
 	} else {
 		return (
-			<HoverCard open={open} onOpenChange={openChange} openDelay={10000} closeDelay={10000}>
+			<HoverCard open={isOpen} onOpenChange={openChange} openDelay={10000} closeDelay={10000}>
 				<HoverCardTrigger asChild>{children}</HoverCardTrigger>
 				<HoverCardContent className='w-80'>{content}</HoverCardContent>
 			</HoverCard>

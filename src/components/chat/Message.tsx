@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { TooltipProvider, Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Copy, Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
+import { Check, Copy, Laugh, PartyPopper, Reply, Smile, SmilePlus, ThumbsDown, ThumbsUp, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -19,6 +19,8 @@ function OptionsButton({
 	emoji = false,
 	onEmojiClick,
 	onClick,
+	className,
+	disabled,
 }: {
 	children: React.ReactNode;
 	variant: 'default' | 'destructive' | 'ghost' | 'link' | 'outline' | 'secondary';
@@ -26,6 +28,8 @@ function OptionsButton({
 	messageId?: string;
 	onEmojiClick?: (emojiName: string) => void;
 	onClick?: () => void;
+	className?: string;
+	disabled?: boolean;
 }) {
 	const handleClick = () => {
 		if (React.isValidElement(children) && emoji) {
@@ -61,7 +65,7 @@ function OptionsButton({
 	};
 
 	return (
-		<Button variant={variant} onClick={handleClick}>
+		<Button variant={variant} onClick={handleClick} className={className} disabled={disabled}>
 			{children}
 		</Button>
 	);
@@ -184,12 +188,23 @@ export function Message({
 	const [userReactions, setUserReactions] = useState<Set<string>>(new Set());
 	const [isProfileOpen, setProfileOpen] = useState(false);
 	const [isNextInline, setIsNextInline] = useState(false);
+	const [copied, setCopied] = useState<boolean>(false);
+
+	useEffect(() => {
+		console.log('is profile open', isProfileOpen);
+	}, [isProfileOpen]);
+
 	const messageRef = useRef<HTMLDivElement | null>(null);
 	const activeUser = useStore(activeUserStore);
 
-	const handleCopyMessage = () => {
-		navigator.clipboard.writeText(messageRef.current?.querySelector('.text')?.textContent ?? '');
-		toast({ title: 'Message copied to clipboard', variant: 'default' });
+	const handleCopyMessage = async () => {
+		try {
+			setCopied(true);
+			navigator.clipboard.writeText(messageRef.current?.querySelector('.text')?.textContent ?? '');
+			setTimeout(() => setCopied(false), 1500);
+		} catch (err) {
+			console.error('Failed to copy text: ', err);
+		}
 	};
 
 	useEffect(() => {
@@ -346,7 +361,11 @@ export function Message({
 									<div className={cn('info flex')}>
 										<div className='username'>
 											<UserProfile userId={message.author._id} isOpen={isProfileOpen} openChange={setProfileOpen}>
-												<Button variant='link' className='text-base p-0 m-0 h-auto' style={{ color: message.author.accentColour }}>
+												<Button
+													variant='link'
+													className='text-base p-0 m-0 h-auto'
+													style={{ color: message.author.accentColour }}
+													onClick={() => setProfileOpen(true)}>
 													@{message.author.username}
 												</Button>
 											</UserProfile>
@@ -382,7 +401,10 @@ export function Message({
 					className='p-1'
 					asChild
 					onMouseEnter={() => messageRef.current?.classList.add('bg-secondary/50')}
-					onMouseLeave={() => messageRef.current?.classList.remove('bg-secondary/50')}>
+					onMouseLeave={() => messageRef.current?.classList.remove('bg-secondary/50')}
+					onPointerDown={e => {
+						e.stopPropagation();
+					}}>
 					<div className='flex gap-x-1'>
 						<ReactionPicker onEmojiClick={handleAddReaction} />
 						<OptionsButton variant='outline' messageId={message._id} onClick={() => onReplyClick?.(message._id)}>
@@ -391,8 +413,18 @@ export function Message({
 
 						<Separator orientation='vertical' className='bg-primary h-full'></Separator>
 
-						<OptionsButton variant='outline' onClick={handleCopyMessage}>
-							<Copy></Copy>
+						<OptionsButton
+							variant='outline'
+							onClick={handleCopyMessage}
+							className='disabled:opacity-100'
+							aria-label={copied ? 'Copied' : 'Copy to clipboard'}
+							disabled={copied}>
+							<div className={cn('transition-all', copied ? 'scale-100 opacity-100' : 'scale-0 opacity-0')}>
+								<Check className='stroke-emerald-500' size={16} strokeWidth={2} aria-hidden='true' />
+							</div>
+							<div className={cn('absolute transition-all', copied ? 'scale-0 opacity-0' : 'scale-100 opacity-100')}>
+								<Copy size={16} strokeWidth={2} aria-hidden='true' />
+							</div>
 						</OptionsButton>
 
 						<OptionsButton variant='destructive' onClick={() => handleDeleteMessage(message._id)}>
