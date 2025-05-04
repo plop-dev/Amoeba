@@ -12,11 +12,12 @@ import { UserConstant } from '@/constants/globalUser';
 import { Separator } from './ui/separator';
 import { statusClasses } from '@/utils/statusClass';
 import { useToast } from '@/hooks/use-toast';
-import { activeWorkspace as activeWorkspaceStore } from '@/stores/Workspace';
+import { activeWorkspace as activeWorkspaceStore, setActiveWorkspace } from '@/stores/Workspace';
 import { useStore } from '@nanostores/react';
-import { activeUser as activeUserStore } from '@/stores/User';
+import { activeUser as activeUserStore, setActiveUser } from '@/stores/User';
 import { updateUserStatus } from '@/utils/statusManager';
 import { PUBLIC_API_URL } from 'astro:env/client';
+import { setActiveChannel } from '@/stores/Channel';
 
 export function UserProfile({
 	user,
@@ -80,6 +81,21 @@ export function UserProfile({
 	const handleLogout = async () => {
 		// Set status to offline before logging out
 		await updateUserStatus('offline');
+
+		const cookieRes = await fetch(`${PUBLIC_API_URL}/set-cookie`, {
+			method: 'POST',
+			credentials: 'include',
+			body: JSON.stringify({
+				data: '',
+				name: 'userData',
+			}),
+		});
+
+		// reset all cached values
+		window.localStorage.removeItem('activeUser');
+		window.localStorage.removeItem('activeUsers');
+		window.localStorage.removeItem('activeWorkspace');
+		window.localStorage.removeItem('activeChannel');
 
 		const res = await fetch(`${PUBLIC_API_URL}/auth/logout`, {
 			method: 'POST',

@@ -12,14 +12,38 @@ import { activeWorkspace as activeWorkspaceStore, setActiveWorkspace } from '@/s
 import { useStore } from '@nanostores/react';
 import { cn } from '@/lib/utils';
 import { Icon, type IconName } from '../ui/icon-picker';
+import { WorkspaceDialog } from './NavMain';
+import { useEffect, useState } from 'react';
+import { activeUser as activeUserStore, setActiveUser } from '@/stores/User';
 
 export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
+	const [updatedWorkspaces, setUpdatedWorkspaces] = useState<Workspace[]>(workspaces);
+	const activeUser = useStore(activeUserStore);
+
+	useEffect(() => {
+		setUpdatedWorkspaces(workspaces);
+	}, [workspaces]);
+
 	const { isMobile } = useSidebar();
 
 	const activeWorkspace = useStore(activeWorkspaceStore);
 
 	if (!activeWorkspace) {
 		return null;
+	}
+
+	function handleWorkspaceCreated(newWorkspace: Workspace) {
+		setUpdatedWorkspaces(prevWorkspaces => {
+			return [...prevWorkspaces, newWorkspace];
+		});
+
+		setActiveWorkspace(newWorkspace);
+		window.location.href = `/${newWorkspace._id}/dashboard/home`;
+
+		// also update active user's workspaces
+		if (activeUser && newWorkspace._id) {
+			setActiveUser({ ...activeUser, workspaces: [...activeUser.workspaces, newWorkspace._id] });
+		}
 	}
 
 	const handleWorkspaceChange = (workspaceId: string) => {
@@ -52,8 +76,8 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
 						align='start'
 						side={isMobile ? 'bottom' : 'right'}
 						sideOffset={4}>
-						<DropdownMenuLabel className='text-xs text-muted-foreground'>Teams</DropdownMenuLabel>
-						{workspaces.map((workspace, index) => {
+						<DropdownMenuLabel className='text-xs text-muted-foreground'>Workspaces</DropdownMenuLabel>
+						{updatedWorkspaces.map((workspace, index) => {
 							return (
 								<DropdownMenuItem
 									key={index}
@@ -73,12 +97,19 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
 							);
 						})}
 						<DropdownMenuSeparator />
-						<DropdownMenuItem className='gap-2 p-2' key={'add-team'}>
-							<div className='flex size-6 items-center justify-center rounded-md border bg-background'>
-								<Plus className='size-4' />
-							</div>
-							<div className='font-medium text-muted-foreground'>Add team</div>
-						</DropdownMenuItem>
+						<WorkspaceDialog mode='create' onWorkspaceCreated={handleWorkspaceCreated}>
+							<DropdownMenuItem
+								className='gap-2 p-2 cursor-pointer'
+								key={'create-workspace'}
+								onSelect={e => {
+									e.preventDefault();
+								}}>
+								<div className='flex size-6 items-center justify-center rounded-md border bg-background'>
+									<Plus className='size-4' />
+								</div>
+								<div className='font-medium text-muted-foreground'>Create Workspace</div>
+							</DropdownMenuItem>
+						</WorkspaceDialog>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>

@@ -444,7 +444,7 @@ function CategoryDialog(props: {
 	);
 }
 
-function WorkspaceDialog(props: {
+export function WorkspaceDialog(props: {
 	children: React.ReactNode;
 	className?: string;
 	mode: 'create' | 'edit';
@@ -457,24 +457,6 @@ function WorkspaceDialog(props: {
 	const { mode, workspace: workspace } = props;
 	const isEditMode = mode === 'edit';
 	const [workspaceIcon, setWorkspaceIcon] = useState<IconName>(isEditMode ? (workspace?.icon as IconName) || 'message-square' : 'message-square');
-	const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceUser[]>();
-	const activeWorkspace = useStore(activeWorkspaceStore);
-
-	useEffect(() => {
-		fetch(`${PUBLIC_API_URL}/workspace/users/${activeWorkspace?._id}`, { credentials: 'include' })
-			.then(res => res.json())
-			.then(res => {
-				if (res.success) {
-					setWorkspaceMembers(res.data);
-				} else {
-					toast({
-						title: 'Error',
-						description: res.message || 'Failed to fetch workspace members.',
-						variant: 'destructive',
-					});
-				}
-			});
-	}, [activeWorkspace]);
 
 	const formSchema = z.object({
 		workspaceName: z
@@ -506,7 +488,7 @@ function WorkspaceDialog(props: {
 						dateJoined: new Date(member.dateJoined),
 						role: member.role,
 				  })) || []
-				: [{ userId: activeUserStore.get()?._id || '', role: 'admin', dateJoined: new Date() }],
+				: [{ userId: activeUserStore.get()?._id || '', role: 'owner', dateJoined: new Date() }],
 		},
 	});
 
