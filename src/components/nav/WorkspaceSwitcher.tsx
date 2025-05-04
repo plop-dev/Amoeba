@@ -15,13 +15,10 @@ import { Icon, type IconName } from '../ui/icon-picker';
 import { WorkspaceDialog } from './NavMain';
 import { useEffect, useState } from 'react';
 import { activeUser as activeUserStore, setActiveUser } from '@/stores/User';
-import { PUBLIC_API_URL } from 'astro:env/client';
-import { useToast } from '@/hooks/use-toast';
 
 export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
 	const [updatedWorkspaces, setUpdatedWorkspaces] = useState<Workspace[]>(workspaces);
 	const activeUser = useStore(activeUserStore);
-	const { toast } = useToast();
 
 	useEffect(() => {
 		setUpdatedWorkspaces(workspaces);
@@ -35,7 +32,7 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
 		return null;
 	}
 
-	async function handleWorkspaceCreated(newWorkspace: Workspace) {
+	function handleWorkspaceCreated(newWorkspace: Workspace) {
 		setUpdatedWorkspaces(prevWorkspaces => {
 			return [...prevWorkspaces, newWorkspace];
 		});
@@ -46,31 +43,6 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
 		// also update active user's workspaces
 		if (activeUser && newWorkspace._id) {
 			setActiveUser({ ...activeUser, workspaces: [...activeUser.workspaces, newWorkspace._id] });
-
-			// and update the user in db
-			await fetch(`${PUBLIC_API_URL}/user/update/${activeUser._id}`, {
-				method: 'PUT',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					workspaces: [...activeUser.workspaces, newWorkspace._id],
-				}),
-			})
-				.then(async res => await res.json())
-				.then(data => {
-					if (!data.success) {
-						toast({
-							title: 'Error',
-							variant: 'destructive',
-							description: 'Failed to update user workspaces.',
-						});
-					}
-				})
-				.catch(error => {
-					console.error('Error updating user:', error);
-				});
 		}
 	}
 
