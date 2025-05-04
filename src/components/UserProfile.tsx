@@ -85,11 +85,18 @@ export function UserProfile({
 		const cookieRes = await fetch(`${PUBLIC_API_URL}/set-cookie`, {
 			method: 'POST',
 			credentials: 'include',
+			headers: {
+				'Content-Type': 'application/json',
+			},
 			body: JSON.stringify({
 				data: '',
 				name: 'userData',
 			}),
-		});
+		}).then(res => res.json());
+		if (!cookieRes.success) {
+			toast({ title: 'Error', description: 'An error occurred while logging out', variant: 'destructive' });
+			return;
+		}
 
 		// reset all cached values
 		window.localStorage.removeItem('activeUser');

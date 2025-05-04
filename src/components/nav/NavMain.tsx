@@ -471,7 +471,7 @@ export function WorkspaceDialog(props: {
 						message: 'Invalid user ID format',
 					}),
 					role: z.enum(['owner', 'admin', 'member']),
-					dateJoined: z.union([z.date(), z.string().transform(val => new Date(val))]),
+					dateJoined: z.date(),
 				}),
 			)
 			.optional(),
