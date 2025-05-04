@@ -748,21 +748,13 @@ export function WorkspaceDialog(props: {
 															</TableRow>
 														</TableHeader>
 														<TableBody>
-															{field.value?.map((member: any) => (
+															{field.value?.map((member: WorkspaceUser) => (
 																<TableRow key={member.userId} className='border-b border-gray-800 hover:bg-gray-900/50'>
 																	<TableCell className='font-medium flex gap-x-2'>
 																		{member.userId} {member.userId === activeUserStore.get()?._id && <p>(you)</p>}
 																	</TableCell>
 																	<TableCell>{formatDate(new Date(member.dateJoined))}</TableCell>
 																	<TableCell>
-																		{/* <span
-																			className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-																				member.role === 'admin'
-																					? 'bg-blue-950/50 text-blue-400'
-																					: 'bg-gray-800 text-gray-300'
-																			}`}>
-																			{member.role}
-																		</span> */}
 																		<Badge className={roleClasses[member.role as UserRoles]}>{member.role}</Badge>
 																	</TableCell>
 																	<TableCell>
@@ -788,16 +780,18 @@ export function WorkspaceDialog(props: {
 																					className='hover:bg-gray-800 cursor-pointer'>
 																					{member.role === 'admin' ? 'Make Member' : 'Make Admin'}
 																				</DropdownMenuItem>
-																				<DropdownMenuItem
-																					onClick={() => {
-																						const updatedMembers = field.value?.filter(
-																							(m: any) => m.userId !== member.userId,
-																						);
-																						field.onChange(updatedMembers);
-																					}}
-																					className='text-red-500 hover:bg-gray-800 cursor-pointer'>
-																					Remove member
-																				</DropdownMenuItem>
+																				{member.userId !== activeUserStore.get()?._id && (
+																					<DropdownMenuItem
+																						onClick={() => {
+																							const updatedMembers = field.value?.filter(
+																								(m: any) => m.userId !== member.userId,
+																							);
+																							field.onChange(updatedMembers);
+																						}}
+																						className='text-red-500 hover:bg-gray-800 cursor-pointer'>
+																						Remove member
+																					</DropdownMenuItem>
+																				)}
 																			</DropdownMenuContent>
 																		</DropdownMenu>
 																	</TableCell>
