@@ -18,6 +18,7 @@ import { activeUser as activeUserStore, setActiveUser } from '@/stores/User';
 import { updateUserStatus } from '@/utils/statusManager';
 import { PUBLIC_API_URL } from 'astro:env/client';
 import { setActiveChannel } from '@/stores/Channel';
+import { getCachedUser, setCachedUser } from '@/stores/UserCache';
 
 export function UserProfile({
 	user,
@@ -45,13 +46,25 @@ export function UserProfile({
 	// If a userId is provided but no user object, fetch the user data
 	useEffect(() => {
 		if (userId && !user) {
+			// First check the cache
+			const cachedUser = getCachedUser(userId);
+			if (cachedUser) {
+				setFetchedUser(cachedUser);
+				return;
+			}
+
+			// If not in cache, fetch from API
 			fetch(`${PUBLIC_API_URL}/user/${userId}`, {
 				method: 'GET',
 				credentials: 'include',
 			})
 				.then(async res => await res.json())
 				.then(data => {
-					setFetchedUser(data.data);
+					if (data.data) {
+						setFetchedUser(data.data);
+						// Update the cache with fresh data
+						setCachedUser(data.data);
+					}
 				})
 				.catch(error => {
 					console.error('Error fetching user:', error);

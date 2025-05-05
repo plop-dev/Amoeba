@@ -12,6 +12,7 @@ import UserAvatar from '@/components/UserAvatar';
 import { useStore } from '@nanostores/react';
 import { activeUser as activeUserStore } from '@/stores/User';
 import { PUBLIC_API_URL } from 'astro:env/client';
+import { getCachedUser, setCachedUser } from '@/stores/UserCache';
 
 function OptionsButton({
 	children,
@@ -189,6 +190,13 @@ export function Message({
 	const [isProfileOpen, setProfileOpen] = useState(false);
 	const [isNextInline, setIsNextInline] = useState(false);
 	const [copied, setCopied] = useState<boolean>(false);
+
+	// Cache the message author when the component mounts
+	useEffect(() => {
+		if (message.author) {
+			setCachedUser(message.author);
+		}
+	}, [message.author]);
 
 	useEffect(() => {
 		console.log('is profile open', isProfileOpen);

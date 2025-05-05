@@ -5,6 +5,7 @@ import { statusClasses } from '@/utils/statusClass';
 import { useStore } from '@nanostores/react';
 import { useEffect, useState } from 'react';
 import { PUBLIC_API_URL } from 'astro:env/client';
+import { getCachedUser, setCachedUser } from '@/stores/UserCache';
 
 export default function UserAvatar({ user, userId, className, size = 8 }: AvatarProps) {
 	const [userData, setUserData] = useState(user || UserConstant);
@@ -12,19 +13,32 @@ export default function UserAvatar({ user, userId, className, size = 8 }: Avatar
 	useEffect(() => {
 		if (user) {
 			setUserData(user);
+			// Update cache when direct user data is provided
+			setCachedUser(user);
 		}
 	}, [user]);
 
 	useEffect(() => {
 		if (userId && !user) {
-			// fetch user data since only the user id is provided
+			// First check the cache
+			const cachedUser = getCachedUser(userId);
+			if (cachedUser) {
+				setUserData(cachedUser);
+				return;
+			}
+
+			// If not in cache, fetch user data
 			fetch(`${PUBLIC_API_URL}/user/${userId}`, {
 				method: 'GET',
 				credentials: 'include',
 			})
 				.then(async res => await res.json())
 				.then(data => {
-					setUserData(data.data);
+					if (data.data) {
+						setUserData(data.data);
+						// Update the cache with fresh data
+						setCachedUser(data.data);
+					}
 				});
 		}
 	}, [userId]);
