@@ -74,7 +74,7 @@ function OptionsButton({
 
 function ReactionPicker({ onEmojiClick }: { onEmojiClick: (emojiName: string) => void }) {
 	return (
-		<DropdownMenu>
+		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger asChild>
 				<div>
 					<OptionsButton variant='outline'>

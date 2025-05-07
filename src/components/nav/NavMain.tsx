@@ -1100,10 +1100,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 				</SidebarGroupLabel>
 				<SidebarMenu>
 					<SidebarMenuItem key={'__home__'}>
-						<SidebarMenuButton
-							asChild
-							tooltip='home'
-							className={cn({ 'border-2 border-primary rounded-lg': window.location.pathname.includes('home') })}>
+						<SidebarMenuButton asChild tooltip='home' className={cn({ 'bg-primary/60 rounded-lg': window.location.pathname.includes('home') })}>
 							<a href={`/${activeWorkspaceId}/dashboard/home`}>
 								<Home></Home>
 								<span>Home</span>
@@ -1168,7 +1165,7 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 															'transition-colors *:translate-x-0 group/channelItem',
 															`before:absolute before:h-[var(--before-height)] before:w-[2px] before:left-0 before:bg-border before:top-[var(--before-top)]`,
 															{
-																'border-2 border-primary rounded-lg before:bg-primary': activeChannel?._id === subItem._id,
+																'bg-primary/60 rounded-lg before:bg-primary': activeChannel?._id === subItem._id,
 															},
 														)}
 														style={
