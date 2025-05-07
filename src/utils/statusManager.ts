@@ -244,6 +244,15 @@ export function setupStatusListeners(): void {
 		resetActivityTimers();
 	}
 
+	// Set status to online when network connectivity is restored
+	window.addEventListener('online', () => {
+		const currentUser = activeUser.get();
+		if (currentUser && currentUser.status !== 'offline') {
+			resetActivityTimers();
+			updateUserStatus('online');
+		}
+	});
+
 	// Original event listeners
 	// Set status to away when tab/window loses focus
 	window.addEventListener('blur', () => {

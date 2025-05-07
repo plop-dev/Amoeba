@@ -120,10 +120,10 @@ function ChatPageContent() {
 		onSuccess: async (response, message, context) => {
 			try {
 				// Get the real message ID from the response
-				const realId = await response.text();
+				const realId = await response.json();
 
-				if (realId.includes('error')) {
-					console.error('Error sending message:', realId);
+				if (!realId.success) {
+					console.error('Error sending message:', realId.error);
 					toast({
 						title: 'Error',
 						description: 'Failed to send message. Please reload page.',
@@ -136,7 +136,7 @@ function ChatPageContent() {
 					type: 'UPDATE_MESSAGE_ID',
 					payload: {
 						tempId: context?.tempId,
-						realId,
+						realId: realId.data,
 					},
 				});
 			} catch (error) {
