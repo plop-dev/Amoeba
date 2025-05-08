@@ -49,31 +49,27 @@
 	src: url('/fonts/fira-code-v22-latin-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
-html {
-	font-size: 100%;
-} /* 16px */
-
-h1 {
+.msg-content h1 {
 	font-size: 4.21rem; /* 67.36px */
 }
 
-h2 {
+.msg-content h2 {
 	font-size: 3.158rem; /* 50.56px */
 }
 
-h3 {
+.msg-content h3 {
 	font-size: 2.369rem; /* 37.92px */
 }
 
-h4 {
+.msg-content h4 {
 	font-size: 1.777rem; /* 28.48px */
 }
 
-h5 {
+.msg-content h5 {
 	font-size: 1.333rem; /* 21.28px */
 }
 
-small {
+.msg-content small {
 	font-size: 0.75rem; /* 12px */
 }
 
