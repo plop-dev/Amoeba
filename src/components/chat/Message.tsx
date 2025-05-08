@@ -13,6 +13,7 @@ import { useStore } from '@nanostores/react';
 import { activeUser as activeUserStore } from '@/stores/User';
 import { PUBLIC_API_URL } from 'astro:env/client';
 import { getCachedUser, setCachedUser } from '@/stores/UserCache';
+import Markdown from 'react-markdown';
 
 function OptionsButton({
 	children,
@@ -380,7 +381,13 @@ export function Message({
 										</div>
 									</div>
 								)}
-								<div className='text whitespace-pre-wrap break-words max-w-full overflow-hidden msg-content'>{message.content}</div>
+								<div
+									className='text whitespace-pre-wrap break-words max-w-full overflow-hidden msg-content prose dark:prose-invert
+  prose-h1:font-bold prose-h1:text-xl
+  prose-a:text-blue-600 prose-p:text-justify prose-img:rounded-xl
+  prose-headings:underline'>
+									<Markdown>{message.content}</Markdown>
+								</div>
 
 								<div className={cn('reactions flex gap-x-1', reactions.size > 0 ? 'my-1' : '')}>
 									{Array.from(reactions).map(([emojiName, users], index) => (
