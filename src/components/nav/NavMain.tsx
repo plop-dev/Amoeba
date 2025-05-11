@@ -444,26 +444,22 @@ function CategoryDialog(props: {
 	);
 }
 
-export function WorkspaceDialog(props: {
+export function WorkspaceMembersDialog(props: {
 	children: React.ReactNode;
 	className?: string;
-	mode: 'create' | 'edit';
 	workspace?: Workspace;
-	onWorkspaceCreated?: (workspace: Workspace) => void;
 	onWorkspaceUpdated?: (workspace: Workspace) => void;
-	onWorkspaceDeleted?: (workspaceId: string, nextWorkspace: Workspace) => void;
 }) {
 	const { toast } = useToast();
-	const { mode, workspace: workspace } = props;
-	const isEditMode = mode === 'edit';
-	const [workspaceIcon, setWorkspaceIcon] = useState<IconName>(isEditMode ? (workspace?.icon as IconName) || 'message-square' : 'message-square');
+	const { workspace } = props;
+	const [members, setMembers] = useState<WorkspaceUser[]>(
+		workspace?.members?.map(member => ({
+			...member,
+			dateJoined: new Date(member.dateJoined),
+		})) || [],
+	);
 
 	const formSchema = z.object({
-		workspaceName: z
-			.string()
-			.min(2, { message: 'Workspace name must be at least 2 characters.' })
-			.max(20, { message: 'Workspace name must be at most 20 characters.' }),
-		workspaceIcon: z.string().optional(),
 		workspaceMembers: z
 			.array(
 				z.object({
@@ -480,130 +476,46 @@ export function WorkspaceDialog(props: {
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			workspaceName: isEditMode ? workspace?.name || '' : 'New Workspace',
-			workspaceIcon: isEditMode ? (workspace?.icon as IconName) || 'message-square' : 'message-square',
-			workspaceMembers: isEditMode
-				? workspace?.members?.map(member => ({
-						...member,
-						dateJoined: new Date(member.dateJoined),
-						role: member.role,
-				  })) || []
-				: [{ userId: activeUserStore.get()?._id || '', role: 'owner', dateJoined: new Date() }],
+			workspaceMembers: members,
 		},
 	});
 
+	useEffect(() => {
+		form.reset({
+			workspaceMembers: members,
+		});
+	}, [members, form]);
+
 	async function onSubmit(values: z.infer<typeof formSchema>) {
-		try {
-			// merge the state value for workspaceIcon into form values
-			const updatedValues = { ...values, workspaceIcon };
+		if (workspace) {
+			// Update workspace with new members list
+			const updatedValues = { workspaceMembers: values.workspaceMembers };
 
-			if (isEditMode && workspace) {
-				// Update existing workspace
-				await fetch(`${PUBLIC_API_URL}/workspace/update/${workspace._id}`, {
-					method: 'POST',
-					body: JSON.stringify(updatedValues),
-					headers: { 'Content-Type': 'application/json' },
-					credentials: 'include',
-				})
-					.then(res => res.json())
-					.then(res => {
-						if (res.success) {
-							toast({
-								title: `${updatedValues.workspaceName} workspace updated`,
-								description: `Workspace ${updatedValues.workspaceName} updated successfully.`,
-								variant: 'success',
-							});
-							props.onWorkspaceUpdated?.(res.data);
-						} else {
-							toast({
-								title: 'Update failed',
-								description: res.message || 'Failed to update workspace.',
-								variant: 'destructive',
-							});
-						}
-					});
-			} else {
-				// Create new workspace
-				const newWorkspaceData = {
-					...updatedValues,
-				};
-
-				await fetch(`${PUBLIC_API_URL}/workspace/new`, {
-					method: 'POST',
-					body: JSON.stringify(newWorkspaceData),
-					headers: { 'Content-Type': 'application/json' },
-					credentials: 'include',
-				})
-					.then(res => res.json())
-					.then(res => {
-						if (res.success) {
-							toast({
-								title: `${updatedValues.workspaceName} workspace created`,
-								description: `Workspace ${updatedValues.workspaceName} created successfully.`,
-								variant: 'success',
-							});
-							props.onWorkspaceCreated?.(res.data);
-						} else {
-							toast({
-								title: 'Creation failed',
-								description: res.message || 'Failed to create workspace.',
-								variant: 'destructive',
-							});
-						}
-					});
-			}
-		} catch (error) {
-			console.error('Form submission error:', error);
-			toast({
-				title: 'Form Error',
-				description: 'There was a problem with your submission. Please check the form for errors.',
-				variant: 'destructive',
-			});
-		}
-	}
-
-	async function handleDeleteWorkspace() {
-		if (isEditMode && workspace) {
-			await fetch(`${PUBLIC_API_URL}/workspace/delete/${workspace._id}`, {
-				method: 'DELETE',
+			await fetch(`${PUBLIC_API_URL}/workspace/update-members/${workspace._id}`, {
+				method: 'POST',
+				body: JSON.stringify(updatedValues),
+				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
 			})
 				.then(res => res.json())
 				.then(res => {
 					if (res.success) {
 						toast({
-							title: `${workspace.name} workspace deleted`,
-							description: `Category ${workspace.name} deleted successfully.`,
+							title: `Members updated`,
+							description: `Workspace members updated successfully.`,
 							variant: 'success',
 						});
-
-						// backend should return (in res.data) another workspace the user is in,
-						// otherwise null if the user is not in any more workspaces
-						props.onWorkspaceDeleted?.(workspace._id, res.data);
+						props.onWorkspaceUpdated?.(res.data);
 					} else {
 						toast({
-							title: 'Error',
-							description: res.message || 'Failed to delete workspace.',
+							title: 'Update failed',
+							description: res.message || 'Failed to update workspace members.',
 							variant: 'destructive',
 						});
 					}
-				})
-				.catch(err => {
-					console.error(err);
-					toast({
-						title: 'Error',
-						description: 'Failed to delete workspace.',
-						variant: 'destructive',
-					});
 				});
 		}
 	}
-
-	const title = isEditMode ? `Edit ${workspace?.name} Workspace` : 'Create New Workspace';
-	const description = isEditMode
-		? 'Edit the name, icon and members of this workspace.'
-		: 'Create a new workspace where you can create channels and invite members.';
-	const actionText = isEditMode ? 'Update' : 'Create';
 
 	return (
 		<AlertDialog>
@@ -618,44 +530,9 @@ export function WorkspaceDialog(props: {
 				<Form {...form}>
 					<form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-y-4'>
 						<AlertDialogHeader>
-							<AlertDialogTitle>{title}</AlertDialogTitle>
-							<AlertDialogDescription className='flex flex-col gap-y-3'>
-								<span>{description}</span>
-							</AlertDialogDescription>
-							<FormField
-								control={form.control}
-								name='workspaceName'
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Workspace Name</FormLabel>
-										<FormControl>
-											<Input placeholder='New Workspace' {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name='workspaceIcon'
-								render={({ field }) => (
-									<FormItem className=''>
-										<FormLabel>Workspace Icon</FormLabel>
-										<FormControl>
-											<IconPicker
-												className='w-max'
-												{...field}
-												value={field.value as IconName}
-												defaultValue={workspaceIcon}
-												onValueChange={(value: IconName) => {
-													field.onChange(value);
-													setWorkspaceIcon(value);
-												}}></IconPicker>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
+							<AlertDialogTitle>Manage Workspace Members</AlertDialogTitle>
+							<AlertDialogDescription>Add, remove, or change the roles of members in this workspace.</AlertDialogDescription>
+
 							<FormField
 								control={form.control}
 								name='workspaceMembers'
@@ -804,7 +681,221 @@ export function WorkspaceDialog(props: {
 											<FormMessage />
 										</FormItem>
 									);
-								}}></FormField>
+								}}
+							/>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel>Cancel</AlertDialogCancel>
+							<AlertDialogAction type='submit'>Save Changes</AlertDialogAction>
+						</AlertDialogFooter>
+					</form>
+				</Form>
+			</AlertDialogContent>
+		</AlertDialog>
+	);
+}
+
+export function WorkspaceDialog(props: {
+	children: React.ReactNode;
+	className?: string;
+	mode: 'create' | 'edit';
+	workspace?: Workspace;
+	onWorkspaceCreated?: (workspace: Workspace) => void;
+	onWorkspaceUpdated?: (workspace: Workspace) => void;
+	onWorkspaceDeleted?: (workspaceId: string, nextWorkspace: Workspace) => void;
+}) {
+	const { toast } = useToast();
+	const { mode, workspace: workspace } = props;
+	const isEditMode = mode === 'edit';
+	const [workspaceIcon, setWorkspaceIcon] = useState<IconName>(isEditMode ? (workspace?.icon as IconName) || 'message-square' : 'message-square');
+
+	const formSchema = z.object({
+		workspaceName: z
+			.string()
+			.min(2, { message: 'Workspace name must be at least 2 characters.' })
+			.max(20, { message: 'Workspace name must be at most 20 characters.' }),
+		workspaceIcon: z.string().optional(),
+		// Removed workspaceMembers from here
+	});
+
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			workspaceName: isEditMode ? workspace?.name || '' : 'New Workspace',
+			workspaceIcon: isEditMode ? (workspace?.icon as IconName) || 'message-square' : 'message-square',
+			// Removed workspaceMembers default values
+		},
+	});
+
+	async function onSubmit(values: z.infer<typeof formSchema>) {
+		try {
+			// merge the state value for workspaceIcon into form values
+			const updatedValues = { ...values, workspaceIcon };
+
+			if (isEditMode && workspace) {
+				// Update existing workspace (without members)
+				await fetch(`${PUBLIC_API_URL}/workspace/update/${workspace._id}`, {
+					method: 'POST',
+					body: JSON.stringify(updatedValues),
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+				})
+					.then(res => res.json())
+					.then(res => {
+						if (res.success) {
+							toast({
+								title: `${updatedValues.workspaceName} workspace updated`,
+								description: `Workspace ${updatedValues.workspaceName} updated successfully.`,
+								variant: 'success',
+							});
+							props.onWorkspaceUpdated?.(res.data);
+						} else {
+							toast({
+								title: 'Update failed',
+								description: res.message || 'Failed to update workspace.',
+								variant: 'destructive',
+							});
+						}
+					});
+			} else {
+				// Create new workspace (with initial owner member)
+				const newWorkspaceData = {
+					...updatedValues,
+					workspaceMembers: [
+						{
+							userId: activeUserStore.get()?._id || '',
+							role: 'owner',
+							dateJoined: new Date(),
+						},
+					],
+				};
+
+				await fetch(`${PUBLIC_API_URL}/workspace/new`, {
+					method: 'POST',
+					body: JSON.stringify(newWorkspaceData),
+					headers: { 'Content-Type': 'application/json' },
+					credentials: 'include',
+				})
+					.then(res => res.json())
+					.then(res => {
+						if (res.success) {
+							toast({
+								title: `${updatedValues.workspaceName} workspace created`,
+								description: `Workspace ${updatedValues.workspaceName} created successfully.`,
+								variant: 'success',
+							});
+							props.onWorkspaceCreated?.(res.data);
+						} else {
+							toast({
+								title: 'Creation failed',
+								description: res.message || 'Failed to create workspace.',
+								variant: 'destructive',
+							});
+						}
+					});
+			}
+		} catch (error) {
+			console.error('Form submission error:', error);
+			toast({
+				title: 'Form Error',
+				description: 'There was a problem with your submission. Please check the form for errors.',
+				variant: 'destructive',
+			});
+		}
+	}
+
+	async function handleDeleteWorkspace() {
+		if (isEditMode && workspace) {
+			await fetch(`${PUBLIC_API_URL}/workspace/delete/${workspace._id}`, {
+				method: 'DELETE',
+				credentials: 'include',
+			})
+				.then(res => res.json())
+				.then(res => {
+					if (res.success) {
+						toast({
+							title: `${workspace.name} workspace deleted`,
+							description: `Category ${workspace.name} deleted successfully.`,
+							variant: 'success',
+						});
+
+						// backend should return (in res.data) another workspace the user is in,
+						// otherwise null if the user is not in any more workspaces
+						props.onWorkspaceDeleted?.(workspace._id, res.data);
+					} else {
+						toast({
+							title: 'Error',
+							description: res.message || 'Failed to delete workspace.',
+							variant: 'destructive',
+						});
+					}
+				})
+				.catch(err => {
+					console.error(err);
+					toast({
+						title: 'Error',
+						description: 'Failed to delete workspace.',
+						variant: 'destructive',
+					});
+				});
+		}
+	}
+
+	const title = isEditMode ? `Edit ${workspace?.name} Workspace` : 'Create New Workspace';
+	const description = isEditMode ? 'Edit the name and icon of this workspace.' : 'Create a new workspace where you can create channels and invite members.';
+	const actionText = isEditMode ? 'Update' : 'Create';
+
+	return (
+		<AlertDialog>
+			<AlertDialogTrigger asChild className={props.className}>
+				{props.children}
+			</AlertDialogTrigger>
+			<AlertDialogContent
+				onClick={e => {
+					e.stopPropagation();
+				}}
+				className='max-w-[60vw]'>
+				<Form {...form}>
+					<form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col gap-y-4'>
+						<AlertDialogHeader>
+							<AlertDialogTitle>{title}</AlertDialogTitle>
+							<AlertDialogDescription className='flex flex-col gap-y-3'>
+								<span>{description}</span>
+							</AlertDialogDescription>
+							<FormField
+								control={form.control}
+								name='workspaceName'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Workspace Name</FormLabel>
+										<FormControl>
+											<Input placeholder='New Workspace' {...field} />
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
+								name='workspaceIcon'
+								render={({ field }) => (
+									<FormItem className=''>
+										<FormLabel>Workspace Icon</FormLabel>
+										<FormControl>
+											<IconPicker
+												className='w-max'
+												{...field}
+												value={field.value as IconName}
+												defaultValue={workspaceIcon}
+												onValueChange={(value: IconName) => {
+													field.onChange(value);
+													setWorkspaceIcon(value);
+												}}></IconPicker>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
 						</AlertDialogHeader>
 						<AlertDialogFooter className='justify-between'>
 							{isEditMode && (
@@ -1082,9 +1173,11 @@ export function NavMain({ channels, DBCategories }: { channels: Channel[]; DBCat
 						)}
 					</SidebarMenuItem>
 					<SidebarMenuItem key={'__members__'}>
-						<SidebarMenuButton>
-							<Users></Users> Members
-						</SidebarMenuButton>
+						<WorkspaceMembersDialog workspace={activeWorkspace || undefined} onWorkspaceUpdated={handleWorkspaceUpdated}>
+							<SidebarMenuButton>
+								<Users className='size-4'></Users> Members
+							</SidebarMenuButton>
+						</WorkspaceMembersDialog>
 					</SidebarMenuItem>
 				</SidebarMenu>
 			</SidebarGroup>
