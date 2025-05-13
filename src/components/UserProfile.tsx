@@ -25,7 +25,6 @@ export function UserProfile({
 	userId,
 	children,
 	contentOnly = false,
-	userControl = false,
 	isOpen = false,
 	openChange = () => {},
 }: {
@@ -33,7 +32,6 @@ export function UserProfile({
 	userId?: string;
 	children?: React.ReactNode;
 	contentOnly?: boolean;
-	userControl?: boolean;
 	isOpen?: boolean;
 	openChange?: (isOpen: boolean) => void;
 }) {
@@ -42,6 +40,7 @@ export function UserProfile({
 	// const [open, setOpen] = useState(isOpen);
 	const activeWorkspace = useStore(activeWorkspaceStore);
 	const activeUser = useStore(activeUserStore);
+	const [userControl, setUserControl] = useState(user?._id || userId === activeUser?._id);
 
 	// If a userId is provided but no user object, fetch the user data
 	useEffect(() => {

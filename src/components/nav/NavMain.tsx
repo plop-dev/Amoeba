@@ -53,6 +53,7 @@ import { PUBLIC_API_URL } from 'astro:env/client';
 import { Badge } from '../ui/badge';
 import { roleClasses } from '@/utils/statusClass';
 import { sleep } from '@/utils/sleep';
+import { UserProfile } from '../UserProfile';
 
 function ChannelDialog(props: {
 	children: React.ReactNode;
@@ -628,7 +629,14 @@ export function WorkspaceMembersDialog(props: {
 															{field.value?.map((member: WorkspaceUser) => (
 																<TableRow key={member.userId} className='border-b border-gray-800 hover:bg-gray-900/50'>
 																	<TableCell className='font-medium flex gap-x-2'>
-																		{member.userId} {member.userId === activeUserStore.get()?._id && <p>(you)</p>}
+																		<UserProfile userId={member.userId}>
+																			<span className='cursor-pointer inline-flex gap-x-1 items-center'>
+																				{member.userId}{' '}
+																				{member.userId === activeUserStore.get()?._id && (
+																					<span className='text-gray-400 text-xs'>(you)</span>
+																				)}
+																			</span>
+																		</UserProfile>
 																	</TableCell>
 																	<TableCell>{formatDate(new Date(member.dateJoined))}</TableCell>
 																	<TableCell>
@@ -715,7 +723,7 @@ export function WorkspaceDialog(props: {
 			.min(2, { message: 'Workspace name must be at least 2 characters.' })
 			.max(20, { message: 'Workspace name must be at most 20 characters.' }),
 		workspaceIcon: z.string().optional(),
-		// Removed workspaceMembers from here
+		workspaceBots: z.array(z.string()).optional(),
 	});
 
 	const form = useForm<z.infer<typeof formSchema>>({
@@ -723,7 +731,7 @@ export function WorkspaceDialog(props: {
 		defaultValues: {
 			workspaceName: isEditMode ? workspace?.name || '' : 'New Workspace',
 			workspaceIcon: isEditMode ? (workspace?.icon as IconName) || 'message-square' : 'message-square',
-			// Removed workspaceMembers default values
+			workspaceBots: isEditMode ? workspace?.bots || [] : [],
 		},
 	});
 
@@ -896,6 +904,16 @@ export function WorkspaceDialog(props: {
 									</FormItem>
 								)}
 							/>
+							{/* <FormField
+								control={form.control}
+								name='workspaceBots'
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Workspace Bots</FormLabel>
+										<FormControl></FormControl>
+									</FormItem>
+								)}
+							/> */}
 						</AlertDialogHeader>
 						<AlertDialogFooter className='justify-between'>
 							{isEditMode && (

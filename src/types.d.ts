@@ -32,12 +32,24 @@ interface Workspace {
 	creationDate: Date;
 	icon: string;
 	members: WorkspaceUser[];
+	bots: Bot['_id'][];
 }
 
 interface WorkspaceUser {
 	userId: User['_id'];
 	role: UserRoles;
 	dateJoined: Date;
+}
+
+interface Bot {
+	_id: string;
+	name: string;
+	workspaceId: Workspace['_id'];
+	avatarUrl: string;
+	creationDate: Date;
+	token: string;
+	role: UserRoles;
+	commands?: any[]; // TODO: Define command structure
 }
 
 // Channel Related Types

@@ -124,7 +124,7 @@ export function NavUser({ user }: { user: User }) {
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent className='rounded-lg p-0' side={isMobile ? 'bottom' : 'right'} align='end' sideOffset={4}>
-						<UserProfile user={currentUser} isOpen={isProfileOpen} openChange={setProfileOpen} contentOnly={true} userControl={true}></UserProfile>
+						<UserProfile user={currentUser} isOpen={isProfileOpen} openChange={setProfileOpen} contentOnly={true}></UserProfile>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>
